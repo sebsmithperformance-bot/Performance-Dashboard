@@ -27,7 +27,7 @@ synthetic data). Backend spike (§2.1) blocked on AWS account access.
 | 0    | §2.1 backend verification spike                             | **Blocked** on input 1                       |
 | 1    | Dev AWS infra + schema applied                              | Not started (schema SQL authored, unapplied) |
 | 2    | Synthetic generator + calculation layer                     | **Done** (this session, quality gate green)  |
-| 3    | Design tokens + app shell                                   | Tokens **done**; real shell not started      |
+| 3    | Design tokens + app shell                                   | **Done** (tokens + shell, session 2)         |
 | 4    | Import foundation                                           | Not started (PlayerData format documented)   |
 | 5    | Coach-facing modules                                        | Not started — gated on spike                 |
 | 6    | Administration                                              | Not started                                  |
@@ -74,3 +74,24 @@ synthetic data). Backend spike (§2.1) blocked on AWS account access.
   realistic ~3% device-missing rate, ~half of mature 28-day ACWR windows are incomplete.
   That is faithful to the spec ("omit the ratio and show a data-completeness warning"),
   but the coach may eventually want an explicit tolerance policy — requires sign-off.
+
+### 2026-07-15 — Session 2
+
+- Re-checked AWS: still no CLI/credentials — §2.1 spike remains blocked on input 1.
+- §7.3 environment guards: pure policy module (CODEOWNERS path) + verifier wired into
+  `npm run build`. Verified live: APP_ENV=production with mock auth blocks the build
+  with 3 violations; mock auth rejected outside local. 6 tests.
+- Build Order step 3 shipped: §5 IA app shell (collapsible sidebar with separated Admin
+  group, topbar with athlete badge / session-date picker / env badge / Import Data,
+  sub-tab rows incl. nested Monitoring→GPS tabs, mobile drawer), §7.3 mock auth with
+  sign-in screen + 15-min idle sign-out (§7.1), app-level error boundary, and honest
+  gated placeholders for every coach-facing pane. Cognito is an explicit unwired seam.
+- Local synthetic data now feeds the shell: generator writes `seed/output/current/`,
+  a dev-only (serve-mode) Vite middleware exposes it, and the picker/badges consume it.
+  The date picker independently confirmed calendar events (rest Sundays and the
+  canceled-Wednesday gap are absent from the options).
+- Verified in browser at desktop / collapsed / mobile widths; console clean. 45 tests
+  green; production build green behind the guard.
+- Next: Build Order step 4 (import foundation) can start against the synthetic fixtures
+  and documented PlayerData format; the §2.1 spike stays the gate for backend-wired
+  pages and needs the AWS account decision.
