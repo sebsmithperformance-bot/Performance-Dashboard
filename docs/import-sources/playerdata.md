@@ -28,7 +28,7 @@ fully synthetic values.
 ## Critical gaps (blockers for a committable import)
 
 - **No athlete identifier column.** Rows are anonymous in both variants.
-- **No date/time column.** The session date appears only in the *filename*
+- **No date/time column.** The session date appears only in the _filename_
   ("Single-Session Report 16 Apr 26").
 
 → The import UI could ask the coach to pick the session date per file, but athlete
@@ -47,19 +47,19 @@ sections; section membership is not an athlete identity.
 
 ## KPI mapping (proposed `kpi_source_mapping` seeds)
 
-| Raw header | KPI key | Canonical unit | Notes |
-|---|---|---|---|
-| Distance | total_distance | yd | |
-| Session Load | player_load | AU | PlayerData's load metric; default load KPI (§3.1) |
-| Workload | workload | scale_1_10 | decimal; PlayerData's own 1–10 scale, neutral interpretation |
-| Sprint Distance | sprint_distance | yd | not in provisional spec list — real column |
-| High Intensity Running | high_speed_distance | yd | device threshold definition unconfirmed |
-| No. of High Intensity Events | high_intensity_events | count | not in provisional spec list |
-| Yards per Minute | yards_per_minute | yd/min | derived-by-source; import as source_value |
-| No. of Sprints | sprints | count | |
-| Top Speed | top_speed | mph | |
-| Accelerations | accelerations | count | |
-| Decelerations | decelerations | count | |
+| Raw header                   | KPI key               | Canonical unit | Notes                                                        |
+| ---------------------------- | --------------------- | -------------- | ------------------------------------------------------------ |
+| Distance                     | total_distance        | yd             |                                                              |
+| Session Load                 | player_load           | AU             | PlayerData's load metric; default load KPI (§3.1)            |
+| Workload                     | workload              | scale_1_10     | decimal; PlayerData's own 1–10 scale, neutral interpretation |
+| Sprint Distance              | sprint_distance       | yd             | not in provisional spec list — real column                   |
+| High Intensity Running       | high_speed_distance   | yd             | device threshold definition unconfirmed                      |
+| No. of High Intensity Events | high_intensity_events | count          | not in provisional spec list                                 |
+| Yards per Minute             | yards_per_minute      | yd/min         | derived-by-source; import as source_value                    |
+| No. of Sprints               | sprints               | count          |                                                              |
+| Top Speed                    | top_speed             | mph            |                                                              |
+| Accelerations                | accelerations         | count          |                                                              |
+| Decelerations                | decelerations         | count          |                                                              |
 
 ## Remaining questions for the coach / PlayerData
 

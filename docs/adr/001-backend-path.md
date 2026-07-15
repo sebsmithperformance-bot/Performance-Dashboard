@@ -7,8 +7,8 @@
 
 The spec (§2) fixes the primary architecture: Amplify Hosting, Cognito, AppSync GraphQL,
 Aurora PostgreSQL Serverless v2 with the RDS Data API, private S3 for imports, Secrets
-Manager. The open question is not *which stack* but *which AppSync-to-Aurora integration
-style* survives the §2.1 verification spike:
+Manager. The open question is not _which stack_ but _which AppSync-to-Aurora integration
+style_ survives the §2.1 verification spike:
 
 1. **Amplify Gen 2 Data SQL integration** (generated) — use only if it supports the full §3
    schema, multi-statement transactions for import commits, authorization rules, and sane

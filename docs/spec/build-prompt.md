@@ -375,6 +375,7 @@ The import adapter must document:
 Persistent left sidebar (collapsible), top bar with athlete-count badge, current session/date context, an **Import Data** action, and a session/date picker. (No "Send Report" — cut from v1 scope.) Four coach-facing primary sections — **Overview, Monitoring, Data Trends, Performance** — each opening into its own **horizontal sub-tab row** across the top of the content area (same pattern as the reference screenshots' "SESSION OVERVIEW / TEAM COMPARE / ..." row) — plus two admin-only sections underneath, kept visually separate from the four primary ones.
 
 ### 5.1 Overview
+
 - **Team Dashboard** — the tile grid:
   - **Availability** — team-wide status at a glance.
   - **Last Session GPS** — key numbers from the most recent session.
@@ -384,6 +385,7 @@ Persistent left sidebar (collapsible), top bar with athlete-count badge, current
 - **Athletes** — a single-day metric overview: pick a date, see every athlete's key metrics for that specific day.
 
 ### 5.2 Monitoring
+
 - **Availability** — roster status (Full Go / Limited / Out), filterable by group (position).
 - **Readiness** — Team Trend (load trend + ACWR) and Individuals (same lens, per athlete).
 - **GPS** — three sub-tabs:
@@ -392,24 +394,30 @@ Persistent left sidebar (collapsible), top bar with athlete-count badge, current
   - **Trends & Recommendations** — long-range trend view (this absorbs the earlier draft's "Load Analysis": 7/14/28/60/90-day ranges, A:C band overlay, monotony/strain) plus rule-based team alerts and session recommendations (e.g. "Acute load is 42% above the 28-day weekly equivalent" with the number, data-completeness status, and a suggested 1–2 session review; recovery-vs-normal-vs-push guidance with a computed target volume band). These are workload observations, not injury predictions. Transparent thresholds shown, never a black-box score.
 
 ### 5.3 Data Trends
+
 Its own primary section (not a widget tucked inside Overview) — same underlying concept in both sub-tabs: a trend-analysis view combining a **graph and a table together**, sortable/filterable by **Group** (position) or **Individual** (single athlete). The split is by data source, not by behavior:
+
 - **Performance** sub-tab — trend analysis over S&C metrics (lifts, Perch power) across time, graph + table, Group/Individual toggle.
 - **GPS** sub-tab — trend analysis over GPS/load metrics across time, graph + table, Group/Individual toggle.
 
 Both sub-tabs share the same underlying component (metric picker, date range, Group/Individual sort) — only the metric catalog each one pulls from differs (S&C-sourced KPIs vs. GPS/load-sourced KPIs, per `kpi_registry.primary_source` and `category` in §3). Keep it that way rather than building two separate implementations — it's the same interaction pattern applied to two metric sets.
 
 ### 5.4 Performance (Strength & Conditioning)
+
 - **Overview** — tiles for all key S&C KPIs.
 - **Leaderboards** — full leaderboard for every S&C metric, each entry showing value + change vs. a selectable basis (prior week default; prior session or rolling average as alternatives). No points anywhere.
 - **Athlete Profile** — individual overview: a radar chart plus a metric comparison view. Radar spokes use direction-aware percentile rank within the selected season and comparison group, not raw values with incompatible units. Show the raw value and sample size beside every percentile, require at least five valid comparison athletes, and never calculate a combined radar score.
 
 ### 5.5 Admin (not on the whiteboard — still required, kept separate from the four sections above)
+
 - **KPI Settings** — manage `kpi_registry`: display name, primary source, display unit, interpretation, aggregation method, valid range, decimal precision, visibility flags, and per-KPI source column mapping (feeds §4). The canonical storage unit is protected from casual UI edits. The same area manages `positions` — rename, add, reorder, or retire groups; retiring one does not delete historical data.
 - **Import Data** — upload flow + import history log (§4).
-- **Data Management** — controls the *layout* of the coach-facing frontend, as distinct from KPI Settings (which controls *metric config*, not layout): reorder the four primary sections and their sub-tabs, show/hide optional widgets (e.g. individual tiles on the Overview Team Dashboard), and reorder tiles within a section. Persisted server-side (a `dashboard_layout` config, similar shape to `saved_views` in §3) so the layout choice is the same on every device, not a per-browser setting. Scope this to structural show/hide/reorder only — it is not a page builder; it doesn't let anyone invent new widget types or change what a widget computes, only whether it's shown and where.
+- **Data Management** — controls the _layout_ of the coach-facing frontend, as distinct from KPI Settings (which controls _metric config_, not layout): reorder the four primary sections and their sub-tabs, show/hide optional widgets (e.g. individual tiles on the Overview Team Dashboard), and reorder tiles within a section. Persisted server-side (a `dashboard_layout` config, similar shape to `saved_views` in §3) so the layout choice is the same on every device, not a per-browser setting. Scope this to structural show/hide/reorder only — it is not a page builder; it doesn't let anyone invent new widget types or change what a widget computes, only whether it's shown and where.
 
 ### Reconciling this with the earlier draft of this doc
+
 A few things named differently or placed differently in the original spec now live here instead — noted so nothing gets silently lost:
+
 - The earlier standalone **"Roster Breakdown"** page is gone as its own nav item — its speed/A:C flag content now lives in Overview's **Athlete Flags** tile and Monitoring → Readiness → **Individuals**.
 - The earlier standalone **"Player Profile"** tab is now **Performance → Athlete Profile** (radar + metric comparison), scoped to S&C — GPS-side individual detail instead lives in Monitoring → GPS → **Session Overview** (per-athlete breakdown) and Overview → **Athletes** (single-day view).
 - The earlier standalone **"Rankings / Leaderboards"** page is now **Performance → Leaderboards**, scoped to S&C metrics (matches the whiteboard's placement).
@@ -535,12 +543,12 @@ npm run seed:generate -- --season=2026 --seed=20260801
 
 Generate exactly 25 athletes:
 
-| Position | Count | Typical roster role |
-|---|---:|---|
-| Goalkeeper | 3 | 1 primary starter, 1 regular backup, 1 developmental |
-| Defender | 7 | mixture of high-minute starters and rotation players |
-| Midfielder | 8 | generally highest running-volume group |
-| Forward | 7 | generally highest sprint-frequency group |
+| Position   | Count | Typical roster role                                  |
+| ---------- | ----: | ---------------------------------------------------- |
+| Goalkeeper |     3 | 1 primary starter, 1 regular backup, 1 developmental |
+| Defender   |     7 | mixture of high-minute starters and rotation players |
+| Midfielder |     8 | generally highest running-volume group               |
+| Forward    |     7 | generally highest sprint-frequency group             |
 
 Each athlete receives stable latent traits that influence every later record:
 
@@ -563,13 +571,13 @@ Do not expose these hidden traits in the UI. They exist only so one athlete's da
 
 Suggested fictional roster ranges:
 
-| Variable | Outfield players | Goalkeepers |
-|---|---:|---:|
-| Height | 61–72 in | 64–73 in |
-| Body mass | 120–185 lb | 135–195 lb |
-| Years on team | 1–4 | 1–4 |
-| Training age | 1–6 yr | 1–6 yr |
-| Individual top-speed capacity | 15.0–20.0 mph | 12.0–16.5 mph |
+| Variable                      | Outfield players |   Goalkeepers |
+| ----------------------------- | ---------------: | ------------: |
+| Height                        |         61–72 in |      64–73 in |
+| Body mass                     |       120–185 lb |    135–195 lb |
+| Years on team                 |              1–4 |           1–4 |
+| Training age                  |           1–6 yr |        1–6 yr |
+| Individual top-speed capacity |    15.0–20.0 mph | 12.0–16.5 mph |
 
 Use truncated distributions rather than uniform distributions, so most athletes fall near the middle and only a few sit at either extreme. Height, mass, speed, strength, and power should be moderately related rather than independent.
 
@@ -706,29 +714,29 @@ These are simulation bounds, not clinical thresholds. Values outside the “typi
 
 ##### Outfield athletes
 
-| Metric | Recovery / short practice | Normal practice | High practice / scrimmage | Game | Hard bound |
-|---|---:|---:|---:|---:|---:|
-| Total distance | 800–2,800 yd | 2,500–5,500 yd | 4,000–7,500 yd | 2,000–7,500 yd by minutes | 0–9,000 yd |
-| High-speed distance | 0–180 yd | 100–550 yd | 250–900 yd | 100–1,000 yd by minutes | 0–1,300 yd |
-| Player Load | 50–220 AU | 180–480 AU | 350–700 AU | 180–700 AU by minutes | 0–850 AU |
-| Top speed | 10.0–16.0 mph | 13.0–18.5 mph | 14.0–19.5 mph | 13.0–20.0 mph | 0–21.0 mph |
-| Sprints | 0–5 | 2–14 | 8–24 | 2–25 by minutes | 0–35 |
-| Accelerations | 3–25 | 15–50 | 30–75 | 10–75 by minutes | 0–90 |
-| Decelerations | 3–25 | 15–55 | 30–80 | 10–80 by minutes | 0–95 |
-| Workload | 1–4 | 3–7 | 6–9 | 4–10 by minutes | 1–10 |
+| Metric              | Recovery / short practice | Normal practice | High practice / scrimmage |                      Game | Hard bound |
+| ------------------- | ------------------------: | --------------: | ------------------------: | ------------------------: | ---------: |
+| Total distance      |              800–2,800 yd |  2,500–5,500 yd |            4,000–7,500 yd | 2,000–7,500 yd by minutes | 0–9,000 yd |
+| High-speed distance |                  0–180 yd |      100–550 yd |                250–900 yd |   100–1,000 yd by minutes | 0–1,300 yd |
+| Player Load         |                 50–220 AU |      180–480 AU |                350–700 AU |     180–700 AU by minutes |   0–850 AU |
+| Top speed           |             10.0–16.0 mph |   13.0–18.5 mph |             14.0–19.5 mph |             13.0–20.0 mph | 0–21.0 mph |
+| Sprints             |                       0–5 |            2–14 |                      8–24 |           2–25 by minutes |       0–35 |
+| Accelerations       |                      3–25 |           15–50 |                     30–75 |          10–75 by minutes |       0–90 |
+| Decelerations       |                      3–25 |           15–55 |                     30–80 |          10–80 by minutes |       0–95 |
+| Workload            |                       1–4 |             3–7 |                       6–9 |           4–10 by minutes |       1–10 |
 
 ##### Goalkeepers
 
-| Metric | Practice | Game | Hard bound |
-|---|---:|---:|---:|
-| Total distance | 300–1,800 yd | 150–1,200 yd | 0–2,500 yd |
-| High-speed distance | 0–80 yd | 0–60 yd | 0–150 yd |
-| Player Load | 40–260 AU | 30–220 AU | 0–350 AU |
-| Top speed | 8.0–15.0 mph | 8.0–15.5 mph | 0–17.0 mph |
-| Sprints | 0–5 | 0–4 | 0–8 |
-| Accelerations | 5–35 | 3–30 | 0–50 |
-| Decelerations | 5–35 | 3–30 | 0–50 |
-| Workload | 1–7 | 1–7 | 1–10 |
+| Metric              |     Practice |         Game | Hard bound |
+| ------------------- | -----------: | -----------: | ---------: |
+| Total distance      | 300–1,800 yd | 150–1,200 yd | 0–2,500 yd |
+| High-speed distance |      0–80 yd |      0–60 yd |   0–150 yd |
+| Player Load         |    40–260 AU |    30–220 AU |   0–350 AU |
+| Top speed           | 8.0–15.0 mph | 8.0–15.5 mph | 0–17.0 mph |
+| Sprints             |          0–5 |          0–4 |        0–8 |
+| Accelerations       |         5–35 |         3–30 |       0–50 |
+| Decelerations       |         5–35 |         3–30 |       0–50 |
+| Workload            |          1–7 |          1–7 |       1–10 |
 
 #### Position behavior
 
@@ -771,12 +779,12 @@ Model strength from athlete-level estimated capacities and a realistic training 
 
 Create latent preseason estimated 1RM values within broad fictional ranges:
 
-| Exercise | Typical estimated 1RM | Hard fictional bound |
-|---|---:|---:|
-| Back Squat | 145–245 lb | 95–300 lb |
-| Bench Press | 75–135 lb | 45–175 lb |
-| Trap Bar Deadlift | 185–335 lb | 125–405 lb |
-| Power Clean | 75–145 lb | 45–185 lb |
+| Exercise          | Typical estimated 1RM | Hard fictional bound |
+| ----------------- | --------------------: | -------------------: |
+| Back Squat        |            145–245 lb |            95–300 lb |
+| Bench Press       |             75–135 lb |            45–175 lb |
+| Trap Bar Deadlift |            185–335 lb |           125–405 lb |
+| Power Clean       |             75–145 lb |            45–185 lb |
 
 Generate programmed working loads from planned intensity and repetitions:
 
@@ -810,12 +818,12 @@ Perch remains independent from TeamBuildr. A TeamBuildr session may exist withou
 
 Generate session-level power observations:
 
-| Exercise / metric | Typical fictional range | Hard fictional bound |
-|---|---:|---:|
-| Back Squat mean concentric power | 300–850 W | 150–1,100 W |
-| Bench Press mean concentric power | 140–420 W | 75–600 W |
-| Trap Bar Deadlift mean concentric power | 450–1,200 W | 250–1,600 W |
-| Power Clean peak power | 650–1,650 W | 350–2,100 W |
+| Exercise / metric                       | Typical fictional range | Hard fictional bound |
+| --------------------------------------- | ----------------------: | -------------------: |
+| Back Squat mean concentric power        |               300–850 W |          150–1,100 W |
+| Bench Press mean concentric power       |               140–420 W |             75–600 W |
+| Trap Bar Deadlift mean concentric power |             450–1,200 W |          250–1,600 W |
+| Power Clean peak power                  |             650–1,650 W |          350–2,100 W |
 
 Power should depend on:
 
@@ -866,19 +874,19 @@ A realistic dev dataset must include clean records and controlled imperfections.
 
 Approximate targets across the full synthetic season:
 
-| Scenario | Target frequency |
-|---|---:|
-| Valid expected rows | 90–96% |
-| GPS device missing/failed | 2–4% of expected GPS exposures |
-| Athlete absent or did not participate | determined by schedule/availability |
-| Perch missing despite an eligible lift | 8–15% |
-| TeamBuildr completed value missing | 2–5% of expected lift values |
-| Exact duplicate row in fixture | 1–3 deliberate cases |
-| Fuzzy athlete-name candidate | 2–4 deliberate cases |
-| Unmapped source header | at least 1 per source fixture suite |
-| Corrected/replacement value | 2–4 deliberate cases |
-| Multiple sessions on the same date | common throughout preseason and occasional in-season |
-| Missing-data rolling window | at least 3 athlete examples |
+| Scenario                               |                                     Target frequency |
+| -------------------------------------- | ---------------------------------------------------: |
+| Valid expected rows                    |                                               90–96% |
+| GPS device missing/failed              |                       2–4% of expected GPS exposures |
+| Athlete absent or did not participate  |                  determined by schedule/availability |
+| Perch missing despite an eligible lift |                                                8–15% |
+| TeamBuildr completed value missing     |                         2–5% of expected lift values |
+| Exact duplicate row in fixture         |                                 1–3 deliberate cases |
+| Fuzzy athlete-name candidate           |                                 2–4 deliberate cases |
+| Unmapped source header                 |                  at least 1 per source fixture suite |
+| Corrected/replacement value            |                                 2–4 deliberate cases |
+| Multiple sessions on the same date     | common throughout preseason and occasional in-season |
+| Missing-data rolling window            |                          at least 3 athlete examples |
 
 Deliberate import problems belong in separate named fixture files, not mixed invisibly into the main “clean realistic season” export.
 
@@ -1122,64 +1130,65 @@ Each deployment receives generated/public frontend configuration for its own Cog
 Build every value below as CSS custom properties / a Tailwind theme config at project start (a single `tokens` file), not hardcoded per-component. The Penn brand palette is defined once here so no component contains one-off brand colors.
 
 ### 12.1 Overall direction
-Dark-mode-first, data-dense, flat UI (minimal shadows, no skeuomorphism) — same visual family as the reference screenshots, tuned for long monitoring sessions (low glare, high contrast on the numbers that matter, everything else recedes). Architect the tokens so a light mode *could* be added later (i.e., don't hardcode `#000`/`#fff` inline anywhere — always reference a token), but only ship dark mode for v1.
+
+Dark-mode-first, data-dense, flat UI (minimal shadows, no skeuomorphism) — same visual family as the reference screenshots, tuned for long monitoring sessions (low glare, high contrast on the numbers that matter, everything else recedes). Architect the tokens so a light mode _could_ be added later (i.e., don't hardcode `#000`/`#fff` inline anywhere — always reference a token), but only ship dark mode for v1.
 
 ### 12.2 Penn Athletics color palette
 
 Use the official Penn Athletics colors from the supplied mini style guide as the brand foundation:
 
-| Color | Digital value | Print reference | Primary dashboard use |
-|---|---:|---|---|
-| Penn Crimson | `#980000` / RGB 152, 0, 0 | PMS 201; CMYK 24, 100, 100, 25 | Primary actions, selected tabs, active indicators, focus rings |
-| Penn Navy | `#011F5B` / RGB 1, 31, 91 | PMS 289; CMYK 100, 93, 32, 32 | Sidebar branding, navigation emphasis, branded headers |
-| Penn Silver | `#8A8D8F` / RGB 138, 141, 143 | PMS 877; CMYK 36, 28, 27, 0 | Secondary brand detail, dividers, neutral branded accents |
-| White | `#FFFFFF` | — | Logo treatment and text placed on Penn Crimson or Penn Navy |
+| Color        |                 Digital value | Print reference                | Primary dashboard use                                          |
+| ------------ | ----------------------------: | ------------------------------ | -------------------------------------------------------------- |
+| Penn Crimson |     `#980000` / RGB 152, 0, 0 | PMS 201; CMYK 24, 100, 100, 25 | Primary actions, selected tabs, active indicators, focus rings |
+| Penn Navy    |     `#011F5B` / RGB 1, 31, 91 | PMS 289; CMYK 100, 93, 32, 32  | Sidebar branding, navigation emphasis, branded headers         |
+| Penn Silver  | `#8A8D8F` / RGB 138, 141, 143 | PMS 877; CMYK 36, 28, 27, 0    | Secondary brand detail, dividers, neutral branded accents      |
+| White        |                     `#FFFFFF` | —                              | Logo treatment and text placed on Penn Crimson or Penn Navy    |
 
 The Nike uniform references in the style guide — Crimson (Nike 613), Scarlet (Nike 658), and Navy (Nike 420) — are apparel references. Do not invent digital hex values for them. The dashboard should use the Penn-specific RGB/PMS colors above.
 
 ```css
 /* Penn Athletics master brand colors */
---penn-crimson:       #980000;
---penn-navy:          #011F5B;
---penn-silver:        #8A8D8F;
---penn-white:         #FFFFFF;
+--penn-crimson: #980000;
+--penn-navy: #011f5b;
+--penn-silver: #8a8d8f;
+--penn-white: #ffffff;
 
 /* Dark application surfaces */
---bg-base:            #0B0D10;
---bg-surface:         #14171C;
---bg-surface-2:       #1B1F26;
---border-subtle:      #262B33;
---border-strong:      #3B424D;
+--bg-base: #0b0d10;
+--bg-surface: #14171c;
+--bg-surface-2: #1b1f26;
+--border-subtle: #262b33;
+--border-strong: #3b424d;
 
 /* Text */
---text-primary:       #F5F6F7;
---text-secondary:     #A7ADB8;
---text-muted:         #808896;
---text-on-brand:      #FFFFFF;
+--text-primary: #f5f6f7;
+--text-secondary: #a7adb8;
+--text-muted: #808896;
+--text-on-brand: #ffffff;
 
 /* Brand interaction tokens */
---accent:             var(--penn-crimson);
---accent-hover:       #B82020;  /* UI-derived tint, not a new master brand color */
---accent-active:      #750000;  /* UI-derived shade */
---accent-contrast:    #FFFFFF;
---brand-nav:          var(--penn-navy);
---brand-neutral:      var(--penn-silver);
---focus-ring:         #E05252;  /* lighter crimson for visibility on dark surfaces */
+--accent: var(--penn-crimson);
+--accent-hover: #b82020; /* UI-derived tint, not a new master brand color */
+--accent-active: #750000; /* UI-derived shade */
+--accent-contrast: #ffffff;
+--brand-nav: var(--penn-navy);
+--brand-neutral: var(--penn-silver);
+--focus-ring: #e05252; /* lighter crimson for visibility on dark surfaces */
 
 /* Semantic status colors remain separate from brand colors */
---status-good:        #34D399;
---status-warning:     #FBBF24;
---status-danger:      #EF4444;
---status-neutral:     #808896;
+--status-good: #34d399;
+--status-warning: #fbbf24;
+--status-danger: #ef4444;
+--status-neutral: #808896;
 
 /* Dark-background chart palette.
    Series 1–3 are Penn-derived; 4–6 extend the palette for clear differentiation. */
---chart-series-1:     #E05252;  /* Penn Crimson tint */
---chart-series-2:     #6688D4;  /* Penn Navy tint */
---chart-series-3:     #B8BCC0;  /* Penn Silver tint */
---chart-series-4:     #F3C969;
---chart-series-5:     #50C2B0;
---chart-series-6:     #B78AE6;
+--chart-series-1: #e05252; /* Penn Crimson tint */
+--chart-series-2: #6688d4; /* Penn Navy tint */
+--chart-series-3: #b8bcc0; /* Penn Silver tint */
+--chart-series-4: #f3c969;
+--chart-series-5: #50c2b0;
+--chart-series-6: #b78ae6;
 ```
 
 #### Brand application rules
@@ -1195,6 +1204,7 @@ The Nike uniform references in the style guide — Crimson (Nike 613), Scarlet (
 - Verify every final text/background and essential graphical-object pairing against WCAG AA. Official colors may be used as backgrounds with white text; lighter derived chart/focus colors are used where the original navy or crimson would be too dark against the dashboard surfaces.
 
 ### 12.3 Typography
+
 - Font: **Inter** (or system-ui stack as fallback: `-apple-system, "Segoe UI", Roboto, sans-serif`) — clean, tabular-friendly, free.
 - All numeric KPI values use `font-variant-numeric: tabular-nums` so columns of numbers align vertically — this matters a lot in leaderboards/tables.
 - Scale (px, with use-case):
@@ -1208,6 +1218,7 @@ The Nike uniform references in the style guide — Crimson (Nike 613), Scarlet (
 - Line-height: 1.4 for body/paragraph text, 1.2 for headings and single-line numeric displays.
 
 ### 12.4 Spacing & layout
+
 - Base unit **4px**; scale: 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 — every margin/padding/gap value in the app should be one of these, no arbitrary values.
 - Card padding: 20px. Gap between cards in a grid: 16–20px. Gap between major page sections: 32px.
 - Sidebar: 240px wide expanded, 64px collapsed (icon-only, per §5). Top bar: 64px tall, fixed.
@@ -1216,6 +1227,7 @@ The Nike uniform references in the style guide — Crimson (Nike 613), Scarlet (
 - Responsive breakpoints: **<768px** — sidebar becomes an off-canvas drawer, all grids collapse to a single column. **768–1199px** — 2-column card grids. **≥1200px** — full multi-column layout as designed.
 
 ### 12.5 Components
+
 - **Buttons:** 36px height, 8px radius, 14px medium-weight text. Primary = `--accent` background; Secondary = outline only (`--border-strong`, transparent background); Ghost = text-only, no border, background appears only on hover (`--bg-surface-2`).
 - **Inputs/selects/date pickers:** `--bg-surface-2` background, `--border-subtle` border, `--accent` border on focus with a visible 2px focus ring (accessibility — see 12.6).
 - **Chips/tags** (KPI category, position filter, flag labels): 12px text, background = the relevant semantic/category color at ~15% opacity, text/border at full opacity of that same color — keeps them readable without being visually loud.
@@ -1227,17 +1239,20 @@ The Nike uniform references in the style guide — Crimson (Nike 613), Scarlet (
 - **Loading states:** skeleton placeholders shaped like the eventual content (card outlines, table row bars), not spinners — spinners read as "broken" on a data-dense dashboard that's supposed to feel instant.
 
 ### 12.6 Accessibility
+
 - WCAG AA contrast minimum everywhere (12.2).
 - Visible focus ring (2px, `--accent`, offset 2px) on every interactive element — required for keyboard navigation, not just a nice-to-have.
 - Minimum interactive target size 40×40px for any icon-only button.
 - Respect `prefers-reduced-motion`: disable non-essential transitions (condense/expand can keep a fast fade instead of a slide) when set.
 
 ### 12.7 Motion
+
 - 120–150ms ease for hover/small state changes (button hover, row highlight).
 - 200–250ms ease-out for panel/widget expand-collapse and page-section transitions.
 - No motion on data updates themselves (a refreshed number should just update, not animate/count up) — keeps the dashboard feeling immediate rather than gimmicky.
 
 ### 12.8 Iconography
+
 - **Lucide** icon set (already used elsewhere in this toolchain, MIT-licensed, consistent stroke style).
 - 16px inline with text, 20px standalone in buttons/nav, stroke-width 1.75–2.
 - Icons always paired with a text label in navigation (never icon-only nav items, for both accessibility and because a new user won't know what an unlabeled icon means).

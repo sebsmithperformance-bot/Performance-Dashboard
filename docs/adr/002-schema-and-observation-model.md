@@ -18,7 +18,7 @@ that must reconcile into one queryable model without losing source traceability.
   never a session key. Sessions carry `source` + `source_external_id` for re-import
   matching.
 - **Source identity is a mapping table.** `athlete_source_identity` binds (source,
-  external_id | normalized raw_name) → athlete. Fuzzy matches only ever *suggest*;
+  external_id | normalized raw_name) → athlete. Fuzzy matches only ever _suggest_;
   creation of athletes is always an explicit staff action.
 - **KPI registry is configuration data**, not code: canonical unit (immutable), display
   unit (editable), interpretation, aggregation method, valid range, visibility flags.

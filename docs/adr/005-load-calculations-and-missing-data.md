@@ -18,7 +18,7 @@ Over the athlete's selected load KPI (default: Player Load / PlayerData "Session
 - `acwr` = acute ÷ chronic, **only when** chronic > 0 **and** the window is complete
   enough to interpret.
 - `monotony_7d` = mean daily load ÷ stdev of daily load over the 7-day window (population
-  stdev, N=7 daily values incl. zero-load *confirmed* rest days), **only when** stdev > 0.
+  stdev, N=7 daily values incl. zero-load _confirmed_ rest days), **only when** stdev > 0.
 - `strain_7d` = 7-day total load × monotony.
 - `speed_percent_of_best` = session top speed ÷ athlete's highest valid top speed within
   the configured comparison window. A speed flag needs ≥ 3 prior valid observations;
@@ -30,7 +30,7 @@ Over the athlete's selected load KPI (default: Player Load / PlayerData "Session
 
 Three distinct day states: **observed load** (value), **confirmed no-session/rest**
 (counts as 0 in windows), **missing data** (no import covering an expected date). Missing
-days make a window *incomplete*: the calculation is omitted and a data-completeness
+days make a window _incomplete_: the calculation is omitted and a data-completeness
 warning shown. Missing never coerces to zero. No calculation may emit NaN, Infinity, or a
 divide-by-zero artifact — unrepresentable results return an explicit
 "not-computable + reason" value.
