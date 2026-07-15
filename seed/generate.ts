@@ -63,6 +63,11 @@ await mkdir(path.join(outDir, 'sources'), { recursive: true })
 await mkdir(path.join(outDir, 'fixtures'), { recursive: true })
 
 await writeFile(path.join(outDir, 'canonical.json'), JSON.stringify(dataset, null, 1))
+
+// Stable copy the local dev server exposes to the shell (vite dev middleware).
+const currentDir = path.join('seed', 'output', 'current')
+await mkdir(currentDir, { recursive: true })
+await writeFile(path.join(currentDir, 'canonical.json'), JSON.stringify(dataset))
 await writeFile(path.join(outDir, 'quality-report.json'), JSON.stringify(report, null, 2))
 await writeFile(path.join(outDir, 'quality-report.txt'), formatQualityReport(report))
 
