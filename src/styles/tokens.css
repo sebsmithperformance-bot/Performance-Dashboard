@@ -1,0 +1,161 @@
+/**
+ * Design tokens — the single source for every color, radius, and motion value
+ * (spec §12). Components never hardcode brand or surface values; a rebrand is
+ * a token/asset swap. Dark-mode-first: these are the shipped v1 values, but
+ * nothing may reference raw #000/#fff outside this file.
+ */
+
+:root {
+  /* Penn Athletics master brand colors (§12.2 — locked for v1) */
+  --penn-crimson: #980000;
+  --penn-navy: #011f5b;
+  --penn-silver: #8a8d8f;
+  --penn-white: #ffffff;
+
+  /* Dark application surfaces */
+  --bg-base: #0b0d10;
+  --bg-surface: #14171c;
+  --bg-surface-2: #1b1f26;
+  --border-subtle: #262b33;
+  --border-strong: #3b424d;
+
+  /* Text */
+  --text-primary: #f5f6f7;
+  --text-secondary: #a7adb8;
+  --text-muted: #808896;
+  --text-on-brand: #ffffff;
+
+  /* Brand interaction tokens */
+  --accent: var(--penn-crimson);
+  --accent-hover: #b82020; /* UI-derived tint, not a new master brand color */
+  --accent-active: #750000; /* UI-derived shade */
+  --accent-contrast: #ffffff;
+  --brand-nav: var(--penn-navy);
+  --brand-neutral: var(--penn-silver);
+  --focus-ring: #e05252; /* lighter crimson for visibility on dark surfaces */
+
+  /* Semantic status colors — never conflated with brand red (§12.2 rules) */
+  --status-good: #34d399;
+  --status-warning: #fbbf24;
+  --status-danger: #ef4444;
+  --status-neutral: #808896;
+
+  /* Dark-background chart palette; per-KPI assignment lives in one registry */
+  --chart-series-1: #e05252; /* Penn Crimson tint */
+  --chart-series-2: #6688d4; /* Penn Navy tint */
+  --chart-series-3: #b8bcc0; /* Penn Silver tint */
+  --chart-series-4: #f3c969;
+  --chart-series-5: #50c2b0;
+  --chart-series-6: #b78ae6;
+
+  /* Shadows: floating elements only — flat cards get borders (§12.4) */
+  --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Tailwind v4 theme mapping — utility names read naturally in components:
+   bg-base, bg-surface, bg-surface-2, border-subtle, border-strong,
+   text-primary/secondary/muted, bg-accent, text-good|warning|danger, etc. */
+@theme inline {
+  --color-*: initial;
+
+  --color-base: var(--bg-base);
+  --color-surface: var(--bg-surface);
+  --color-surface-2: var(--bg-surface-2);
+  --color-subtle: var(--border-subtle);
+  --color-strong: var(--border-strong);
+
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-on-brand: var(--text-on-brand);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-active: var(--accent-active);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-brand-nav: var(--brand-nav);
+  --color-brand-neutral: var(--brand-neutral);
+  --color-focus: var(--focus-ring);
+
+  --color-good: var(--status-good);
+  --color-warning: var(--status-warning);
+  --color-danger: var(--status-danger);
+  --color-neutral: var(--status-neutral);
+
+  --color-chart-1: var(--chart-series-1);
+  --color-chart-2: var(--chart-series-2);
+  --color-chart-3: var(--chart-series-3);
+  --color-chart-4: var(--chart-series-4);
+  --color-chart-5: var(--chart-series-5);
+  --color-chart-6: var(--chart-series-6);
+
+  --color-penn-crimson: var(--penn-crimson);
+  --color-penn-navy: var(--penn-navy);
+  --color-penn-silver: var(--penn-silver);
+  --color-white: var(--penn-white);
+}
+
+@theme {
+  /* Typography (§12.3) */
+  --font-sans: 'Inter Variable', Inter, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Type scale — 14px body is the floor; nothing renders smaller than 12px labels */
+  --text-label: 0.75rem; /* 12 — tiny labels, table headers, chips */
+  --text-label--line-height: 1.4;
+  --text-body: 0.875rem; /* 14 — body, table cells, inputs (floor) */
+  --text-body--line-height: 1.4;
+  --text-subhead: 1rem; /* 16 — section sub-headers, card titles */
+  --text-subhead--line-height: 1.4;
+  --text-widget: 1.25rem; /* 20 — card/widget headers */
+  --text-widget--line-height: 1.2;
+  --text-title: 1.5rem; /* 24 — page titles */
+  --text-title--line-height: 1.2;
+  --text-kpi: 2.25rem; /* 36 — the big KPI number (32–40 band) */
+  --text-kpi--line-height: 1.2;
+
+  /* Radii (§12.4): cards 10px, buttons/inputs 8px, chips fully rounded */
+  --radius-card: 10px;
+  --radius-control: 8px;
+
+  /* Breakpoints (§12.4): <768 single column, 768–1199 two-col, ≥1200 full */
+  --breakpoint-xl: 1200px;
+
+  /* Motion (§12.7) */
+  --ease-fast: 135ms ease; /* hover/small state changes (120–150ms band) */
+  --ease-panel: 220ms ease-out; /* expand/collapse, section transitions */
+}
+
+/* ---------------------------------------------------------------------------
+   Base element styles
+--------------------------------------------------------------------------- */
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Every numeric KPI/table value aligns vertically (§12.3); apply via .tabular */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Visible focus ring on every interactive element (§12.6) */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Reduced motion: drop non-essential transitions (§12.6, §12.7) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

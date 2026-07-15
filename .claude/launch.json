@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fh-dashboard-dev",
+      "runtimeExecutable": "/Users/sebastiansmith/.local/node/bin/npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173,
+      "env": {
+        "PATH": "/Users/sebastiansmith/.local/node/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+      }
+    }
+  ]
+}
