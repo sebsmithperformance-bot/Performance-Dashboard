@@ -168,17 +168,19 @@ describe('0001 initial schema', () => {
   })
 
   it('maintains updated_at via trigger', async () => {
-    const [before] = await db.query<{ id: string; updated_at: string }>(
-      `insert into positions (name, sort_order) values ('Midfielder', 3)
-       returning id, updated_at`,
+    // Backdate the insert so the trigger's now() is strictly greater regardless
+    // of clock resolution; compare inside Postgres to keep microsecond precision.
+    const [before] = await db.query<{ id: string }>(
+      `insert into positions (name, sort_order, created_at, updated_at)
+       values ('Midfielder', 3, now() - interval '1 day', now() - interval '1 day')
+       returning id`,
     )
-    const [after] = await db.query<{ updated_at: string }>(
-      `update positions set sort_order = 4 where id = $1 returning updated_at`,
+    const [after] = await db.query<{ bumped: boolean }>(
+      `update positions set sort_order = 4 where id = $1
+       returning (updated_at > created_at) as bumped`,
       [before!.id],
     )
-    expect(new Date(after!.updated_at).getTime()).toBeGreaterThan(
-      new Date(before!.updated_at).getTime(),
-    )
+    expect(after!.bumped).toBe(true)
   })
 
   it('refuses a previously applied migration whose content changed', async () => {
