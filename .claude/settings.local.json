@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(git --version)",
+      "Bash(git config *)",
+      "Bash(echo \"git user: $\\(git config --global user.name\\) <$\\(git config --global user.email\\)>\")",
+      "Bash(aws --version)",
+      "Bash(aws sts *)",
+      "Bash(docker --version)",
+      "Bash(psql --version)",
+      "Bash(sw_vers)",
+      "Bash(curl -sI --max-time 10 https://nodejs.org/dist/)",
+      "Bash(curl -s --max-time 15 https://nodejs.org/dist/latest-v22.x/SHASUMS256.txt)"
+    ]
+  }
+}
