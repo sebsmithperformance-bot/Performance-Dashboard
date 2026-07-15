@@ -1,0 +1,13 @@
+# Architecture-sensitive paths (spec §15) — changes here require architect-level review
+# (docs/orchestration.md). When this repo gains a GitHub remote, assign the owning
+# reviewer handle(s); until then this file is the canonical list of protected paths.
+
+/db/migrations/                 @architect-review
+/db/roles/                      @architect-review
+/amplify/                       @architect-review
+/src/lib/calculations/          @architect-review
+/src/lib/units/                 @architect-review
+/src/lib/import/                @architect-review
+/src/lib/env-guards/            @architect-review
+/docs/adr/                      @architect-review
+/.github/                       @architect-review
