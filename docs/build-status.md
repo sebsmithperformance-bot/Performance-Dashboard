@@ -3,8 +3,9 @@
 Live tracker maintained by the orchestrator (docs/orchestration.md). Spec references
 (§) point at `docs/spec/build-prompt.md`.
 
-**Current phase:** Build Order step 0–2 groundwork (repo, process, schema, calculations,
-synthetic data). Backend spike (§2.1) blocked on AWS account access.
+**Current phase:** Build Order step 4 complete locally (import pipeline + Import Data
+page on the local PGlite backend). Backend spike (§2.1) blocked on AWS account access
+and remains the gate for coach-facing analytics pages.
 
 ## Blockers / required inputs (owner: Sebastian)
 
@@ -21,23 +22,26 @@ synthetic data). Backend spike (§2.1) blocked on AWS account access.
 
 ## Build order progress (§10)
 
-| Step | Scope                                                       | Status                                       |
-| ---- | ----------------------------------------------------------- | -------------------------------------------- |
-| 0    | Repo, strict TS, lint/format/test, migrations tooling, ADRs | **Done** (this session)                      |
-| 0    | §2.1 backend verification spike                             | **Blocked** on input 1                       |
-| 1    | Dev AWS infra + schema applied                              | Not started (schema SQL authored, unapplied) |
-| 2    | Synthetic generator + calculation layer                     | **Done** (this session, quality gate green)  |
-| 3    | Design tokens + app shell                                   | **Done** (tokens + shell, session 2)         |
-| 4    | Import foundation                                           | Not started (PlayerData format documented)   |
-| 5    | Coach-facing modules                                        | Not started — gated on spike                 |
-| 6    | Administration                                              | Not started                                  |
-| 7    | Hardening + launch                                          | Not started                                  |
+| Step | Scope                                                       | Status                                                  |
+| ---- | ----------------------------------------------------------- | ------------------------------------------------------- |
+| 0    | Repo, strict TS, lint/format/test, migrations tooling, ADRs | **Done** (this session)                                 |
+| 0    | §2.1 backend verification spike                             | **Blocked** on input 1                                  |
+| 1    | Dev AWS infra + schema applied                              | Not started (schema SQL authored, unapplied)            |
+| 2    | Synthetic generator + calculation layer                     | **Done** (this session, quality gate green)             |
+| 3    | Design tokens + app shell                                   | **Done** (tokens + shell, session 2)                    |
+| 4    | Import foundation                                           | **Done locally** (session 3; AWS re-homing after spike) |
+| 5    | Coach-facing modules                                        | Not started — gated on spike                            |
+| 6    | Administration                                              | Not started                                             |
+| 7    | Hardening + launch                                          | Not started                                             |
 
 ## Functional checklist (§13) — condensed
 
-- Platform/data: repo+tooling done; auth, import pipeline, seasons — not started
+- Platform/data: repo+tooling done. Import pipeline done locally: upload/preview/resolve/
+  acknowledge/atomic-commit ✓, hash dedupe ✓, identities remembered ✓, fuzzy-never-creates ✓,
+  Import History with per-row before/after ✓. Cognito auth + S3 originals — gated on spike.
 - Overview / Monitoring / Data Trends / Performance modules — not started (gated on spike)
-- Administration — not started
+- Administration — Import Data page done (local backend); KPI Settings / Data Management
+  not started
 
 ## Non-functional checklist (§14) — items already locked in
 
@@ -95,3 +99,29 @@ synthetic data). Backend spike (§2.1) blocked on AWS account access.
 - Next: Build Order step 4 (import foundation) can start against the synthetic fixtures
   and documented PlayerData format; the §2.1 spike stays the gate for backend-wired
   pages and needs the AWS account decision.
+
+### 2026-07-16 — Session 3 (Build Order step 4: import pipeline)
+
+- Shipped the source-agnostic ingestion engine in `src/lib/import/` (CODEOWNERS path):
+  adapter contract → canonical staging → athlete/session resolution ladders → row
+  classification → filterable preview → single-transaction commit with in-tx
+  re-validation → import history. Vendor headers live only inside the three PROVISIONAL
+  adapters; a future API connector is just another adapter.
+- ADR-006 unit registry (`src/lib/units/`) with exact factors + round-trip tests; RFC-4180
+  parser; WebCrypto SHA-256; migration core split runtime-agnostic so the browser applies
+  the same versioned SQL.
+- Import Data page is a real working flow on the local PGlite (IndexedDB) backend behind
+  the `ImportBackend` seam, with generated sample files (§13: demo season enters through
+  the real pipeline) and a local-only reset utility. PGlite WASM is lazy and hard-gated to
+  APP_ENV=local.
+- Tests 45 → 79 (csv/hash 7, units 6, pipeline 13, commit-integration 6 incl. forced
+  rollback to zero rows + unique-constraint final guard + before/after audit, UI walk 1).
+  All green; guarded production build green.
+- Browser E2E: TeamBuildr fixture committed (59 rows), Perch fixture landed on the SAME
+  lift session (55 rows, no new-session badge), identical re-upload → duplicate banner +
+  all-skip + blocked commit, history mirrors the DB, console clean.
+- ADR-003 updated with the local proof + two local-only adaptations (local:// object key;
+  imports row created at commit). Transaction semantics unchanged.
+- Deferred to AWS phase: S3 original storage + download, uploaded/previewed staging
+  statuses, §4.3 formula-escaping on audit export, persistent header-Ignore (needs a
+  schema decision), rollback UI (§4.2 says optional; audit suffices).

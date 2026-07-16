@@ -28,3 +28,23 @@ CSV import is the highest-risk workflow (§4). The browser previews; the server 
 The Data API `BeginTransaction`/`CommitTransaction` (or the chosen resolver path) must
 handle the full commit in one transaction — this is spike checklist item 5 and the main
 thing that could force explicit resolvers over the generated integration.
+
+## Local proof (2026-07-16, architect-role update per docs/orchestration.md)
+
+The semantics above are now implemented in `src/lib/import/` and proven on PGlite (real
+PostgreSQL): atomic commit with in-transaction re-validation, forced-failure rollback to
+zero rows across every table, before/after audit on replacements, SHA-256 duplicate-file
+guard with explicit reprocess, identity/mapping persistence, and cross-source session
+sharing. Transaction _semantics are unchanged_ from this ADR; two local-only adaptations
+apply until the AWS backend exists:
+
+- `s3_object_key` stores a `local://imports/<sha256>/<filename>` placeholder (no S3 yet);
+  the schema is untouched.
+- The `imports` row is created inside the commit transaction with status `committed`; the
+  `uploaded`/`previewed` staging statuses activate with the AWS upload flow, which is also
+  where original-file storage and the §4.3 formula-escaping on audit _export_ land.
+- Import counts are per source row, matching the `import_rows` audit exactly (a PlayerData
+  row carrying 11 KPIs is one inserted row); observation-level counts remain visible in
+  the preview.
+
+Status stays Proposed only because the Aurora Data API transaction mechanism (spike item 5) is unproven; the pipeline behind the `ImportBackend` seam is final-shape.
