@@ -71,6 +71,8 @@ export interface KpiConfig {
 export interface AdapterInput {
   text: string
   filename: string
+  /** User-supplied session date for files that carry no date column and whose filename has none. */
+  fallbackDate?: string
   /** normalized raw_header/exercise → kpi_key (registry rows + this import's additions) */
   mappings: ReadonlyMap<string, string>
   /** normalized headers/exercises explicitly ignored */

@@ -286,7 +286,7 @@ export function buildPreview(
   for (const r of rows) obs[r.action] += 1
 
   const rowActions = new Map<number, RowAction>()
-  const rank: Record<RowAction, number> = { error: 3, insert: 2, update: 2, skip: 1 }
+  const rank: Record<RowAction, number> = { error: 4, insert: 3, update: 2, skip: 1 }
   for (const r of rows) {
     const prev = rowActions.get(r.sourceRowNumber)
     if (!prev || rank[r.action] > rank[prev]) rowActions.set(r.sourceRowNumber, r.action)

@@ -30,6 +30,8 @@ export interface PreviewRequest {
   source: Source
   text: string
   filename: string
+  /** User-supplied session date when neither file nor filename carries one. */
+  fallbackDate?: string
   athleteDecisions: ReadonlyMap<string, AthleteDecision>
   sessionDecisions: ReadonlyMap<string, SessionDecision>
   /** normalized header/exercise → kpi_key added by the user this import */
@@ -59,6 +61,7 @@ export async function runPreview(db: SqlExecutor, request: PreviewRequest): Prom
     mappings,
     ignoredHeaders: ignored,
     kpis: context.kpis,
+    ...(request.fallbackDate !== undefined ? { fallbackDate: request.fallbackDate } : {}),
   })
 
   const athleteItems = resolveAthletes(stage.staged, context, request.athleteDecisions)

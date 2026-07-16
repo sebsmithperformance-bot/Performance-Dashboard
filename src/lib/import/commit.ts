@@ -78,10 +78,21 @@ export async function commitImport(db: SqlExecutor, plan: CommitPlanInput): Prom
     }
 
     // ---- imports record ----
-    const committableRows = plan.rows.filter((r) => r.commit !== undefined)
-    const inserted = committableRows.filter((r) => r.action === 'insert').length
-    const updated = committableRows.filter((r) => r.action === 'update').length
-    const skipped = plan.rows.filter((r) => r.action === 'skip').length
+    // Counts are per SOURCE ROW (matching the import_rows audit), not per
+    // observation: a PlayerData row carrying 11 KPIs is one inserted row.
+    const rowActionRank = { insert: 3, update: 2, skip: 1 } as const
+    const actionBySourceRow = new Map<number, 'insert' | 'update' | 'skip'>()
+    for (const row of plan.rows) {
+      const action = row.action === 'error' ? 'skip' : row.action // errors never reach commit
+      const current = actionBySourceRow.get(row.sourceRowNumber)
+      if (!current || rowActionRank[action] > rowActionRank[current]) {
+        actionBySourceRow.set(row.sourceRowNumber, action)
+      }
+    }
+    const rowActions = [...actionBySourceRow.values()]
+    const inserted = rowActions.filter((a) => a === 'insert').length
+    const updated = rowActions.filter((a) => a === 'update').length
+    const skipped = rowActions.filter((a) => a === 'skip').length
     const warnings = plan.rows.filter((r) => r.hasWarning).length
 
     const [importRow] = await db.query<{ id: string }>(

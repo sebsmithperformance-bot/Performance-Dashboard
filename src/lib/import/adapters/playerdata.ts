@@ -63,7 +63,7 @@ export const playerDataAdapter: SourceAdapter = {
     const headerByNorm = new Map(parsed.headers.map((h) => [normalizeKey(h), h]))
     const hasAthlete = headerByNorm.has('athlete')
     const hasDate = headerByNorm.has('date')
-    const filenameDate = dateFromFilename(input.filename)
+    const filenameDate = dateFromFilename(input.filename) ?? input.fallbackDate ?? null
 
     if (!hasAthlete) {
       return {
