@@ -35,6 +35,12 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), devSyntheticData()],
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts', 'db/**/*.test.ts', 'seed/**/*.test.ts'],
+    include: [
+      'src/**/*.test.ts',
+      'src/**/*.test.tsx',
+      'db/**/*.test.ts',
+      'seed/**/*.test.ts',
+      'tests/**/*.test.ts',
+    ],
   },
 })

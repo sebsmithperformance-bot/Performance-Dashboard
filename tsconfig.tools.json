@@ -23,5 +23,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["db", "seed", "scripts"]
+  "include": ["db", "seed", "scripts", "tests"]
 }
