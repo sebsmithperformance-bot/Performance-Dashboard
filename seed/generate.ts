@@ -66,7 +66,8 @@ await writeFile(path.join(outDir, 'canonical.json'), JSON.stringify(dataset, nul
 
 // Stable copy the local dev server exposes to the shell (vite dev middleware).
 const currentDir = path.join('seed', 'output', 'current')
-await mkdir(currentDir, { recursive: true })
+await rm(currentDir, { recursive: true, force: true })
+await mkdir(path.join(currentDir, 'fixtures'), { recursive: true })
 await writeFile(path.join(currentDir, 'canonical.json'), JSON.stringify(dataset))
 await writeFile(path.join(outDir, 'quality-report.json'), JSON.stringify(report, null, 2))
 await writeFile(path.join(outDir, 'quality-report.txt'), formatQualityReport(report))
@@ -97,6 +98,13 @@ const fixtures = [
 ]
 for (const file of fixtures) {
   await writeFile(path.join(outDir, 'fixtures', file.filename), file.content)
+  // also into current/ so the local Import page can offer them as samples
+  await writeFile(path.join(currentDir, 'fixtures', file.filename), file.content)
+}
+// a filename-dated single-session report exercises the date-from-filename path
+const sampleSession = exportPlayerDataSessions(dataset)[0]
+if (sampleSession) {
+  await writeFile(path.join(currentDir, 'fixtures', sampleSession.filename), sampleSession.content)
 }
 
 console.log(formatQualityReport(report))

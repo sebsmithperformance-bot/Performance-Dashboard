@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useAuth } from '../lib/auth/AuthContext.tsx'
 import { SignInScreen } from '../lib/auth/SignInScreen.tsx'
 import { AppShell } from './AppShell.tsx'
+import { ImportPage } from './import/ImportPage.tsx'
 import { PRIMARY_SECTIONS } from './nav.ts'
 import {
   AdminPage,
@@ -157,15 +158,7 @@ export function AppRoutes() {
             />
           }
         />
-        <Route
-          path="/admin/import"
-          element={
-            <AdminPage
-              title="Import Data"
-              description="Upload → parse → resolve athletes/sessions → map KPIs → validate → preview → atomic commit, with full import history (§4). Built next, against the synthetic fixtures."
-            />
-          }
-        />
+        <Route path="/admin/import" element={<ImportPage />} />
         <Route
           path="/admin/data-management"
           element={
