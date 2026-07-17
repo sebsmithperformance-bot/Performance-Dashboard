@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import { useAuth } from '../lib/auth/AuthContext.tsx'
 import { SignInScreen } from '../lib/auth/SignInScreen.tsx'
 import { AppShell } from './AppShell.tsx'
+import { DataManagementPage } from './admin/DataManagementPage.tsx'
+import { KpiSettingsPage } from './admin/KpiSettingsPage.tsx'
 import { ImportPage } from './import/ImportPage.tsx'
 import { MonitoringAvailabilityPage } from './monitoring/AvailabilityPage.tsx'
 import { ReadinessPage } from './monitoring/ReadinessPage.tsx'
@@ -16,7 +18,7 @@ import { TrendExplorer } from './trends/TrendExplorer.tsx'
 import { PRIMARY_SECTIONS } from './nav.ts'
 import { AthletesPage } from './overview/AthletesPage.tsx'
 import { TeamDashboardPage } from './overview/TeamDashboardPage.tsx'
-import { AdminPage, GpsPage, NotFoundPage, SectionPage } from './pages.tsx'
+import { GpsPage, NotFoundPage, SectionPage } from './pages.tsx'
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { status } = useAuth()
@@ -84,25 +86,9 @@ export function AppRoutes() {
           <Route path="athlete-profile" element={<AthleteProfilePage />} />
         </Route>
 
-        <Route
-          path="/admin/kpi-settings"
-          element={
-            <AdminPage
-              title="KPI Settings"
-              description="Manage the KPI registry: display units, interpretation, aggregation, valid ranges, visibility, source mappings, and positions (§5.5)."
-            />
-          }
-        />
+        <Route path="/admin/kpi-settings" element={<KpiSettingsPage />} />
         <Route path="/admin/import" element={<ImportPage />} />
-        <Route
-          path="/admin/data-management"
-          element={
-            <AdminPage
-              title="Data Management"
-              description="Structural layout control: reorder sections/sub-tabs, show/hide optional widgets — persisted server-side (§5.5)."
-            />
-          }
-        />
+        <Route path="/admin/data-management" element={<DataManagementPage />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Route>

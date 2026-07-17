@@ -1,5 +1,7 @@
 import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
 import { NavLink } from 'react-router'
+import { orderByConfig } from '../lib/settings/defaults.ts'
+import { useSettings } from '../lib/settings/SettingsContext.tsx'
 import { ADMIN_ITEMS, PRIMARY_SECTIONS } from './nav.ts'
 import type { LucideIcon } from 'lucide-react'
 
@@ -35,6 +37,9 @@ function NavItem({
 }
 
 function SidebarBody({ collapsed }: { collapsed: boolean }) {
+  // §5.5 layout config: coach-chosen section order (Data Management)
+  const { settings } = useSettings()
+  const sections = orderByConfig(PRIMARY_SECTIONS, (s) => s.base, settings.layout.sectionOrder)
   return (
     <>
       {/* Penn Navy brand block (§12.2); approved logo asset pending (blocker #5) */}
@@ -44,7 +49,7 @@ function SidebarBody({ collapsed }: { collapsed: boolean }) {
         </span>
       </div>
       <nav aria-label="Primary" className="flex flex-col gap-1 p-3">
-        {PRIMARY_SECTIONS.map((section) => (
+        {sections.map((section) => (
           <NavItem
             key={section.base}
             to={section.base}
