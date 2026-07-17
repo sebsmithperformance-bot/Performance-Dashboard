@@ -125,3 +125,34 @@ and remains the gate for coach-facing analytics pages.
 - Deferred to AWS phase: S3 original storage + download, uploaded/previewed staging
   statuses, §4.3 formula-escaping on audit export, persistent header-Ignore (needs a
   schema decision), rollback UI (§4.2 says optional; audit suffices).
+
+### 2026-07-17 — Session 4 (Step 5 frontend-first, milestones 1–2: seam + Overview)
+
+- **Owner decision recorded:** the §2.1 "spike before full UI" gate is consciously waived
+  in favor of a frontend-first Step 5 behind a data seam; the spike remains the gate for
+  anything backend-wired.
+- Dashboard data seam shipped: `DashboardDataProvider` + local provider transforming the
+  generated season into typed view models (latent traits never mapped), selected-date
+  context in the topbar, SavedViewsStore (localStorage locally; saved_views on AWS).
+  Old dev-data context deleted.
+- Pure selector layer reusing the tested calc functions: availability, last-session GPS
+  (prior-comparable delta, device-missing count), load health (ACWR bands via calc layer,
+  observation language, incomplete/insufficient first-class), S&C % change (4 bases,
+  zero-baseline refusal, stated ±2% unchanged band, interpretation-aware), speed flags
+  (90% threshold + ≥3 baseline + exposure-eligible sessions; insufficient separated),
+  single-session athletes table (same-date sessions separate; quality states).
+- Shared component system: KPIValue/formatting core (registry decimals, units,
+  missing ≠ zero, NaN/∞ impossible), TrendIndicator, CompletenessBadge,
+  AvailabilityBadge, AlertCard, ChartCard (built-in accessible table toggle), sticky
+  sortable DataTable, Drawer, PageHeader, FilterBar + selector controls, SaveViewControl,
+  ErrorState, SVG Sparkline/DistributionBar, KPI→chart-token registry.
+- Overview complete: five Team Dashboard tiles (reveal-in-place lists, switchable
+  last-session metric, transparent thresholds everywhere) + Athletes page (session
+  picker, position filter, metric show/hide, drawer, saved views, mobile cards).
+- Tests 79 → 102 (17 selector/format incl. generated-season smoke; 6 jsdom page tests).
+  Typecheck, lint, guarded build green. Browser-reviewed at 1280/768/375 — findings in
+  docs/visual-review.md; console clean.
+- Remaining Step-5 milestones: Monitoring (Availability, Readiness), Monitoring GPS
+  (Session Overview/Compare/Trends+Recommendations — needs the line-chart component),
+  Data Trends shared graph+table, Performance (tiles/leaderboards/profile radar),
+  responsive/a11y pass, docs.
