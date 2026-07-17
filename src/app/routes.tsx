@@ -5,14 +5,9 @@ import { SignInScreen } from '../lib/auth/SignInScreen.tsx'
 import { AppShell } from './AppShell.tsx'
 import { ImportPage } from './import/ImportPage.tsx'
 import { PRIMARY_SECTIONS } from './nav.ts'
-import {
-  AdminPage,
-  GpsPage,
-  NotFoundPage,
-  OverviewTeamDashboard,
-  PlaceholderPane,
-  SectionPage,
-} from './pages.tsx'
+import { AthletesPage } from './overview/AthletesPage.tsx'
+import { TeamDashboardPage } from './overview/TeamDashboardPage.tsx'
+import { AdminPage, GpsPage, NotFoundPage, PlaceholderPane, SectionPage } from './pages.tsx'
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { status } = useAuth()
@@ -36,16 +31,8 @@ export function AppRoutes() {
         <Route index element={<Navigate to="/overview" replace />} />
 
         <Route path="/overview" element={<SectionPage section={overview!} />}>
-          <Route index element={<OverviewTeamDashboard />} />
-          <Route
-            path="athletes"
-            element={
-              <PlaceholderPane
-                title="Athletes — single-day overview"
-                description="Pick a date and see every athlete's key metrics for that day (§5.1)."
-              />
-            }
-          />
+          <Route index element={<TeamDashboardPage />} />
+          <Route path="athletes" element={<AthletesPage />} />
         </Route>
 
         <Route path="/monitoring" element={<SectionPage section={monitoring!} />}>

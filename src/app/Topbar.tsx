@@ -1,20 +1,13 @@
 import { CalendarDays, LogOut, Menu, Upload, Users } from 'lucide-react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '../lib/auth/AuthContext.tsx'
-import { useDevData } from '../lib/data/dev-dataset.tsx'
+import { useDashboardData } from '../lib/dashboard/DashboardDataContext.tsx'
+import { formatDayLabel as formatDate } from '../lib/dashboard/format.ts'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 
 const APP_ENV: string = import.meta.env.VITE_APP_ENV ?? 'local'
-
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(`${iso}T00:00:00Z`))
-}
 
 /**
  * Top bar (§5): athlete-count badge, session/date context + picker, Import
@@ -23,9 +16,11 @@ function formatDate(iso: string): string {
  */
 export function Topbar({ onOpenDrawer }: { onOpenDrawer: () => void }) {
   const { identity, signOut } = useAuth()
-  const { status, athletes, seasonLabel, sessionDates, selectedDate, setSelectedDate } =
-    useDevData()
+  const { status, dataset, selectedDate, setSelectedDate } = useDashboardData()
   const navigate = useNavigate()
+  const athletes = dataset?.athletes ?? []
+  const seasonLabel = dataset?.seasonLabel ?? null
+  const sessionDates = useMemo(() => [...(dataset?.sessionsByDate.keys() ?? [])], [dataset])
 
   return (
     <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-3 border-b border-subtle bg-base/95 px-4 backdrop-blur md:px-6">
