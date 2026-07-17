@@ -3,6 +3,7 @@
  * the app flows through here: registry decimals, unit text, missing ≠ zero,
  * and a hard guard so NaN/Infinity/undefined can never reach the DOM.
  */
+import { canConvert, convert, type Unit } from '../units/index.ts'
 import type { DashKpi } from './types.ts'
 
 export const MISSING_TEXT = '—'
@@ -18,16 +19,20 @@ export interface FormattedMetric {
   aria: string
 }
 
-/** Unit → human label (display units mirror canonical for v1, ADR-006). */
+/** Unit → human label (ADR-006; includes coach-selectable display units). */
 const UNIT_LABEL: Record<string, string> = {
   yd: 'yd',
+  m: 'm',
   mph: 'mph',
+  km_h: 'km/h',
   lb: 'lb',
+  kg: 'kg',
   AU: 'AU',
   W: 'W',
   count: '',
   min: 'min',
   yd_per_min: 'yd/min',
+  m_per_min: 'm/min',
   scale_1_10: '/ 10',
 }
 
@@ -37,13 +42,21 @@ export function unitLabel(unit: string): string {
 
 export function formatMetricValue(
   value: number | null | undefined,
-  kpi: Pick<DashKpi, 'decimalPlaces' | 'unit'>,
+  kpi: Pick<DashKpi, 'decimalPlaces' | 'unit'> & { canonicalUnit?: string },
 ): FormattedMetric {
   if (value === null || value === undefined || !Number.isFinite(value)) {
     // NaN/Infinity are treated as missing and never rendered (§6.5)
     return { text: MISSING_TEXT, unit: null, missing: true, aria: 'no data' }
   }
-  const text = value.toLocaleString('en-US', {
+  // canonical → display conversion is the single outbound unit-math site
+  // (ADR-006); stored values are never rewritten (§6.3)
+  const displayValue =
+    kpi.canonicalUnit !== undefined &&
+    kpi.canonicalUnit !== kpi.unit &&
+    canConvert(kpi.canonicalUnit as Unit, kpi.unit as Unit)
+      ? convert(value, kpi.canonicalUnit as Unit, kpi.unit as Unit)
+      : value
+  const text = displayValue.toLocaleString('en-US', {
     minimumFractionDigits: kpi.decimalPlaces,
     maximumFractionDigits: kpi.decimalPlaces,
   })

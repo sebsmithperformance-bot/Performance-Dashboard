@@ -4,6 +4,7 @@ import { AlertCard } from '../../../components/ui/AlertCard.tsx'
 import { Panel } from '../../../components/ui/Panel.tsx'
 import { formatDayLabel } from '../../../lib/dashboard/format.ts'
 import { athleteFlagsView } from '../../../lib/dashboard/selectors/speed-flags.ts'
+import { useSettings } from '../../../lib/settings/SettingsContext.tsx'
 import type { DashboardDataset } from '../../../lib/dashboard/types.ts'
 
 /**
@@ -12,7 +13,11 @@ import type { DashboardDataset } from '../../../lib/dashboard/types.ts'
  * list of transparent rule results so more flag types can be added.
  */
 export function FlagsTile({ dataset, date }: { dataset: DashboardDataset; date: string }) {
-  const view = useMemo(() => athleteFlagsView(dataset, date), [dataset, date])
+  const { settings } = useSettings()
+  const view = useMemo(
+    () => athleteFlagsView(dataset, date, settings.thresholds),
+    [dataset, date, settings.thresholds],
+  )
   const [showInsufficient, setShowInsufficient] = useState(false)
 
   return (
@@ -58,7 +63,7 @@ export function FlagsTile({ dataset, date }: { dataset: DashboardDataset; date: 
             </p>
             <p>
               {flag.reason} — worth a coach review
-              {flag.exposureMin !== null && flag.exposureMin < 25
+              {flag.exposureMin !== null && flag.exposureMin < settings.thresholds.speedMinExposureMin
                 ? '; short exposure may under-expose maximal speed'
                 : ' of recent exposure'}
               .

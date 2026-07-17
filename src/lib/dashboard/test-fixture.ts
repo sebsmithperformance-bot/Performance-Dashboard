@@ -16,12 +16,11 @@ const KPI = (
   key,
   displayName: key,
   category,
+  canonicalUnit: unit,
   unit,
   decimalPlaces: decimals,
   interpretation: interp,
-  inLeaderboards: true,
-  inMonitoring: true,
-  inProfile: true,
+  visibility: { overview: true, monitoring: true, trends: true, leaderboards: true, profile: true },
 })
 
 export function dashboardFixture(): DashboardDataset {

@@ -5,6 +5,8 @@
  * never coerced (§6.7).
  */
 import { CHRONIC_WINDOW_DAYS, acwr, windowEndingAt } from '../../calculations/index.ts'
+import { DEFAULT_THRESHOLDS } from '../../settings/defaults.ts'
+import type { ThresholdSettings } from '../../settings/types.ts'
 import type { DashboardDataset, Position } from '../types.ts'
 import { dailyLoadByDate } from './daily-load.ts'
 
@@ -36,22 +38,30 @@ export interface LoadHealthViewModel {
   loadKpiLabel: string
 }
 
-export const LOAD_BANDS: LoadHealthViewModel['bands'] = [
-  { key: 'below', label: 'Below recent workload', definition: 'ACWR < 0.80' },
-  { key: 'within', label: 'Within recent workload range', definition: 'ACWR 0.80 – 1.30' },
-  { key: 'elevated', label: 'Elevated acute load', definition: 'ACWR > 1.30' },
-]
+/** Band definitions rendered verbatim — always derived from the live thresholds. */
+export function loadBands(
+  thresholds: ThresholdSettings = DEFAULT_THRESHOLDS,
+): LoadHealthViewModel['bands'] {
+  const lo = thresholds.acwrBelowBand.toFixed(2)
+  const hi = thresholds.acwrElevatedBand.toFixed(2)
+  return [
+    { key: 'below', label: 'Below recent workload', definition: `ACWR < ${lo}` },
+    { key: 'within', label: 'Within recent workload range', definition: `ACWR ${lo} – ${hi}` },
+    { key: 'elevated', label: 'Elevated acute load', definition: `ACWR > ${hi}` },
+  ]
+}
 
-function bandFor(value: number): LoadBand {
-  if (value < 0.8) return 'below'
-  if (value <= 1.3) return 'within'
+export function bandFor(value: number, thresholds: ThresholdSettings = DEFAULT_THRESHOLDS): LoadBand {
+  if (value < thresholds.acwrBelowBand) return 'below'
+  if (value <= thresholds.acwrElevatedBand) return 'within'
   return 'elevated'
 }
 
 export function loadHealthView(
   dataset: DashboardDataset,
   date: string,
-  position: Position | null,
+  position: string | null,
+  thresholds: ThresholdSettings = DEFAULT_THRESHOLDS,
 ): LoadHealthViewModel {
   const athletes = dataset.athletes.filter((a) => position === null || a.position === position)
   const rows: LoadHealthAthlete[] = []
@@ -61,7 +71,7 @@ export function loadHealthView(
     const byDate = dailyLoadByDate(dataset, athlete.id, date)
     const result = acwr(windowEndingAt(byDate, date, CHRONIC_WINDOW_DAYS))
     if (result.computable) {
-      const band = bandFor(result.value)
+      const band = bandFor(result.value, thresholds)
       counts[band] += 1
       rows.push({
         athleteId: athlete.id,
@@ -88,7 +98,7 @@ export function loadHealthView(
 
   return {
     date,
-    bands: LOAD_BANDS,
+    bands: loadBands(thresholds),
     athletes: rows,
     counts,
     validCount: counts.below + counts.within + counts.elevated,

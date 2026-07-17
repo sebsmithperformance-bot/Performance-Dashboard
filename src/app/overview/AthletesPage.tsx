@@ -17,7 +17,8 @@ import { Skeleton } from '../../components/ui/Skeleton.tsx'
 import { useDashboardData } from '../../lib/dashboard/DashboardDataContext.tsx'
 import { formatDayLabel } from '../../lib/dashboard/format.ts'
 import { athletesTableView, type AthleteRow } from '../../lib/dashboard/selectors/athletes-table.ts'
-import type { DashboardDataset, Position } from '../../lib/dashboard/types.ts'
+import { useSettings } from '../../lib/settings/SettingsContext.tsx'
+import type { DashboardDataset } from '../../lib/dashboard/types.ts'
 
 const QUALITY_TONE = {
   ok: 'good',
@@ -60,9 +61,13 @@ function AthletesTable({
   onDateChange: (date: string) => void
   savedViews: ReturnType<typeof useDashboardData>['savedViews']
 }) {
+  const { settings } = useSettings()
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [position, setPosition] = useState<Position | null>(null)
-  const [hiddenKpis, setHiddenKpis] = useState<Set<string>>(new Set())
+  const [position, setPosition] = useState<string | null>(null)
+  const [hiddenKpis, setHiddenKpis] = useState<Set<string>>(
+    // least-used columns start hidden; coach-tunable in Data Management (§5.5)
+    () => new Set(settings.display.athletesDefaultHiddenKpis),
+  )
   const [columnsOpen, setColumnsOpen] = useState(false)
   const [drawerAthlete, setDrawerAthlete] = useState<AthleteRow | null>(null)
 
@@ -179,7 +184,7 @@ function AthletesTable({
           store={savedViews}
           getCurrentConfig={() => ({ position, hiddenKpis: [...hiddenKpis] })}
           onApply={(config) => {
-            setPosition((config['position'] as Position | null) ?? null)
+            setPosition((config['position'] as string | null) ?? null)
             setHiddenKpis(new Set((config['hiddenKpis'] as string[] | undefined) ?? []))
           }}
         />

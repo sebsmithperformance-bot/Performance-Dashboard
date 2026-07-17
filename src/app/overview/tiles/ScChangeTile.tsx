@@ -12,7 +12,8 @@ import { Panel } from '../../../components/ui/Panel.tsx'
 import { formatPercentDelta } from '../../../lib/dashboard/format.ts'
 import { scChangeView, type ComparisonBasis } from '../../../lib/dashboard/selectors/sc-change.ts'
 import { addDays } from '../../../lib/calculations/index.ts'
-import type { DashboardDataset, Position } from '../../../lib/dashboard/types.ts'
+import { activePositionGroups, useSettings } from '../../../lib/settings/SettingsContext.tsx'
+import type { DashboardDataset } from '../../../lib/dashboard/types.ts'
 
 const BASES: { value: ComparisonBasis; label: string }[] = [
   { value: 'prior_session', label: 'Prior session' },
@@ -21,20 +22,25 @@ const BASES: { value: ComparisonBasis; label: string }[] = [
   { value: 'custom_range', label: 'Custom range' },
 ]
 
-const POSITIONS: (Position | 'all')[] = ['all', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward']
-
 /** §5.1 S&C % Change tile: coach-selected KPI over a chosen basis. */
 export function ScChangeTile({ dataset, date }: { dataset: DashboardDataset; date: string }) {
+  const { settings } = useSettings()
   const scKpis = useMemo(
     () =>
       [...dataset.kpis.values()].filter((k) => k.category === 'Strength' || k.category === 'Power'),
     [dataset],
   )
-  const [kpiKey, setKpiKey] = useState(scKpis[0]?.key ?? 'back_squat_top_load')
-  const [basis, setBasis] = useState<ComparisonBasis>('prior_week')
-  const [position, setPosition] = useState<Position | 'all'>('all')
+  const defaultKpi =
+    settings.display.defaultScChangeKpi &&
+    scKpis.some((k) => k.key === settings.display.defaultScChangeKpi)
+      ? settings.display.defaultScChangeKpi
+      : (scKpis[0]?.key ?? 'back_squat_top_load')
+  const [kpiKey, setKpiKey] = useState(defaultKpi)
+  const [basis, setBasis] = useState<ComparisonBasis>(settings.display.defaultComparisonBasis)
+  const [position, setPosition] = useState<string>('all')
   const [range, setRange] = useState({ from: dataset.seasonStart, to: addDays(date, -7) })
   const [revealed, setRevealed] = useState<string | null>(null)
+  const positionGroups = activePositionGroups(settings)
 
   const view = useMemo(
     () =>
@@ -45,8 +51,9 @@ export function ScChangeTile({ dataset, date }: { dataset: DashboardDataset; dat
         position === 'all' ? null : position,
         date,
         basis === 'custom_range' ? range : undefined,
+        settings.thresholds,
       ),
-    [dataset, kpiKey, basis, position, date, range],
+    [dataset, kpiKey, basis, position, date, range, settings.thresholds],
   )
   const kpi = dataset.kpis.get(kpiKey)!
   const medianText = formatPercentDelta(view.medianDeltaPct)
@@ -105,12 +112,13 @@ export function ScChangeTile({ dataset, date }: { dataset: DashboardDataset; dat
           <LabeledControl label="Group">
             <select
               value={position}
-              onChange={(e) => setPosition(e.target.value as Position | 'all')}
+              onChange={(e) => setPosition(e.target.value)}
               className={CONTROL_CLASS}
             >
-              {POSITIONS.map((p) => (
-                <option key={p} value={p}>
-                  {p === 'all' ? 'Full team' : `${p}s`}
+              <option value="all">Full team</option>
+              {positionGroups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.label}
                 </option>
               ))}
             </select>

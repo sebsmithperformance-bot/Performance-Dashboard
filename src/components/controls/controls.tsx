@@ -5,7 +5,8 @@
  */
 import type { ReactNode } from 'react'
 import { formatDayLabel } from '../../lib/dashboard/format.ts'
-import type { DashKpi, DashSession, Position } from '../../lib/dashboard/types.ts'
+import { activePositionGroups, useSettings } from '../../lib/settings/SettingsContext.tsx'
+import type { DashKpi, DashSession } from '../../lib/dashboard/types.ts'
 
 export const CONTROL_CLASS =
   'h-9 rounded-control border border-subtle bg-surface-2 px-2 text-body text-primary focus:border-accent'
@@ -27,19 +28,24 @@ export function LabeledControl({ label, children }: { label: string; children: R
   )
 }
 
-const POSITIONS: Position[] = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward']
-
-/** Position filter as chips: All + the four editable groups. */
+/** Position filter as chips: All + the coach-configured groups (§5.5 —
+ *  rename/reorder/retire flow in from settings; retired groups disappear
+ *  from filters but athletes' historical data is untouched). */
 export function PositionSelector({
   value,
   onChange,
 }: {
-  value: Position | null
-  onChange: (position: Position | null) => void
+  value: string | null
+  onChange: (position: string | null) => void
 }) {
-  const options: { key: string; label: string; position: Position | null }[] = [
+  const { settings } = useSettings()
+  const options: { key: string; label: string; position: string | null }[] = [
     { key: 'all', label: 'All', position: null },
-    ...POSITIONS.map((p) => ({ key: p, label: p + 's', position: p as Position | null })),
+    ...activePositionGroups(settings).map((g) => ({
+      key: g.id,
+      label: g.label,
+      position: g.id as string | null,
+    })),
   ]
   return (
     <div role="group" aria-label="Position group" className="flex flex-wrap gap-1">

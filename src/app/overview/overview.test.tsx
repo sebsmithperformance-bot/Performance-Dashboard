@@ -8,6 +8,8 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, expect, it } from 'vitest'
 import { DashboardDataProviderBoundary } from '../../lib/dashboard/DashboardDataContext.tsx'
 import { dashboardFixture } from '../../lib/dashboard/test-fixture.ts'
+import { createMemorySettingsRepository } from '../../lib/settings/local-settings.ts'
+import { SettingsProvider } from '../../lib/settings/SettingsContext.tsx'
 import type { DashboardDataProvider, SavedView } from '../../lib/dashboard/types.ts'
 import { AthletesPage } from './AthletesPage.tsx'
 import { TeamDashboardPage } from './TeamDashboardPage.tsx'
@@ -35,7 +37,9 @@ const provider: DashboardDataProvider = {
 
 function renderWithProvider(ui: React.ReactNode) {
   return render(
-    <DashboardDataProviderBoundary provider={provider}>{ui}</DashboardDataProviderBoundary>,
+    <SettingsProvider repository={createMemorySettingsRepository()}>
+      <DashboardDataProviderBoundary provider={provider}>{ui}</DashboardDataProviderBoundary>
+    </SettingsProvider>,
   )
 }
 

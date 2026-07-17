@@ -54,7 +54,7 @@ export function athletesTableView(
   dataset: DashboardDataset,
   date: string,
   sessionId: string | null,
-  position: Position | null,
+  position: string | null,
 ): AthletesTableViewModel {
   const sessionsOnDate = dataset.sessionsByDate.get(date) ?? []
   const session =
@@ -73,7 +73,7 @@ export function athletesTableView(
   ]
   const availableKpis = ordered
     .map((k) => dataset.kpis.get(k))
-    .filter((k): k is DashKpi => k !== undefined)
+    .filter((k): k is DashKpi => k !== undefined && k.visibility.overview)
 
   const rows: AthleteRow[] = athletes.map((athlete) => {
     const availability = dataset.availabilityByKey.get(`${athlete.id}|${date}`) ?? null

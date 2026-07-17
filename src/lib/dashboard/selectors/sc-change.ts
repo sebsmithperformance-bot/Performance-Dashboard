@@ -5,11 +5,12 @@
  * interpretation with a stated ±2% "unchanged" band.
  */
 import { addDays, percentChange } from '../../calculations/index.ts'
-import type { DashObservation, DashboardDataset, Position } from '../types.ts'
+import { DEFAULT_THRESHOLDS } from '../../settings/defaults.ts'
+import type { ThresholdSettings } from '../../settings/types.ts'
+import type { ComparisonBasis, DashObservation, DashboardDataset, Position } from '../types.ts'
 
-export type ComparisonBasis = 'prior_session' | 'prior_week' | 'rolling_average' | 'custom_range'
+export type { ComparisonBasis } from '../types.ts'
 
-export const UNCHANGED_BAND_PCT = 2
 const ROLLING_N = 4
 
 export interface ScChangeAthlete {
@@ -73,10 +74,12 @@ export function scChangeView(
   dataset: DashboardDataset,
   kpiKey: string,
   basis: ComparisonBasis,
-  position: Position | null,
+  position: string | null,
   endDate: string,
   customRange?: { from: string; to: string },
+  thresholds: ThresholdSettings = DEFAULT_THRESHOLDS,
 ): ScChangeViewModel {
+  const unchangedBandPct = thresholds.percentChangeUnchangedBandPct
   const athletes = dataset.athletes.filter((a) => position === null || a.position === position)
   const interpretation = dataset.kpis.get(kpiKey)?.interpretation ?? 'neutral'
   const rows: ScChangeAthlete[] = []
@@ -129,7 +132,7 @@ export function scChangeView(
       const change = percentChange(current.value, baseline)
       if (change.computable) {
         deltaPct = change.value
-        if (Math.abs(deltaPct) <= UNCHANGED_BAND_PCT) classification = 'unchanged'
+        if (Math.abs(deltaPct) <= unchangedBandPct) classification = 'unchanged'
         else {
           const higherIsBetter = interpretation === 'higher_is_better'
           const lowerIsBetter = interpretation === 'lower_is_better'
@@ -168,6 +171,6 @@ export function scChangeView(
     athletes: rows,
     withData: rows.filter((r) => r.deltaPct !== null).length,
     groupSize: athletes.length,
-    unchangedBandPct: UNCHANGED_BAND_PCT,
+    unchangedBandPct,
   }
 }

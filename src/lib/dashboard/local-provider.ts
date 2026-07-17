@@ -7,7 +7,7 @@
  * Saved views persist to localStorage here; the AWS provider persists to the
  * saved_views table (§6.4 server-side persistence is a production concern).
  */
-import { referenceKpiConfigs } from '../import/local/reference-data.ts'
+import { referenceKpiConfigs, referenceMappings } from '../import/local/reference-data.ts'
 import { buildDataset } from './dataset.ts'
 import type {
   DashKpi,
@@ -86,6 +86,19 @@ const PERCH_EXERCISE_TO_KPI: Record<string, string> = {
   'Power Clean': 'power_clean_peak_power',
 }
 
+/** kpi key → mapped raw source columns (read-only context for KPI Settings) */
+function buildSourceColumns(): Map<string, string[]> {
+  const byKpi = new Map<string, string[]>()
+  for (const source of ['TeamBuildr', 'PlayerData', 'Perch'] as const) {
+    for (const [header, kpiKey] of referenceMappings(source)) {
+      byKpi.set(kpiKey, [...(byKpi.get(kpiKey) ?? []), header])
+    }
+  }
+  return byKpi
+}
+
+const sourceColumnsByKpi = buildSourceColumns()
+
 export function datasetFromCanonical(file: CanonicalFile): DashboardDataset {
   const observations: { athleteId: string; sessionId: string; kpiKey: string; value: number }[] = []
 
@@ -124,15 +137,22 @@ export function datasetFromCanonical(file: CanonicalFile): DashboardDataset {
     key: k.key,
     displayName: k.displayName,
     category: k.category as DashKpi['category'],
+    canonicalUnit: k.canonicalUnit,
     unit: k.canonicalUnit,
     decimalPlaces: k.decimalPlaces,
     interpretation:
       k.key === 'top_speed' || k.category === 'Strength' || k.category === 'Power'
         ? 'higher_is_better'
         : 'neutral',
-    inLeaderboards: k.category === 'Strength' || k.category === 'Power',
-    inMonitoring: k.category === 'GPS' || k.category === 'Load',
-    inProfile: k.category !== 'Load',
+    visibility: {
+      overview: true,
+      monitoring: k.category === 'GPS' || k.category === 'Load',
+      trends: true,
+      leaderboards: k.category === 'Strength' || k.category === 'Power',
+      profile: k.category !== 'Load',
+    },
+    source: k.primarySource,
+    sourceColumns: sourceColumnsByKpi.get(k.key) ?? [],
   }))
 
   return buildDataset({

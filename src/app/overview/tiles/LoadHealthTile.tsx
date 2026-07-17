@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { DistributionBar } from '../../../components/charts/DistributionBar.tsx'
 import { Panel } from '../../../components/ui/Panel.tsx'
 import { loadHealthView } from '../../../lib/dashboard/selectors/load-health.ts'
+import { useSettings } from '../../../lib/settings/SettingsContext.tsx'
 import type { DashboardDataset } from '../../../lib/dashboard/types.ts'
 
 const SEGMENT_COLORS: Record<string, string> = {
@@ -20,7 +21,11 @@ const SEGMENT_COLORS: Record<string, string> = {
  */
 export function LoadHealthTile({ dataset, date }: { dataset: DashboardDataset; date: string }) {
   const [revealed, setRevealed] = useState<string | null>(null)
-  const view = useMemo(() => loadHealthView(dataset, date, null), [dataset, date])
+  const { settings } = useSettings()
+  const view = useMemo(
+    () => loadHealthView(dataset, date, null, settings.thresholds),
+    [dataset, date, settings.thresholds],
+  )
 
   const segments = [
     ...view.bands.map((b) => ({

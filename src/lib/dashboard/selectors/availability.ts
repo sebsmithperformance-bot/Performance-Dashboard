@@ -25,7 +25,7 @@ export interface AvailabilityViewModel {
 export function availabilityView(
   dataset: DashboardDataset,
   date: string,
-  position: Position | null,
+  position: string | null,
 ): AvailabilityViewModel {
   const athletes = dataset.athletes.filter((a) => position === null || a.position === position)
 

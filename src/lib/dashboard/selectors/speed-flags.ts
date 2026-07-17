@@ -5,12 +5,10 @@
  * valid baseline observations, and the current value is below the threshold.
  * "Insufficient baseline" is reported separately, never as a flag (§3.1).
  */
-import { SPEED_BASELINE_MIN_OBSERVATIONS, speedPercentOfBest } from '../../calculations/index.ts'
+import { speedPercentOfBest } from '../../calculations/index.ts'
+import { DEFAULT_THRESHOLDS } from '../../settings/defaults.ts'
+import type { ThresholdSettings } from '../../settings/types.ts'
 import type { DashSession, DashboardDataset, Position } from '../types.ts'
-
-export const SPEED_FLAG_THRESHOLD_PCT = 90
-/** minimum exposure for a session to count as speed-exposing (matches §8 QA rule) */
-const MIN_EXPOSURE_MIN = 25
 
 export interface SpeedFlag {
   athleteId: string
@@ -46,7 +44,11 @@ function isSpeedEligible(session: DashSession): boolean {
   return session.kind === 'field' && (session.type === 'game' || session.type === 'practice')
 }
 
-export function athleteFlagsView(dataset: DashboardDataset, date: string): AthleteFlagsViewModel {
+export function athleteFlagsView(
+  dataset: DashboardDataset,
+  date: string,
+  thresholds: ThresholdSettings = DEFAULT_THRESHOLDS,
+): AthleteFlagsViewModel {
   // most recent speed-eligible session at/before the date that has top-speed data
   const session =
     [...dataset.sessions]
@@ -61,8 +63,8 @@ export function athleteFlagsView(dataset: DashboardDataset, date: string): Athle
   if (!session) {
     return {
       session: null,
-      thresholdPct: SPEED_FLAG_THRESHOLD_PCT,
-      minBaseline: SPEED_BASELINE_MIN_OBSERVATIONS,
+      thresholdPct: thresholds.speedFlagThresholdPct,
+      minBaseline: thresholds.speedMinBaselineSamples,
       flags: [],
       insufficientBaseline: [],
       evaluated: 0,
@@ -89,11 +91,11 @@ export function athleteFlagsView(dataset: DashboardDataset, date: string): Athle
         s.date < session.date || (s.date === session.date && s.startTime < session.startTime)
       if (!before || !isSpeedEligible(s)) continue
       const part = dataset.participationByKey.get(`${athlete.id}|${obs.sessionId}`)
-      if (!part || part.exposureMin < MIN_EXPOSURE_MIN) continue
+      if (!part || part.exposureMin < thresholds.speedMinExposureMin) continue
       priors.push(obs.value)
     }
 
-    const result = speedPercentOfBest(current.value, priors)
+    const result = speedPercentOfBest(current.value, priors, thresholds.speedMinBaselineSamples)
     if (!result.computable) {
       if (result.reason === 'insufficient_baseline') {
         insufficient.push({
@@ -105,7 +107,7 @@ export function athleteFlagsView(dataset: DashboardDataset, date: string): Athle
       }
       continue
     }
-    if (result.value < SPEED_FLAG_THRESHOLD_PCT) {
+    if (result.value < thresholds.speedFlagThresholdPct) {
       const currentPart = dataset.participationByKey.get(`${athlete.id}|${session.id}`)
       flags.push({
         athleteId: athlete.id,
@@ -116,7 +118,7 @@ export function athleteFlagsView(dataset: DashboardDataset, date: string): Athle
         baselineBest: Math.max(...priors),
         baselineSize: priors.length,
         exposureMin: currentPart && currentPart.exposureMin > 0 ? currentPart.exposureMin : null,
-        reason: `top speed below ${SPEED_FLAG_THRESHOLD_PCT}% of personal baseline`,
+        reason: `top speed below ${thresholds.speedFlagThresholdPct}% of personal baseline`,
       })
     }
   }
@@ -124,8 +126,8 @@ export function athleteFlagsView(dataset: DashboardDataset, date: string): Athle
   flags.sort((a, b) => a.percentOfBest - b.percentOfBest)
   return {
     session,
-    thresholdPct: SPEED_FLAG_THRESHOLD_PCT,
-    minBaseline: SPEED_BASELINE_MIN_OBSERVATIONS,
+    thresholdPct: thresholds.speedFlagThresholdPct,
+    minBaseline: thresholds.speedMinBaselineSamples,
     flags,
     insufficientBaseline: insufficient,
     evaluated,

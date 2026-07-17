@@ -5,11 +5,7 @@ import { PositionSelector } from '../../../components/controls/controls.tsx'
 import { Panel } from '../../../components/ui/Panel.tsx'
 import { availabilityView } from '../../../lib/dashboard/selectors/availability.ts'
 import { formatDayLabel } from '../../../lib/dashboard/format.ts'
-import type {
-  AvailabilityStatus,
-  DashboardDataset,
-  Position,
-} from '../../../lib/dashboard/types.ts'
+import type { AvailabilityStatus, DashboardDataset } from '../../../lib/dashboard/types.ts'
 
 const STATUS_META: { key: AvailabilityStatus; label: string; color: string }[] = [
   { key: 'full_go', label: 'Full Go', color: 'var(--status-good)' },
@@ -19,7 +15,7 @@ const STATUS_META: { key: AvailabilityStatus; label: string; color: string }[] =
 
 /** §5.1 Availability tile: team-wide status with reveal-in-place lists. */
 export function AvailabilityTile({ dataset, date }: { dataset: DashboardDataset; date: string }) {
-  const [position, setPosition] = useState<Position | null>(null)
+  const [position, setPosition] = useState<string | null>(null)
   const [revealed, setRevealed] = useState<string | null>(null)
   const view = useMemo(() => availabilityView(dataset, date, position), [dataset, date, position])
 

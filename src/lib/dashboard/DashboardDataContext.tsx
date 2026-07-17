@@ -5,6 +5,7 @@
  * never touch the provider internals.
  */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { applyKpiOverride, useSettings } from '../settings/SettingsContext.tsx'
 import type { DashboardDataProvider, DashboardDataset, SavedViewsStore } from './types.ts'
 
 export type DashboardDataStatus = 'loading' | 'ready' | 'error'
@@ -32,6 +33,17 @@ export function DashboardDataProviderBoundary({
   const [error, setError] = useState<string | null>(null)
   const [dataset, setDataset] = useState<DashboardDataset | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const { settings } = useSettings()
+
+  // Coach KPI display overrides (§5.5) applied once here: every selector and
+  // page downstream sees the effective registry; observations stay canonical.
+  const effectiveDataset = useMemo<DashboardDataset | null>(() => {
+    if (!dataset) return null
+    const kpis = new Map(
+      [...dataset.kpis].map(([key, kpi]) => [key, applyKpiOverride(kpi, settings.kpi[key])]),
+    )
+    return { ...dataset, kpis }
+  }, [dataset, settings.kpi])
 
   useEffect(() => {
     let cancelled = false
@@ -58,12 +70,12 @@ export function DashboardDataProviderBoundary({
     () => ({
       status,
       error,
-      dataset,
+      dataset: effectiveDataset,
       savedViews: provider.savedViews,
       selectedDate,
       setSelectedDate,
     }),
-    [status, error, dataset, provider, selectedDate],
+    [status, error, effectiveDataset, provider, selectedDate],
   )
 
   return <DashboardDataContext.Provider value={value}>{children}</DashboardDataContext.Provider>

@@ -14,17 +14,20 @@ function isValidSpeed(v: number): boolean {
 
 /**
  * Selected-session top speed as a percentage of the athlete's best valid top
- * speed in the comparison window. With fewer than three prior valid
- * observations the result is "insufficient baseline" — never a flag (§3.1).
+ * speed in the comparison window. With fewer than `minObservations` prior
+ * valid observations the result is "insufficient baseline" — never a flag
+ * (§3.1). The minimum is a coach-visible threshold (default 3); the formula
+ * itself is fixed.
  */
 export function speedPercentOfBest(
   currentTopSpeed: number,
   priorValidTopSpeeds: readonly number[],
+  minObservations: number = SPEED_BASELINE_MIN_OBSERVATIONS,
 ): ComparisonResult {
   if (!isValidSpeed(currentTopSpeed) || priorValidTopSpeeds.some((v) => !isValidSpeed(v))) {
     return { computable: false, reason: 'invalid_input' }
   }
-  if (priorValidTopSpeeds.length < SPEED_BASELINE_MIN_OBSERVATIONS) {
+  if (priorValidTopSpeeds.length < Math.max(1, minObservations)) {
     return { computable: false, reason: 'insufficient_baseline' }
   }
   const best = Math.max(...priorValidTopSpeeds)

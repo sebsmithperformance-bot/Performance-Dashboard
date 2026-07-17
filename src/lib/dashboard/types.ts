@@ -55,16 +55,32 @@ export interface DashObservation {
 
 export type KpiInterpretation = 'higher_is_better' | 'lower_is_better' | 'target_range' | 'neutral'
 
+/** Comparison bases shared by S&C % Change, leaderboards, and saved views. */
+export type ComparisonBasis = 'prior_session' | 'prior_week' | 'rolling_average' | 'custom_range'
+
+/** Where a KPI appears — each surface independently coach-toggleable (§5.5). */
+export interface KpiVisibility {
+  overview: boolean
+  monitoring: boolean
+  trends: boolean
+  leaderboards: boolean
+  profile: boolean
+}
+
 export interface DashKpi {
   key: string
   displayName: string
   category: 'Strength' | 'Power' | 'GPS' | 'Load'
+  /** immutable storage unit (§6.3) — never changed by settings */
+  canonicalUnit: string
+  /** display unit — defaults to canonical; coach-overridable when convertible */
   unit: string
   decimalPlaces: number
   interpretation: KpiInterpretation
-  inLeaderboards: boolean
-  inMonitoring: boolean
-  inProfile: boolean
+  visibility: KpiVisibility
+  /** vendor source + mapped raw columns — read-only context for KPI Settings */
+  source?: string
+  sourceColumns?: string[]
 }
 
 export interface DashboardDataset {
