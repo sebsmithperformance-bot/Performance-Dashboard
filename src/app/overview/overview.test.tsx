@@ -33,6 +33,7 @@ function memoryViews(): DashboardDataProvider['savedViews'] {
 const provider: DashboardDataProvider = {
   load: () => Promise.resolve(dashboardFixture()),
   savedViews: memoryViews(),
+  availability: { loadOverrides: () => [], saveOverride: () => undefined },
 }
 
 function renderWithProvider(ui: React.ReactNode) {

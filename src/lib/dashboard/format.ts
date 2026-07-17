@@ -72,6 +72,13 @@ export function formatPercentDelta(value: number | null): string | null {
   return `${sign}${Math.abs(rounded).toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
 }
 
+/** Compact axis-tick date, e.g. "09/02". */
+export const formatShortDay = (iso: string): string => iso.slice(5).replace('-', '/')
+/** Plain integer with thousands separators (chart ticks/tables). */
+export const formatInt = (v: number): string => Math.round(v).toLocaleString('en-US')
+/** Two-decimal ratio text (ACWR, monotony). */
+export const formatRatio = (v: number): string => v.toFixed(2)
+
 export function formatDayLabel(iso: string): string {
   return new Intl.DateTimeFormat('en-US', {
     weekday: 'short',

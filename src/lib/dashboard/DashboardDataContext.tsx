@@ -6,7 +6,12 @@
  */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { applyKpiOverride, useSettings } from '../settings/SettingsContext.tsx'
-import type { DashboardDataProvider, DashboardDataset, SavedViewsStore } from './types.ts'
+import type {
+  DashAvailabilityDay,
+  DashboardDataProvider,
+  DashboardDataset,
+  SavedViewsStore,
+} from './types.ts'
 
 export type DashboardDataStatus = 'loading' | 'ready' | 'error'
 
@@ -18,6 +23,8 @@ interface DashboardDataValue {
   /** Global date context (defaults to the latest session date). */
   selectedDate: string | null
   setSelectedDate: (date: string) => void
+  /** Coach availability edit (§5.2) — persists through the provider seam. */
+  setAvailability: (entry: DashAvailabilityDay) => void
 }
 
 const DashboardDataContext = createContext<DashboardDataValue | null>(null)
@@ -34,16 +41,29 @@ export function DashboardDataProviderBoundary({
   const [dataset, setDataset] = useState<DashboardDataset | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const { settings } = useSettings()
+  const [availabilityOverrides, setAvailabilityOverrides] = useState<DashAvailabilityDay[]>(() =>
+    provider.availability.loadOverrides(),
+  )
 
-  // Coach KPI display overrides (§5.5) applied once here: every selector and
-  // page downstream sees the effective registry; observations stay canonical.
+  // Coach KPI display overrides (§5.5) and availability edits (§5.2) applied
+  // once here: every selector and page downstream sees the effective dataset;
+  // observations stay canonical.
   const effectiveDataset = useMemo<DashboardDataset | null>(() => {
     if (!dataset) return null
     const kpis = new Map(
       [...dataset.kpis].map(([key, kpi]) => [key, applyKpiOverride(kpi, settings.kpi[key])]),
     )
-    return { ...dataset, kpis }
-  }, [dataset, settings.kpi])
+    let availability = dataset.availability
+    let availabilityByKey = dataset.availabilityByKey
+    if (availabilityOverrides.length > 0) {
+      availabilityByKey = new Map(dataset.availabilityByKey)
+      for (const entry of availabilityOverrides) {
+        availabilityByKey.set(`${entry.athleteId}|${entry.date}`, entry)
+      }
+      availability = [...availabilityByKey.values()]
+    }
+    return { ...dataset, kpis, availability, availabilityByKey }
+  }, [dataset, settings.kpi, availabilityOverrides])
 
   useEffect(() => {
     let cancelled = false
@@ -74,6 +94,13 @@ export function DashboardDataProviderBoundary({
       savedViews: provider.savedViews,
       selectedDate,
       setSelectedDate,
+      setAvailability: (entry: DashAvailabilityDay) => {
+        provider.availability.saveOverride(entry)
+        setAvailabilityOverrides((current) => [
+          ...current.filter((e) => !(e.athleteId === entry.athleteId && e.date === entry.date)),
+          entry,
+        ])
+      },
     }),
     [status, error, effectiveDataset, provider, selectedDate],
   )

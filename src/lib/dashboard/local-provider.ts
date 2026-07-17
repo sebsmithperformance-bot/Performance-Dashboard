@@ -10,6 +10,8 @@
 import { referenceKpiConfigs, referenceMappings } from '../import/local/reference-data.ts'
 import { buildDataset } from './dataset.ts'
 import type {
+  AvailabilityRepository,
+  DashAvailabilityDay,
   DashKpi,
   DashboardDataProvider,
   DashboardDataset,
@@ -199,6 +201,24 @@ class LocalSavedViews implements SavedViewsStore {
   }
 }
 
+/** Coach availability edits as localStorage overrides (AWS: a real mutation). */
+class LocalAvailabilityOverrides implements AvailabilityRepository {
+  private readonly key = 'fh.availability-overrides'
+  loadOverrides(): DashAvailabilityDay[] {
+    try {
+      return JSON.parse(localStorage.getItem(this.key) ?? '[]') as DashAvailabilityDay[]
+    } catch {
+      return []
+    }
+  }
+  saveOverride(entry: DashAvailabilityDay): void {
+    const rest = this.loadOverrides().filter(
+      (e) => !(e.athleteId === entry.athleteId && e.date === entry.date),
+    )
+    localStorage.setItem(this.key, JSON.stringify([...rest, entry]))
+  }
+}
+
 export function createLocalDashboardProvider(): DashboardDataProvider {
   return {
     async load(): Promise<DashboardDataset> {
@@ -209,5 +229,6 @@ export function createLocalDashboardProvider(): DashboardDataProvider {
       return datasetFromCanonical((await response.json()) as CanonicalFile)
     },
     savedViews: new LocalSavedViews(),
+    availability: new LocalAvailabilityOverrides(),
   }
 }

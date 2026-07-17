@@ -4,10 +4,19 @@ import { useAuth } from '../lib/auth/AuthContext.tsx'
 import { SignInScreen } from '../lib/auth/SignInScreen.tsx'
 import { AppShell } from './AppShell.tsx'
 import { ImportPage } from './import/ImportPage.tsx'
+import { MonitoringAvailabilityPage } from './monitoring/AvailabilityPage.tsx'
+import { ReadinessPage } from './monitoring/ReadinessPage.tsx'
+import { GpsSessionComparePage } from './monitoring/gps/SessionComparePage.tsx'
+import { GpsSessionOverviewPage } from './monitoring/gps/SessionOverviewPage.tsx'
+import { GpsTrendsPage } from './monitoring/gps/TrendsRecommendationsPage.tsx'
+import { AthleteProfilePage } from './performance/AthleteProfilePage.tsx'
+import { LeaderboardsPage } from './performance/LeaderboardsPage.tsx'
+import { PerformanceOverviewPage } from './performance/PerformanceOverviewPage.tsx'
+import { TrendExplorer } from './trends/TrendExplorer.tsx'
 import { PRIMARY_SECTIONS } from './nav.ts'
 import { AthletesPage } from './overview/AthletesPage.tsx'
 import { TeamDashboardPage } from './overview/TeamDashboardPage.tsx'
-import { AdminPage, GpsPage, NotFoundPage, PlaceholderPane, SectionPage } from './pages.tsx'
+import { AdminPage, GpsPage, NotFoundPage, SectionPage } from './pages.tsx'
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { status } = useAuth()
@@ -36,104 +45,43 @@ export function AppRoutes() {
         </Route>
 
         <Route path="/monitoring" element={<SectionPage section={monitoring!} />}>
-          <Route
-            index
-            element={
-              <PlaceholderPane
-                title="Availability"
-                description="Roster status — Full Go / Limited / Out — filterable by position (§5.2)."
-              />
-            }
-          />
-          <Route
-            path="readiness"
-            element={
-              <PlaceholderPane
-                title="Readiness"
-                description="Team Trend (load trend + ACWR) and Individuals views (§5.2)."
-              />
-            }
-          />
+          <Route index element={<MonitoringAvailabilityPage />} />
+          <Route path="readiness" element={<ReadinessPage />} />
           <Route path="gps" element={<GpsPage />}>
-            <Route
-              index
-              element={
-                <PlaceholderPane
-                  title="Session Overview"
-                  description="All major GPS metrics for the selected session, broken down by athlete (§5.2)."
-                />
-              }
-            />
-            <Route
-              path="compare"
-              element={
-                <PlaceholderPane
-                  title="Session Compare"
-                  description="Multi-session overlay comparison (§5.2)."
-                />
-              }
-            />
-            <Route
-              path="trends"
-              element={
-                <PlaceholderPane
-                  title="Trends & Recommendations"
-                  description="7/14/28/60/90-day ranges, ACWR band, monotony/strain, data completeness, and transparent rule-based recommendations (§5.2)."
-                />
-              }
-            />
+            <Route index element={<GpsSessionOverviewPage />} />
+            <Route path="compare" element={<GpsSessionComparePage />} />
+            <Route path="trends" element={<GpsTrendsPage />} />
           </Route>
         </Route>
 
+        {/* §5.3: both tabs are the SAME explorer — only the KPI catalog differs */}
         <Route path="/trends" element={<SectionPage section={trends!} />}>
           <Route
             index
             element={
-              <PlaceholderPane
-                title="Data Trends — Performance"
-                description="Graph + table over S&C metrics, sortable by Group or Individual (§5.3)."
+              <TrendExplorer
+                pageId="trends-performance"
+                catalog={(k) => k.category === 'Strength' || k.category === 'Power'}
+                catalogLabel="S&C"
               />
             }
           />
           <Route
             path="gps"
             element={
-              <PlaceholderPane
-                title="Data Trends — GPS"
-                description="The same graph + table component over GPS/load metrics (§5.3)."
+              <TrendExplorer
+                pageId="trends-gps"
+                catalog={(k) => k.category === 'GPS' || k.category === 'Load'}
+                catalogLabel="GPS/load"
               />
             }
           />
         </Route>
 
         <Route path="/performance" element={<SectionPage section={performance!} />}>
-          <Route
-            index
-            element={
-              <PlaceholderPane
-                title="Performance Overview"
-                description="Tiles for all key S&C KPIs (§5.4)."
-              />
-            }
-          />
-          <Route
-            path="leaderboards"
-            element={
-              <PlaceholderPane
-                title="Leaderboards"
-                description="Every eligible S&C metric with value + change vs. a selectable basis — no points anywhere (§5.4)."
-              />
-            }
-          />
-          <Route
-            path="athlete-profile"
-            element={
-              <PlaceholderPane
-                title="Athlete Profile"
-                description="Direction-aware percentile radar (≥5 comparison athletes) plus raw-value metric comparison (§5.4)."
-              />
-            }
-          />
+          <Route index element={<PerformanceOverviewPage />} />
+          <Route path="leaderboards" element={<LeaderboardsPage />} />
+          <Route path="athlete-profile" element={<AthleteProfilePage />} />
         </Route>
 
         <Route

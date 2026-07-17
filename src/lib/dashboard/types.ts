@@ -117,7 +117,19 @@ export interface SavedViewsStore {
   remove(page: string, name: string): void
 }
 
+/**
+ * Coach-side availability edits (§5.2). Locally these are localStorage
+ * overrides layered over the dataset; on AWS the same interface fronts the
+ * availability mutation + audit trail. Entries carry operational notes only —
+ * never medical detail (§7.2).
+ */
+export interface AvailabilityRepository {
+  loadOverrides(): DashAvailabilityDay[]
+  saveOverride(entry: DashAvailabilityDay): void
+}
+
 export interface DashboardDataProvider {
   load(): Promise<DashboardDataset>
   savedViews: SavedViewsStore
+  availability: AvailabilityRepository
 }
