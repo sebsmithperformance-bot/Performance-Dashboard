@@ -67,15 +67,24 @@ export function Topbar({ onOpenDrawer }: { onOpenDrawer: () => void }) {
 
       <div className="ml-auto flex items-center gap-3">
         <Badge tone="warning">
-          {APP_ENV.toUpperCase()} · {APP_ENV === 'production' ? 'REAL DATA' : 'SYNTHETIC'}
+          {APP_ENV.toUpperCase()}
+          {/* visually collapses below lg but stays in the accessibility tree */}
+          <span className="sr-only lg:not-sr-only">
+            {' '}
+            · {APP_ENV === 'production' ? 'REAL DATA' : 'SYNTHETIC'}
+          </span>
         </Badge>
+        {/* Below lg the label collapses to an icon (≥40px target, aria/title
+            preserved; the labeled entry also lives in Admin → Import Data) */}
         <Button
           variant="primary"
           onClick={() => navigate('/admin/import')}
-          className="hidden sm:inline-flex"
+          aria-label="Import Data"
+          title="Import Data"
+          className="hidden sm:inline-flex lg:px-4 max-lg:w-10 max-lg:px-0"
         >
           <Upload aria-hidden className="size-4" />
-          Import Data
+          <span className="hidden lg:inline">Import Data</span>
         </Button>
         <span className="hidden text-body text-secondary lg:inline">{identity?.displayName}</span>
         <button

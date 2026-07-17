@@ -20,6 +20,8 @@ export interface SpeedFlag {
   percentOfBest: number
   baselineBest: number
   baselineSize: number
+  /** current-session exposure minutes — context only, not part of the rule; null = unknown */
+  exposureMin: number | null
   reason: string
 }
 
@@ -104,6 +106,7 @@ export function athleteFlagsView(dataset: DashboardDataset, date: string): Athle
       continue
     }
     if (result.value < SPEED_FLAG_THRESHOLD_PCT) {
+      const currentPart = dataset.participationByKey.get(`${athlete.id}|${session.id}`)
       flags.push({
         athleteId: athlete.id,
         name: athlete.fullName,
@@ -112,6 +115,7 @@ export function athleteFlagsView(dataset: DashboardDataset, date: string): Athle
         percentOfBest: result.value,
         baselineBest: Math.max(...priors),
         baselineSize: priors.length,
+        exposureMin: currentPart && currentPart.exposureMin > 0 ? currentPart.exposureMin : null,
         reason: `top speed below ${SPEED_FLAG_THRESHOLD_PCT}% of personal baseline`,
       })
     }

@@ -30,11 +30,17 @@ export function TeamDashboardPage() {
   }
 
   return (
+    // Two independently-stacking columns: unequal tile heights pack tightly
+    // instead of leaving row-aligned gaps (visual-review finding #2).
     <div className="grid items-start gap-4 md:grid-cols-2">
-      <AvailabilityTile dataset={dataset} date={selectedDate} />
-      <LastSessionTile dataset={dataset} date={selectedDate} />
-      <LoadHealthTile dataset={dataset} date={selectedDate} />
-      <ScChangeTile dataset={dataset} date={selectedDate} />
+      <div className="flex min-w-0 flex-col gap-4">
+        <AvailabilityTile dataset={dataset} date={selectedDate} />
+        <LoadHealthTile dataset={dataset} date={selectedDate} />
+      </div>
+      <div className="flex min-w-0 flex-col gap-4">
+        <LastSessionTile dataset={dataset} date={selectedDate} />
+        <ScChangeTile dataset={dataset} date={selectedDate} />
+      </div>
       <div className="md:col-span-2">
         <FlagsTile dataset={dataset} date={selectedDate} />
       </div>

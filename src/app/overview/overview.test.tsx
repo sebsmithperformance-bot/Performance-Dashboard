@@ -58,8 +58,9 @@ it('Team Dashboard renders all five tiles from the seam with correct content', a
   expect(screen.getAllByText(/Incomplete data/).length).toBeGreaterThan(0)
   expect(screen.getByText(/not injury predictions/)).toBeTruthy()
 
-  // flags: Ada flagged with transparent rule; Bea insufficient, separate
+  // flags: Ada flagged with transparent rule + exposure context; Bea insufficient, separate
   expect(screen.getByText(/Ada Fast — 86\.1% of baseline top speed/)).toBeTruthy()
+  expect(screen.getByText(/exposure 58 min/)).toBeTruthy()
   const insufficientToggle = screen.getByRole('button', {
     name: /1 athlete with insufficient baseline/,
   })

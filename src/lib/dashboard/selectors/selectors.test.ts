@@ -87,7 +87,12 @@ describe('athleteFlagsView', () => {
     const v = athleteFlagsView(ds, '2026-09-05')
     expect(v.session?.id).toBe('S7')
     expect(v.flags).toHaveLength(1)
-    expect(v.flags[0]).toMatchObject({ name: 'Ada Fast', baselineSize: 3, baselineBest: 18.0 })
+    expect(v.flags[0]).toMatchObject({
+      name: 'Ada Fast',
+      baselineSize: 3,
+      baselineBest: 18.0,
+      exposureMin: 58, // current-session context shown with every flag
+    })
     expect(v.flags[0]!.percentOfBest).toBeCloseTo((15.5 / 18) * 100, 4)
     expect(v.insufficientBaseline).toHaveLength(1)
     expect(v.insufficientBaseline[0]).toMatchObject({ name: 'Bea Steady', baselineSize: 1 })

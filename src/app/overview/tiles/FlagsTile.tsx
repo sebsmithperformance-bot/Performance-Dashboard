@@ -53,9 +53,16 @@ export function FlagsTile({ dataset, date }: { dataset: DashboardDataset; date: 
             <p className="tabular">
               {flag.position} · current {flag.currentTopSpeed.toFixed(1)} mph · baseline best{' '}
               {flag.baselineBest.toFixed(1)} mph (n={flag.baselineSize}) · threshold{' '}
-              {view.thresholdPct}%
+              {view.thresholdPct}% · exposure{' '}
+              {flag.exposureMin !== null ? `${flag.exposureMin} min` : 'unknown'}
             </p>
-            <p>{flag.reason} — worth a coach review of recent exposure.</p>
+            <p>
+              {flag.reason} — worth a coach review
+              {flag.exposureMin !== null && flag.exposureMin < 25
+                ? '; short exposure may under-expose maximal speed'
+                : ' of recent exposure'}
+              .
+            </p>
           </AlertCard>
         ))}
 
