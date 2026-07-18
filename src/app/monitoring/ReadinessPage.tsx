@@ -34,10 +34,11 @@ import type { DashboardDataset } from '../../lib/dashboard/types.ts'
 
 const RANGES = [14, 28, 60, 90]
 
-const BAND_TONE: Record<LoadBand, 'good' | 'warning' | 'neutral'> = {
+const BAND_TONE: Record<LoadBand, 'good' | 'warning' | 'neutral' | 'danger'> = {
   below: 'neutral',
   within: 'good',
   elevated: 'warning',
+  high: 'danger',
 }
 
 /** Monitoring → Readiness (§5.2): Team Trend and Individuals, same lens. */

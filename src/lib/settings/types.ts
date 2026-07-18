@@ -18,9 +18,14 @@ export interface ThresholdSettings {
   speedMinBaselineSamples: number
   /** minimum session exposure minutes for a session to count toward the speed baseline */
   speedMinExposureMin: number
-  /** ACWR display band edges (below < acwrBelowBand ≤ within ≤ acwrElevatedBand < elevated) */
+  /**
+   * ACWR display band edges, four transparent states:
+   * below < acwrBelowBand ≤ within ≤ acwrElevatedBand < elevated ≤ acwrHighBand < substantially elevated
+   */
   acwrBelowBand: number
   acwrElevatedBand: number
+  /** above this = "substantially elevated acute load" (the red state) */
+  acwrHighBand: number
   /** ± percent band treated as "unchanged" in percent-change classification */
   percentChangeUnchangedBandPct: number
 }
@@ -68,6 +73,9 @@ export interface DisplayPreferences {
   defaultScChangeKpi: string | null
   /** metric columns hidden by default on the Overview Athletes table */
   athletesDefaultHiddenKpis: string[]
+  /** GPS metric keys shown on the Overview Last Session GPS tile, in order;
+   *  empty = the canonical default set (Player Load leads) */
+  overviewGpsMetrics: string[]
 }
 
 export interface DashboardSettings {

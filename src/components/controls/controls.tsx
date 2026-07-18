@@ -4,7 +4,11 @@
  * icon-only inputs.
  */
 import type { ReactNode } from 'react'
-import { formatDayLabel } from '../../lib/dashboard/format.ts'
+import {
+  formatDayLabel,
+  sessionTypeLabel,
+  sessionTypeSummary,
+} from '../../lib/dashboard/format.ts'
 import { activePositionGroups, useSettings } from '../../lib/settings/SettingsContext.tsx'
 import type { DashKpi, DashSession } from '../../lib/dashboard/types.ts'
 
@@ -96,6 +100,7 @@ export function SessionPicker({
   dates,
   date,
   onDateChange,
+  sessionsByDate,
   sessionsOnDate,
   sessionId,
   onSessionChange,
@@ -103,6 +108,8 @@ export function SessionPicker({
   dates: string[]
   date: string
   onDateChange: (date: string) => void
+  /** used to annotate each date option with its session type(s) */
+  sessionsByDate: Map<string, DashSession[]>
   sessionsOnDate: DashSession[]
   sessionId: string | null
   onSessionChange: (id: string) => void
@@ -115,11 +122,15 @@ export function SessionPicker({
           onChange={(e) => onDateChange(e.target.value)}
           className={CONTROL_CLASS}
         >
-          {dates.map((d) => (
-            <option key={d} value={d}>
-              {formatDayLabel(d)}
-            </option>
-          ))}
+          {dates.map((d) => {
+            const summary = sessionTypeSummary(sessionsByDate.get(d) ?? [])
+            return (
+              <option key={d} value={d}>
+                {formatDayLabel(d)}
+                {summary ? ` · ${summary}` : ''}
+              </option>
+            )
+          })}
         </select>
       </LabeledControl>
       {sessionsOnDate.length > 1 && (
@@ -131,7 +142,7 @@ export function SessionPicker({
           >
             {sessionsOnDate.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.startTime} · {s.label}
+                {s.startTime} · {sessionTypeLabel(s.type)} · {s.label}
               </option>
             ))}
           </select>

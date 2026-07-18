@@ -391,11 +391,19 @@ const THRESHOLD_FIELDS: {
   },
   {
     key: 'acwrElevatedBand',
-    label: 'ACWR upper band edge',
-    help: 'above this = "elevated acute load"',
+    label: 'ACWR elevated band edge',
+    help: 'above this = "elevated acute load" (yellow)',
     step: 0.05,
     min: 1,
     max: 2.5,
+  },
+  {
+    key: 'acwrHighBand',
+    label: 'ACWR substantially-elevated edge',
+    help: 'above this = "substantially elevated acute load" (red)',
+    step: 0.05,
+    min: 1,
+    max: 3,
   },
   {
     key: 'percentChangeUnchangedBandPct',
@@ -441,9 +449,10 @@ function ThresholdsEditor() {
             </label>
           ))}
         </div>
-        {settings.thresholds.acwrBelowBand >= settings.thresholds.acwrElevatedBand && (
+        {(settings.thresholds.acwrBelowBand >= settings.thresholds.acwrElevatedBand ||
+          settings.thresholds.acwrElevatedBand >= settings.thresholds.acwrHighBand) && (
           <p className="text-label text-danger">
-            The lower ACWR band edge must stay below the upper edge.
+            ACWR band edges must increase: below &lt; elevated &lt; substantially-elevated.
           </p>
         )}
         <div>

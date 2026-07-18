@@ -1,7 +1,9 @@
 import { HeartPulse } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { DistributionBar } from '../../../components/charts/DistributionBar.tsx'
+import { InfoHint } from '../../../components/ui/InfoHint.tsx'
 import { Panel } from '../../../components/ui/Panel.tsx'
+import { formatInt } from '../../../lib/dashboard/format.ts'
 import { loadHealthView } from '../../../lib/dashboard/selectors/load-health.ts'
 import { useSettings } from '../../../lib/settings/SettingsContext.tsx'
 import type { DashboardDataset } from '../../../lib/dashboard/types.ts'
@@ -10,14 +12,17 @@ const SEGMENT_COLORS: Record<string, string> = {
   below: 'var(--chart-series-2)',
   within: 'var(--status-good)',
   elevated: 'var(--status-warning)',
+  high: 'var(--status-danger)',
   incomplete: 'var(--status-neutral)',
   insufficient: 'var(--border-strong)',
 }
 
 /**
- * §5.1 Load Health tile: ACWR condensed to one clear status. Workload
- * observation language only — no injury prediction (§6.8); incomplete windows
- * are first-class, never hidden (§6.7).
+ * §5.1 Load Health tile: ACWR condensed to four transparent states plus the
+ * team-level numbers coaches scan first (median ACWR, average 7-day acute
+ * load, valid/incomplete counts). Workload observation language only — no
+ * injury prediction (§6.8); incomplete windows are first-class (§6.7). Band
+ * definitions live behind an info affordance to keep the card scannable.
  */
 export function LoadHealthTile({ dataset, date }: { dataset: DashboardDataset; date: string }) {
   const [revealed, setRevealed] = useState<string | null>(null)
@@ -30,7 +35,7 @@ export function LoadHealthTile({ dataset, date }: { dataset: DashboardDataset; d
   const segments = [
     ...view.bands.map((b) => ({
       key: b.key,
-      label: b.label,
+      label: b.short,
       count: view.counts[b.key],
       color: SEGMENT_COLORS[b.key]!,
     })),
@@ -59,14 +64,37 @@ export function LoadHealthTile({ dataset, date }: { dataset: DashboardDataset; d
               : a.band === revealed,
         )
 
+  const stats: { label: string; value: string }[] = [
+    { label: 'Team median ACWR', value: view.teamMedianAcwr?.toFixed(2) ?? '—' },
+    {
+      label: 'Avg 7-day acute load',
+      value: view.avgAcute7dLoad !== null ? `${formatInt(view.avgAcute7dLoad)} AU` : '—',
+    },
+    { label: 'Valid athletes', value: String(view.validCount) },
+    {
+      label: 'Without a valid ACWR',
+      value: String(view.counts.incomplete + view.counts.insufficient),
+    },
+  ]
+
   return (
     <Panel
       icon={HeartPulse}
       title="Load Health"
-      keyValue={`${view.counts.elevated} elevated · ${view.counts.incomplete} incomplete`}
+      keyValue={`median ACWR ${view.teamMedianAcwr?.toFixed(2) ?? '—'}`}
     >
       <div className="flex flex-col gap-3">
+        <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {stats.map((s) => (
+            <div key={s.label} className="rounded-control bg-surface-2 px-3 py-2">
+              <dt className="text-label text-muted">{s.label}</dt>
+              <dd className="tabular text-subhead font-semibold">{s.value}</dd>
+            </div>
+          ))}
+        </dl>
+
         <DistributionBar segments={segments} selectedKey={revealed} onSelect={setRevealed} />
+
         {revealedAthletes && (
           <ul className="flex max-h-48 flex-col divide-y divide-subtle overflow-y-auto rounded-control border border-subtle">
             {revealedAthletes.length === 0 && (
@@ -83,17 +111,23 @@ export function LoadHealthTile({ dataset, date }: { dataset: DashboardDataset; d
             ))}
           </ul>
         )}
-        <div className="text-label text-muted">
-          <p className="tabular">
-            {view.validCount} athletes with a valid calculation ·{' '}
-            {view.counts.incomplete + view.counts.insufficient} without
-          </p>
-          <p className="mt-1">
-            {view.loadKpiLabel}. Bands:{' '}
-            {view.bands.map((b) => `${b.label} = ${b.definition}`).join(' · ')}. These are workload
-            observations, not injury predictions.
-          </p>
-        </div>
+
+        <p className="flex items-center gap-1 text-label text-muted">
+          Four workload states from the configured ACWR bands — observations, not injury
+          predictions.
+          <InfoHint label="ACWR band definitions">
+            <span className="mb-1 block font-medium text-secondary">
+              {view.loadKpiLabel}. Bands (editable in KPI Settings → Thresholds):
+            </span>
+            <ul className="flex flex-col gap-0.5">
+              {view.bands.map((b) => (
+                <li key={b.key}>
+                  <span className="font-medium">{b.short}</span> — {b.definition}
+                </li>
+              ))}
+            </ul>
+          </InfoHint>
+        </p>
       </div>
     </Panel>
   )

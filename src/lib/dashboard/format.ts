@@ -4,9 +4,37 @@
  * and a hard guard so NaN/Infinity/undefined can never reach the DOM.
  */
 import { canConvert, convert, type Unit } from '../units/index.ts'
-import type { DashKpi } from './types.ts'
+import type { DashKpi, DashSession, SessionType } from './types.ts'
 
 export const MISSING_TEXT = '—'
+
+const SESSION_TYPE_LABEL: Record<SessionType, string> = {
+  game: 'Game',
+  practice: 'Practice',
+  lift: 'Lift',
+  recovery: 'Recovery',
+  testing: 'Testing',
+  other: 'Other',
+}
+
+/** Human label for a session type (Game / Practice / Lift / …). */
+export function sessionTypeLabel(type: SessionType): string {
+  return SESSION_TYPE_LABEL[type] ?? type
+}
+
+/**
+ * Concise summary of the session type(s) on a date, so a date option never
+ * reads as a bare date when sessions exist. One session → "Game"; distinct
+ * types → "Practice + Lift"; repeats of one type → "2 × Practice".
+ */
+export function sessionTypeSummary(sessions: DashSession[]): string {
+  if (sessions.length === 0) return ''
+  const counts = new Map<SessionType, number>()
+  for (const s of sessions) counts.set(s.type, (counts.get(s.type) ?? 0) + 1)
+  return [...counts.entries()]
+    .map(([type, n]) => (n > 1 ? `${n} × ${sessionTypeLabel(type)}` : sessionTypeLabel(type)))
+    .join(' + ')
+}
 
 export interface FormattedMetric {
   /** display text, e.g. "5,907" or "—" */

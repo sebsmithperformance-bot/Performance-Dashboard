@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '../lib/auth/AuthContext.tsx'
 import { useDashboardData } from '../lib/dashboard/DashboardDataContext.tsx'
-import { formatDayLabel as formatDate } from '../lib/dashboard/format.ts'
+import { formatDayLabel as formatDate, sessionTypeSummary } from '../lib/dashboard/format.ts'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 
@@ -48,11 +48,15 @@ export function Topbar({ onOpenDrawer }: { onOpenDrawer: () => void }) {
               onChange={(e) => setSelectedDate(e.target.value)}
               className="h-9 rounded-control border border-subtle bg-surface-2 px-2 text-body text-primary focus:border-accent"
             >
-              {sessionDates.map((date) => (
-                <option key={date} value={date}>
-                  {formatDate(date)}
-                </option>
-              ))}
+              {sessionDates.map((date) => {
+                const summary = sessionTypeSummary(dataset?.sessionsByDate.get(date) ?? [])
+                return (
+                  <option key={date} value={date}>
+                    {formatDate(date)}
+                    {summary ? ` · ${summary}` : ''}
+                  </option>
+                )
+              })}
             </select>
           </label>
         ) : (

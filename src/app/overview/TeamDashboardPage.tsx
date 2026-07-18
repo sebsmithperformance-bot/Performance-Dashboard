@@ -1,10 +1,16 @@
-import type { ComponentType } from 'react'
+import { type ComponentType, useState } from 'react'
+import { Button } from '../../components/ui/Button.tsx'
+import { Drawer } from '../../components/ui/Drawer.tsx'
 import { EmptyState } from '../../components/ui/EmptyState.tsx'
 import { ErrorState } from '../../components/ui/ErrorState.tsx'
 import { Skeleton } from '../../components/ui/Skeleton.tsx'
-import { LayoutDashboard } from 'lucide-react'
+import { LayoutDashboard, RotateCcw, SlidersHorizontal } from 'lucide-react'
 import { useDashboardData } from '../../lib/dashboard/DashboardDataContext.tsx'
-import { orderByConfig } from '../../lib/settings/defaults.ts'
+import {
+  DEFAULT_OVERVIEW_GPS_METRICS,
+  OVERVIEW_GPS_SUPPORTED,
+  orderByConfig,
+} from '../../lib/settings/defaults.ts'
 import { useSettings } from '../../lib/settings/SettingsContext.tsx'
 import type { DashboardDataset } from '../../lib/dashboard/types.ts'
 import { AvailabilityTile } from './tiles/AvailabilityTile.tsx'
@@ -15,6 +21,68 @@ import { ScChangeTile } from './tiles/ScChangeTile.tsx'
 import { OVERVIEW_PAGE_ID, OVERVIEW_WIDGETS } from './widgets.ts'
 
 type TileProps = { dataset: DashboardDataset; date: string }
+
+/** Team Dashboard → Customize: which GPS metrics the Last Session tile shows.
+ *  One page-level control, secondary to normal viewing (coach-feedback). */
+function CustomizeDrawer({ dataset, onClose }: { dataset: DashboardDataset; onClose: () => void }) {
+  const { settings, updateDisplay } = useSettings()
+  const selected =
+    settings.display.overviewGpsMetrics.length > 0
+      ? settings.display.overviewGpsMetrics
+      : DEFAULT_OVERVIEW_GPS_METRICS
+  const supported = OVERVIEW_GPS_SUPPORTED.filter((k) => dataset.kpis.has(k))
+
+  const toggle = (key: string, on: boolean) => {
+    const next = OVERVIEW_GPS_SUPPORTED.filter((k) =>
+      k === key ? on : selected.includes(k),
+    )
+    if (next.length === 0) return // keep at least one metric visible
+    updateDisplay({ overviewGpsMetrics: next })
+  }
+
+  return (
+    <Drawer title="Customize Team Dashboard" onClose={onClose}>
+      <div className="flex flex-col gap-4">
+        <div>
+          <p className="text-body font-medium">Last Session GPS metrics</p>
+          <p className="text-label text-muted">
+            Choose which GPS metrics appear on the tile. Values are averages per participating
+            athlete.
+          </p>
+        </div>
+        <fieldset className="flex flex-col gap-1">
+          {supported.map((key) => {
+            const kpi = dataset.kpis.get(key)!
+            const on = selected.includes(key)
+            return (
+              <label
+                key={key}
+                className="flex items-center gap-2 rounded-control px-2 py-1 text-body hover:bg-surface-2"
+              >
+                <input
+                  type="checkbox"
+                  checked={on}
+                  onChange={(e) => toggle(key, e.target.checked)}
+                  className="accent-(--accent)"
+                />
+                {kpi.displayName}
+              </label>
+            )
+          })}
+        </fieldset>
+        <div>
+          <Button variant="secondary" onClick={() => updateDisplay({ overviewGpsMetrics: [] })}>
+            <RotateCcw aria-hidden className="size-4" />
+            Reset to default
+          </Button>
+        </div>
+        <p className="text-label text-muted">
+          Widget show/hide and ordering for the whole dashboard live in Admin → Data Management.
+        </p>
+      </div>
+    </Drawer>
+  )
+}
 
 const TILE_COMPONENTS: Record<string, ComponentType<TileProps>> = {
   availability: AvailabilityTile,
@@ -29,6 +97,7 @@ const TILE_COMPONENTS: Record<string, ComponentType<TileProps>> = {
 export function TeamDashboardPage() {
   const { status, error, dataset, selectedDate } = useDashboardData()
   const { settings } = useSettings()
+  const [customizeOpen, setCustomizeOpen] = useState(false)
 
   if (status === 'loading') {
     return (
@@ -84,6 +153,16 @@ export function TeamDashboardPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end">
+        <button
+          type="button"
+          onClick={() => setCustomizeOpen(true)}
+          className="inline-flex h-9 items-center gap-2 rounded-control border border-subtle px-3 text-label font-medium text-secondary hover:border-strong hover:text-primary"
+        >
+          <SlidersHorizontal aria-hidden className="size-4" />
+          Customize
+        </button>
+      </div>
       {segments.map((segment, i) =>
         segment.fullWidth ? (
           segment.ids.map(renderTile)
@@ -97,6 +176,9 @@ export function TeamDashboardPage() {
             </div>
           </div>
         ),
+      )}
+      {customizeOpen && (
+        <CustomizeDrawer dataset={dataset} onClose={() => setCustomizeOpen(false)} />
       )}
     </div>
   )

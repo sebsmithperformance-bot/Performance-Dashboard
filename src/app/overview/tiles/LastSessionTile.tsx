@@ -7,16 +7,21 @@ import { KPIValue } from '../../../components/ui/KPIValue.tsx'
 import { Panel } from '../../../components/ui/Panel.tsx'
 import { TrendIndicator } from '../../../components/ui/TrendIndicator.tsx'
 import { formatDayLabel, formatMetricValue } from '../../../lib/dashboard/format.ts'
-import {
-  lastSessionGpsView,
-  type LastSessionMetricKey,
-} from '../../../lib/dashboard/selectors/last-session.ts'
+import { lastSessionGpsView } from '../../../lib/dashboard/selectors/last-session.ts'
+import { useSettings } from '../../../lib/settings/SettingsContext.tsx'
 import type { DashboardDataset } from '../../../lib/dashboard/types.ts'
 
-/** §5.1 Last Session GPS tile with a switchable primary metric. */
+/** §5.1 Last Session GPS tile: team averages per participating athlete, with a
+ *  switchable primary metric (defaults to Player Load) and the coach-chosen
+ *  GPS metric set from settings (Team Dashboard → Customize). */
 export function LastSessionTile({ dataset, date }: { dataset: DashboardDataset; date: string }) {
-  const [primaryKey, setPrimaryKey] = useState<LastSessionMetricKey>('total_distance')
-  const view = useMemo(() => lastSessionGpsView(dataset, date), [dataset, date])
+  const { settings } = useSettings()
+  const view = useMemo(
+    () => lastSessionGpsView(dataset, date, settings.display.overviewGpsMetrics),
+    [dataset, date, settings.display.overviewGpsMetrics],
+  )
+  // default primary metric is Player Load when the coach keeps it visible
+  const [primaryKey, setPrimaryKey] = useState<string>('player_load')
 
   if (!view) {
     return (
@@ -63,7 +68,7 @@ export function LastSessionTile({ dataset, date }: { dataset: DashboardDataset; 
             <span className="sr-only">Primary metric</span>
             <select
               value={primary.kpiKey}
-              onChange={(e) => setPrimaryKey(e.target.value as LastSessionMetricKey)}
+              onChange={(e) => setPrimaryKey(e.target.value)}
               className={CONTROL_CLASS}
             >
               {view.metrics.map((m) => (

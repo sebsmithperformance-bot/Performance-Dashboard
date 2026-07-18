@@ -138,6 +138,7 @@ function AthletesTable({
             onDateChange(d)
             setSessionId(null)
           }}
+          sessionsByDate={dataset.sessionsByDate}
           sessionsOnDate={view.sessionsOnDate}
           sessionId={view.session?.id ?? null}
           onSessionChange={setSessionId}

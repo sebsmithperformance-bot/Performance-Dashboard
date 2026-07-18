@@ -33,8 +33,11 @@ describe('lastSessionGpsView', () => {
     expect(v.session.id).toBe('S7')
     expect(v.comparedTo?.id).toBe('S2')
     const distance = v.metrics.find((m) => m.kpiKey === 'total_distance')!
-    expect(distance.value).toBe(6800)
-    expect(distance.deltaPct).toBeCloseTo(((6800 - 3600) / 3600) * 100, 5)
+    // team scope is the AVERAGE PER PARTICIPATING ATHLETE, never a hidden total:
+    // S7 = mean(3500, 3300) = 3400; prior S2 = mean(3600) = 3600 (A2 device-missing)
+    expect(distance.value).toBe(3400)
+    expect(distance.aggLabel).toBe('average per athlete')
+    expect(distance.deltaPct).toBeCloseTo(((3400 - 3600) / 3600) * 100, 5)
   })
   it('reports device-missing participants without zero-filling', () => {
     const v = lastSessionGpsView(ds, '2026-09-02')!
@@ -51,7 +54,9 @@ describe('loadHealthView', () => {
     expect(v.validCount).toBe(0)
     expect(v.counts.incomplete + v.counts.insufficient).toBe(3)
     expect(v.athletes.find((a) => a.athleteId === 'A2')?.reason).toBe('incomplete data')
-    expect(v.bands).toHaveLength(3)
+    // four transparent states: below / within / elevated / substantially elevated
+    expect(v.bands).toHaveLength(4)
+    expect(v.bands.map((b) => b.key)).toEqual(['below', 'within', 'elevated', 'high'])
   })
 })
 
@@ -162,6 +167,7 @@ describe('local provider over the generated season (smoke)', () => {
       v.counts.below +
       v.counts.within +
       v.counts.elevated +
+      v.counts.high +
       v.counts.incomplete +
       v.counts.insufficient
     expect(total).toBe(25)

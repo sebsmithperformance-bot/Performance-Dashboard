@@ -12,8 +12,35 @@ export const DEFAULT_THRESHOLDS: ThresholdSettings = {
   speedMinExposureMin: 25, // §8 QA speed-exposure rule
   acwrBelowBand: 0.8,
   acwrElevatedBand: 1.3,
+  acwrHighBand: 1.5,
   percentChangeUnchangedBandPct: 2,
 }
+
+/**
+ * Canonical GPS metrics on the Overview Last Session GPS tile — Player Load
+ * leads (coach-feedback default). Coaches add/remove via the Team Dashboard
+ * Customize drawer; an empty override falls back to this list.
+ */
+export const DEFAULT_OVERVIEW_GPS_METRICS = [
+  'player_load',
+  'total_distance',
+  'high_speed_distance',
+  'top_speed',
+]
+
+/** GPS/Load metrics the coach may surface on the Team Dashboard, canonical
+ *  order. The Customize drawer offers exactly these; selection is stored in
+ *  DisplayPreferences.overviewGpsMetrics. */
+export const OVERVIEW_GPS_SUPPORTED = [
+  'player_load',
+  'total_distance',
+  'high_speed_distance',
+  'top_speed',
+  'sprints',
+  'accelerations',
+  'decelerations',
+  'workload',
+]
 
 export const DEFAULT_POSITIONS: PositionGroup[] = [
   { id: 'Goalkeeper', label: 'Goalkeepers', builtin: true, retired: false },
@@ -35,6 +62,8 @@ export function defaultSettings(): DashboardSettings {
       defaultScChangeKpi: null,
       // least-used metric columns start hidden (visual-review #5)
       athletesDefaultHiddenKpis: ['yards_per_minute', 'sprint_distance', 'high_intensity_events'],
+      // empty = DEFAULT_OVERVIEW_GPS_METRICS
+      overviewGpsMetrics: [],
     },
   }
 }

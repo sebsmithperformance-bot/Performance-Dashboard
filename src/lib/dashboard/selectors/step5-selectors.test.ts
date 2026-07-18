@@ -7,9 +7,12 @@ import { describe, expect, it } from 'vitest'
 import { DEFAULT_THRESHOLDS } from '../../settings/defaults.ts'
 import { applyKpiOverride } from '../../settings/SettingsContext.tsx'
 import { buildDataset } from '../dataset.ts'
+import { sessionTypeSummary } from '../format.ts'
 import { dashboardFixture } from '../test-fixture.ts'
 import type { DashKpi } from '../types.ts'
 import { gpsSessionCompare, gpsSessionOverview, gpsTrendsView } from './gps.ts'
+import { lastSessionGpsView } from './last-session.ts'
+import { bandFor, loadHealthView } from './load-health.ts'
 import { metricTrendView } from './metric-trend.ts'
 import {
   athleteProfileView,
@@ -250,5 +253,45 @@ describe('settings overrides', () => {
   it('thresholds default to the shipped values', () => {
     expect(DEFAULT_THRESHOLDS.speedFlagThresholdPct).toBe(90)
     expect(DEFAULT_THRESHOLDS.acwrElevatedBand).toBeCloseTo(1.3, 10)
+    expect(DEFAULT_THRESHOLDS.acwrHighBand).toBeCloseTo(1.5, 10)
+  })
+})
+
+describe('coach-feedback: overview presentation', () => {
+  it('Last Session GPS leads with Player Load and labels values as averages', () => {
+    const v = lastSessionGpsView(ds, '2026-09-05')!
+    // default metric set leads with Player Load (coach-feedback default)
+    expect(v.metrics[0]?.kpiKey).toBe('player_load')
+    // team scope is always average per participating athlete, never a total
+    expect(v.metrics.every((m) => m.aggLabel === 'average per athlete')).toBe(true)
+    // S7 player_load = mean(480, 450) = 465
+    expect(v.metrics[0]?.value).toBe(465)
+  })
+
+  it('honours the coach-selected GPS metric set and drops unknown keys', () => {
+    const v = lastSessionGpsView(ds, '2026-09-05', ['top_speed', 'total_distance', 'not_a_metric'])!
+    expect(v.metrics.map((m) => m.kpiKey)).toEqual(['top_speed', 'total_distance'])
+  })
+
+  it('Load Health exposes four labelled states plus team ACWR and 7-day load', () => {
+    const v = loadHealthView(ds, '2026-09-05', null)
+    expect(v.bands.map((b) => b.key)).toEqual(['below', 'within', 'elevated', 'high'])
+    // each state carries a text label, never colour alone (§12.5)
+    expect(v.bands.every((b) => b.short.length > 0)).toBe(true)
+    // team-level numbers are present as numbers or explicit null (never NaN)
+    expect(v.avgAcute7dLoad === null || Number.isFinite(v.avgAcute7dLoad)).toBe(true)
+    expect(v.teamMedianAcwr === null || Number.isFinite(v.teamMedianAcwr)).toBe(true)
+  })
+
+  it('bandFor separates elevated (yellow) from substantially elevated (red)', () => {
+    expect(bandFor(1.4, DEFAULT_THRESHOLDS)).toBe('elevated')
+    expect(bandFor(1.7, DEFAULT_THRESHOLDS)).toBe('high')
+  })
+
+  it('session-type summary distinguishes same-day sessions', () => {
+    expect(sessionTypeSummary([])).toBe('')
+    // 2026-09-04 has AM Practice + PM Practice + Lift in the fixture
+    expect(sessionTypeSummary(ds.sessionsByDate.get('2026-09-04') ?? [])).toBe('2 × Practice + Lift')
+    expect(sessionTypeSummary(ds.sessionsByDate.get('2026-09-05') ?? [])).toBe('Game')
   })
 })

@@ -264,7 +264,7 @@ export function gpsTrendsView(
 
   // per-athlete rules reuse the tested readiness rows
   const rows = readinessTableView(dataset, date, position, thresholds)
-  const elevated = rows.filter((r) => r.band === 'elevated')
+  const elevated = rows.filter((r) => r.band === 'elevated' || r.band === 'high')
   if (elevated.length > 0) {
     recommendations.push({
       id: 'elevated-athletes',
