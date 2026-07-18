@@ -1,8 +1,8 @@
 import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
-import { NavLink } from 'react-router'
+import { NavLink, useLocation } from 'react-router'
 import { orderByConfig } from '../lib/settings/defaults.ts'
 import { useSettings } from '../lib/settings/SettingsContext.tsx'
-import { ADMIN_ITEMS, PRIMARY_SECTIONS } from './nav.ts'
+import { ADMIN_ITEMS, PRIMARY_SECTIONS, type SubTab } from './nav.ts'
 import type { LucideIcon } from 'lucide-react'
 
 function NavItem({
@@ -36,9 +36,29 @@ function NavItem({
   )
 }
 
+/** Second-level entry shown, indented, under the active primary section. */
+function SubNavItem({ tab }: { tab: SubTab }) {
+  return (
+    <NavLink
+      to={tab.path}
+      end={tab.end}
+      className={({ isActive }) =>
+        `flex h-8 items-center rounded-control px-3 text-label font-medium transition-colors duration-150 ${
+          isActive
+            ? 'bg-surface-2 text-primary'
+            : 'text-muted hover:bg-surface-2 hover:text-secondary'
+        }`
+      }
+    >
+      <span className="truncate">{tab.label}</span>
+    </NavLink>
+  )
+}
+
 function SidebarBody({ collapsed }: { collapsed: boolean }) {
   // §5.5 layout config: coach-chosen section order (Data Management)
   const { settings } = useSettings()
+  const { pathname } = useLocation()
   const sections = orderByConfig(PRIMARY_SECTIONS, (s) => s.base, settings.layout.sectionOrder)
   return (
     <>
@@ -49,15 +69,32 @@ function SidebarBody({ collapsed }: { collapsed: boolean }) {
         </span>
       </div>
       <nav aria-label="Primary" className="flex flex-col gap-1 p-3">
-        {sections.map((section) => (
-          <NavItem
-            key={section.base}
-            to={section.base}
-            icon={section.icon}
-            label={section.label}
-            collapsed={collapsed}
-          />
-        ))}
+        {sections.map((section) => {
+          const active = pathname === section.base || pathname.startsWith(`${section.base}/`)
+          const subTabs = orderByConfig(
+            section.subTabs,
+            (t) => t.path,
+            settings.layout.subTabOrder[section.base] ?? [],
+          )
+          return (
+            <div key={section.base}>
+              <NavItem
+                to={section.base}
+                icon={section.icon}
+                label={section.label}
+                collapsed={collapsed}
+              />
+              {/* subcategories: visible only for the active section when expanded */}
+              {!collapsed && active && subTabs.length > 0 && (
+                <div className="mt-0.5 mb-1 ml-[1.35rem] flex flex-col gap-0.5 border-l border-subtle pl-2">
+                  {subTabs.map((tab) => (
+                    <SubNavItem key={tab.path} tab={tab} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </nav>
       <div className="mx-3 border-t border-subtle" />
       <nav aria-label="Administration" className="flex flex-col gap-1 p-3">
