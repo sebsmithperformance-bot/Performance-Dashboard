@@ -1,31 +1,30 @@
 import { useMemo, useState } from 'react'
-import { HBarChart } from '../../../components/charts/HBarChart.tsx'
+import { LineChart, type LineChartSeries } from '../../../components/charts/LineChart.tsx'
 import {
   FilterBar,
-  MetricSelector,
   PositionSelector,
   SeasonSelector,
 } from '../../../components/controls/controls.tsx'
 import { SaveViewControl } from '../../../components/controls/SaveViewControl.tsx'
+import { Badge } from '../../../components/ui/Badge.tsx'
 import { ChartCard } from '../../../components/ui/ChartCard.tsx'
 import { ErrorState } from '../../../components/ui/ErrorState.tsx'
-import { KPIValue } from '../../../components/ui/KPIValue.tsx'
 import { Skeleton } from '../../../components/ui/Skeleton.tsx'
 import { useDashboardData } from '../../../lib/dashboard/DashboardDataContext.tsx'
-import { formatDayLabel, formatMetricValue } from '../../../lib/dashboard/format.ts'
-import { gpsSessionCompare, monitoringGpsKpis } from '../../../lib/dashboard/selectors/gps.ts'
+import { formatDayLabel, formatMetricValue, sessionTypeLabel } from '../../../lib/dashboard/format.ts'
+import { gpsCompareSeries, monitoringGpsKpis } from '../../../lib/dashboard/selectors/gps.ts'
 import type { DashboardDataset } from '../../../lib/dashboard/types.ts'
 
-/** distinct series colors for up to four overlaid sessions */
-const SESSION_COLORS = [
+const METRIC_COLORS = [
   'var(--chart-series-1)',
   'var(--chart-series-2)',
   'var(--chart-series-4)',
   'var(--chart-series-5)',
 ]
-const MAX_SESSIONS = 4
+const MAX_METRICS = 4
 
-/** Monitoring → GPS → Session Compare (§5.2): overlay two or more sessions. */
+/** Monitoring → GPS → Session Compare (§5.2): a chronological team-average
+ *  trend across the sessions the coach selects, one or more metrics at once. */
 export function GpsSessionComparePage() {
   const { status, error, dataset, selectedDate, savedViews } = useDashboardData()
 
@@ -52,7 +51,7 @@ function SessionCompare({
 }) {
   const kpis = useMemo(() => monitoringGpsKpis(dataset), [dataset])
 
-  // candidate sessions: field sessions up to the selected date, most recent first
+  // candidate field sessions up to the selected date that carry data, newest first
   const candidates = useMemo(
     () =>
       [...dataset.sessions]
@@ -63,55 +62,76 @@ function SessionCompare({
             (dataset.observationsBySession.get(s.id)?.length ?? 0) > 0,
         )
         .reverse()
-        .slice(0, 12),
+        .slice(0, 24),
     [dataset, date],
   )
 
-  const [kpiKey, setKpiKey] = useState(kpis[0]?.key ?? 'total_distance')
-  const [position, setPosition] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<string[]>(() =>
-    candidates.slice(0, 2).map((s) => s.id),
+    candidates.slice(0, 6).map((s) => s.id),
   )
+  const [metricKeys, setMetricKeys] = useState<string[]>(() => [kpis[0]?.key ?? 'player_load'])
+  const [position, setPosition] = useState<string | null>(null)
 
   const view = useMemo(
-    () => gpsSessionCompare(dataset, selectedIds, kpiKey, position),
-    [dataset, selectedIds, kpiKey, position],
+    () => gpsCompareSeries(dataset, selectedIds, metricKeys, position),
+    [dataset, selectedIds, metricKeys, position],
   )
-  const kpi = view.kpi
 
-  const toggleSession = (id: string) => {
-    setSelectedIds((current) =>
-      current.includes(id)
-        ? current.filter((x) => x !== id)
-        : current.length >= MAX_SESSIONS
-          ? current
-          : // keep chronological order for the overlay legend
-            candidates
-              .filter((s) => [...current, id].includes(s.id))
-              .map((s) => s.id)
-              .reverse(),
+  const toggleSession = (id: string) =>
+    setSelectedIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]))
+  const toggleMetric = (key: string) =>
+    setMetricKeys((cur) =>
+      cur.includes(key)
+        ? cur.length > 1
+          ? cur.filter((k) => k !== key)
+          : cur // keep at least one metric
+        : cur.length >= MAX_METRICS
+          ? cur
+          : [...cur, key],
     )
+
+  const multi = view.metrics.length > 1
+  const fmtAbs = (kpiKey: string, v: number | null) => {
+    const kpi = dataset.kpis.get(kpiKey)
+    if (!kpi || v === null) return '—'
+    const f = formatMetricValue(v, kpi)
+    return f.unit ? `${f.text} ${f.unit}` : f.text
   }
 
-  const series = view.sessions.map((s, i) => ({
-    key: s.id,
-    label: `${formatDayLabel(s.date)} · ${s.label}`,
-    color: SESSION_COLORS[i % SESSION_COLORS.length]!,
-  }))
-  const fmt = (v: number) => formatMetricValue(v, kpi ?? { decimalPlaces: 0, unit: '' }).text
+  // indexed to each metric's first data point when comparing multiple metrics
+  // (differently-scaled units share one axis); absolute units for a single metric
+  const chartSeries: LineChartSeries[] = view.metrics.map((m, i) => {
+    const baseline = m.means.find((v): v is number => v !== null) ?? null
+    return {
+      key: m.kpi.key,
+      label: m.kpi.displayName,
+      color: METRIC_COLORS[i % METRIC_COLORS.length]!,
+      values: m.means.map((v) =>
+        multi ? (v === null || baseline === null || baseline === 0 ? null : (v / baseline) * 100) : v,
+      ),
+    }
+  })
+
+  const xLabels = view.sessions.map((s) => formatDayLabel(s.date))
+  const tooltipHeaders = view.sessions.map(
+    (s) => `${formatDayLabel(s.date)} · ${sessionTypeLabel(s.type)}`,
+  )
+  const singleKpi = view.metrics[0]?.kpi
 
   return (
     <div className="flex flex-col gap-4">
       <FilterBar>
         <SeasonSelector seasonLabel={dataset.seasonLabel} />
-        <MetricSelector kpis={kpis} value={kpiKey} onChange={setKpiKey} />
         <PositionSelector value={position} onChange={setPosition} />
         <SaveViewControl
           page="monitoring-gps-compare"
           store={savedViews}
-          getCurrentConfig={() => ({ kpiKey, position, selectedIds })}
+          getCurrentConfig={() => ({ metricKeys, position, selectedIds })}
           onApply={(config) => {
-            setKpiKey((config['kpiKey'] as string) ?? kpis[0]?.key ?? 'total_distance')
+            const mk = (config['metricKeys'] as string[] | undefined)?.filter((k) =>
+              dataset.kpis.has(k),
+            )
+            setMetricKeys(mk && mk.length > 0 ? mk.slice(0, MAX_METRICS) : [kpis[0]?.key ?? 'player_load'])
             setPosition((config['position'] as string | null) ?? null)
             const ids = (config['selectedIds'] as string[] | undefined) ?? []
             setSelectedIds(ids.filter((id) => dataset.sessionById.has(id)))
@@ -119,79 +139,136 @@ function SessionCompare({
         />
       </FilterBar>
 
-      <div className="rounded-card border border-subtle bg-surface p-3">
-        <p className="mb-2 text-label font-medium text-secondary">
-          Sessions to overlay ({selectedIds.length}/{MAX_SESSIONS})
-        </p>
-        <div className="flex flex-wrap gap-1">
-          {candidates.map((s) => {
-            const active = selectedIds.includes(s.id)
-            return (
+      <div className="grid items-start gap-4 lg:grid-cols-[260px_1fr]">
+        {/* left vertical session selector */}
+        <section
+          aria-label="Sessions"
+          className="flex flex-col rounded-card border border-subtle bg-surface"
+        >
+          <div className="flex items-center justify-between gap-2 border-b border-subtle px-3 py-2">
+            <span className="text-label font-medium text-secondary">
+              Sessions ({selectedIds.length})
+            </span>
+            <span className="flex gap-2 text-label">
               <button
-                key={s.id}
                 type="button"
-                aria-pressed={active}
-                onClick={() => toggleSession(s.id)}
-                className={`rounded-full border px-3 py-1 text-label font-medium ${
-                  active
-                    ? 'border-accent bg-accent/15 text-primary'
-                    : 'border-subtle text-secondary hover:border-strong hover:text-primary'
-                }`}
+                onClick={() => setSelectedIds(candidates.map((s) => s.id))}
+                className="text-accent hover:underline"
               >
-                {formatDayLabel(s.date)} · {s.type}
+                All
               </button>
-            )
-          })}
+              <button
+                type="button"
+                onClick={() => setSelectedIds([])}
+                className="text-secondary hover:underline"
+              >
+                Clear
+              </button>
+            </span>
+          </div>
+          <ul className="flex max-h-64 flex-col divide-y divide-subtle overflow-y-auto lg:max-h-[32rem]">
+            {candidates.map((s) => {
+              const active = selectedIds.includes(s.id)
+              return (
+                <li key={s.id}>
+                  <label className="flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-surface-2">
+                    <input
+                      type="checkbox"
+                      checked={active}
+                      onChange={() => toggleSession(s.id)}
+                      className="accent-(--accent)"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-body">{formatDayLabel(s.date)}</span>
+                      <span className="block truncate text-label text-muted">{s.label}</span>
+                    </span>
+                    <Badge tone="neutral">{sessionTypeLabel(s.type)}</Badge>
+                  </label>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+
+        {/* metrics + chart */}
+        <div className="flex min-w-0 flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="mr-1 text-label font-medium text-secondary">
+              Metrics ({metricKeys.length}/{MAX_METRICS}):
+            </span>
+            {kpis.map((kpi) => {
+              const active = metricKeys.includes(kpi.key)
+              const disabled = !active && metricKeys.length >= MAX_METRICS
+              return (
+                <button
+                  key={kpi.key}
+                  type="button"
+                  aria-pressed={active}
+                  disabled={disabled}
+                  onClick={() => toggleMetric(kpi.key)}
+                  className={`rounded-full border px-3 py-1 text-label font-medium ${
+                    active
+                      ? 'border-accent bg-accent/15 text-primary'
+                      : disabled
+                        ? 'border-subtle text-muted opacity-50'
+                        : 'border-subtle text-secondary hover:border-strong hover:text-primary'
+                  }`}
+                >
+                  {kpi.displayName}
+                </button>
+              )
+            })}
+          </div>
+
+          {view.sessions.length < 2 ? (
+            <ErrorState
+              title="Pick at least two sessions"
+              message="Select sessions on the left to see the trend across them."
+            />
+          ) : (
+            <ChartCard
+              title="Session comparison"
+              subtitle={
+                multi
+                  ? 'team average per athlete, indexed to each metric’s first session (= 100%)'
+                  : `team average per athlete · ${singleKpi?.displayName}`
+              }
+              table={{
+                columns: ['Session', ...view.metrics.map((m) => m.kpi.displayName), 'Athletes (n)'],
+                rows: view.sessions.map((s, i) => [
+                  `${formatDayLabel(s.date)} · ${sessionTypeLabel(s.type)}`,
+                  ...view.metrics.map((m) => fmtAbs(m.kpi.key, m.means[i] ?? null)),
+                  String(Math.max(...view.metrics.map((m) => m.ns[i] ?? 0))),
+                ]),
+              }}
+            >
+              <LineChart
+                xLabels={xLabels}
+                series={chartSeries}
+                smooth
+                zeroBased={!multi}
+                tooltipHeaders={tooltipHeaders}
+                tooltipValueFor={(si, xi) => {
+                  const m = view.metrics[si]
+                  if (!m) return null
+                  const n = m.ns[xi] ?? 0
+                  return `${fmtAbs(m.kpi.key, m.means[xi] ?? null)} · n=${n}`
+                }}
+                formatX={(label) => label}
+                formatY={(v) =>
+                  multi ? `${Math.round(v)}%` : formatMetricValue(v, singleKpi!).text
+                }
+                ariaLabel={`Team-average ${view.metrics.map((m) => m.kpi.displayName).join(', ')} across ${view.sessions.length} sessions`}
+              />
+              <p className="mt-2 text-label text-muted">
+                Values are averages per participating athlete. Missing sessions leave gaps — they are
+                never drawn through (§6.7).
+                {multi && ' Metrics are indexed so differently-scaled units share one axis.'}
+              </p>
+            </ChartCard>
+          )}
         </div>
       </div>
-
-      {view.sessions.length < 2 ? (
-        <ErrorState
-          title="Pick at least two sessions"
-          message="Session Compare overlays two or more sessions — select them above."
-        />
-      ) : kpi === null ? (
-        <ErrorState title="Unknown metric" message="Pick a metric from the list." />
-      ) : (
-        <ChartCard
-          title={`${kpi.displayName} — session overlay`}
-          subtitle={`per athlete · team mean: ${view.teamMeans
-            .map((m, i) => `${formatDayLabel(view.sessions[i]!.date)} ${m === null ? '—' : fmt(m)}`)
-            .join(' · ')}`}
-          table={{
-            columns: ['Athlete', ...series.map((s) => s.label)],
-            rows: view.rows.map((r) => [
-              r.name,
-              ...r.values.map((v) => (v === null ? '—' : fmt(v))),
-            ]),
-          }}
-        >
-          <HBarChart
-            series={series}
-            rows={view.rows.map((r) => ({
-              key: r.athleteId,
-              label: r.name,
-              sublabel: r.position,
-              values: r.values,
-            }))}
-            formatValue={fmt}
-            ariaLabel={`${kpi.displayName} compared across ${view.sessions.length} sessions`}
-          />
-          <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-label text-muted">
-            {view.sessions.map((s, i) => (
-              <span key={s.id} className="tabular">
-                {formatDayLabel(s.date)}: n={view.teamNs[i]} ·{' '}
-                <KPIValue
-                  value={view.teamMeans[i]}
-                  kpi={kpi}
-                  size="small"
-                />{' '}
-                mean
-              </span>
-            ))}
-          </p>
-        </ChartCard>
-      )}
     </div>
   )
 }

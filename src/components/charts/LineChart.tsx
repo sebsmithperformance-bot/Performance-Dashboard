@@ -1,10 +1,13 @@
 /**
- * Multi-series SVG line chart — token-pure, no animation (§12.7). Null values
- * break the line into gaps (missing ≠ zero, §6.7); an optional shaded y-band
- * makes threshold ranges visible on the chart itself (§6.9). Always render
- * inside a ChartCard so the accessible table alternative exists.
+ * Multi-series SVG line chart — token-pure, no entrance animation (§12.7).
+ * Null values break the line into gaps (missing ≠ zero, §6.7); an optional
+ * shaded y-band makes threshold ranges visible on the chart itself (§6.9).
+ * Optional monotone smoothing is visual interpolation only — it never moves a
+ * plotted point or overshoots the data. A lightweight hover tooltip reads out
+ * each series at the nearest x. Always render inside a ChartCard so the
+ * accessible table alternative exists.
  */
-import { useId } from 'react'
+import { useId, useRef, useState } from 'react'
 
 export interface LineChartSeries {
   key: string
@@ -44,27 +47,80 @@ function niceTicks(min: number, max: number, count = 4): number[] {
   return ticks
 }
 
+/** Monotone cubic (Fritsch–Carlson) path through points — no overshoot. */
+function monotonePath(pts: { x: number; y: number }[]): string {
+  const n = pts.length
+  if (n < 3) return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
+  const dx: number[] = []
+  const slope: number[] = []
+  for (let i = 0; i < n - 1; i += 1) {
+    dx[i] = pts[i + 1]!.x - pts[i]!.x
+    slope[i] = (pts[i + 1]!.y - pts[i]!.y) / dx[i]!
+  }
+  const t: number[] = [slope[0]!]
+  for (let i = 1; i < n - 1; i += 1) {
+    if (slope[i - 1]! * slope[i]! <= 0) t[i] = 0
+    else t[i] = (slope[i - 1]! + slope[i]!) / 2
+  }
+  t[n - 1] = slope[n - 2]!
+  // clamp tangents to keep the curve monotone (no overshoot past the points)
+  for (let i = 0; i < n - 1; i += 1) {
+    if (slope[i] === 0) {
+      t[i] = 0
+      t[i + 1] = 0
+    } else {
+      const a = t[i]! / slope[i]!
+      const b = t[i + 1]! / slope[i]!
+      const h = Math.hypot(a, b)
+      if (h > 3) {
+        t[i] = ((3 / h) * a) * slope[i]!
+        t[i + 1] = ((3 / h) * b) * slope[i]!
+      }
+    }
+  }
+  let d = `M${pts[0]!.x.toFixed(1)},${pts[0]!.y.toFixed(1)}`
+  for (let i = 0; i < n - 1; i += 1) {
+    const c1x = pts[i]!.x + dx[i]! / 3
+    const c1y = pts[i]!.y + (t[i]! * dx[i]!) / 3
+    const c2x = pts[i + 1]!.x - dx[i]! / 3
+    const c2y = pts[i + 1]!.y - (t[i + 1]! * dx[i]!) / 3
+    d += ` C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${pts[i + 1]!.x.toFixed(1)},${pts[i + 1]!.y.toFixed(1)}`
+  }
+  return d
+}
+
 export function LineChart({
   xLabels,
   series,
   height = 240,
   yBand = null,
   zeroBased = false,
+  smooth = false,
   formatX = (label) => label,
   formatY = (v) => String(v),
+  /** tooltip header per x-index; defaults to the x label */
+  tooltipHeaders,
+  /** override the tooltip value text for a series at an x-index (e.g. absolute
+   *  units when the plotted axis is indexed); return null to show "—" */
+  tooltipValueFor,
   ariaLabel,
 }: {
   xLabels: string[]
   series: LineChartSeries[]
   height?: number
   yBand?: YBand | null
-  /** force the y-axis to include zero (sensible for volumes/loads) */
   zeroBased?: boolean
+  smooth?: boolean
   formatX?: (label: string, index: number) => string
   formatY?: (value: number) => string
+  tooltipHeaders?: string[]
+  tooltipValueFor?: (seriesIndex: number, xIndex: number) => string | null
   ariaLabel: string
 }) {
   const clipId = useId()
+  const svgRef = useRef<SVGSVGElement>(null)
+  const [hover, setHover] = useState<number | null>(null)
+
   const allValues = series.flatMap((s) => s.values).filter((v): v is number => v !== null)
   if (allValues.length === 0 || xLabels.length === 0) {
     return <p className="py-8 text-center text-label text-muted">no plottable data in this range</p>
@@ -96,31 +152,57 @@ export function LineChart({
   // build per-series path segments, breaking at nulls (gaps stay visible)
   const seriesPaths = series.map((s) => {
     const segments: string[] = []
-    let current: string[] = []
+    let current: { x: number; y: number }[] = []
+    const flush = () => {
+      if (current.length === 0) return
+      segments.push(smooth ? monotonePath(current) : current.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '))
+      current = []
+    }
     s.values.forEach((v, i) => {
       if (v === null) {
-        if (current.length > 0) segments.push(current.join(' '))
-        current = []
+        flush()
         return
       }
-      current.push(`${current.length === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`)
+      current.push({ x: x(i), y: y(v) })
     })
-    if (current.length > 0) segments.push(current.join(' '))
+    flush()
     const lonePoints = s.values
       .map((v, i) => ({ v, i }))
-      .filter(
-        ({ v, i }) => v !== null && s.values[i - 1] == null && s.values[i + 1] == null,
-      )
+      .filter(({ v, i }) => v !== null && s.values[i - 1] == null && s.values[i + 1] == null)
     return { series: s, d: segments.join(' '), lonePoints }
   })
 
+  const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const svg = svgRef.current
+    if (!svg) return
+    const rect = svg.getBoundingClientRect()
+    const vx = ((e.clientX - rect.left) / rect.width) * W
+    // nearest x index
+    let best = 0
+    let bestDist = Infinity
+    for (let i = 0; i < xLabels.length; i += 1) {
+      const d = Math.abs(x(i) - vx)
+      if (d < bestDist) {
+        bestDist = d
+        best = i
+      }
+    }
+    setHover(best)
+  }
+
+  const hoverX = hover === null ? null : x(hover)
+  const tooltipRight = hoverX !== null && hoverX > PAD_L + innerW * 0.6
+
   return (
-    <div className="flex flex-col gap-2">
+    <div className="relative flex flex-col gap-2">
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${W} ${height}`}
         className="h-auto w-full"
         role="img"
         aria-label={ariaLabel}
+        onMouseMove={onMove}
+        onMouseLeave={() => setHover(null)}
       >
         <clipPath id={clipId}>
           <rect x={PAD_L} y={PAD_T} width={innerW} height={innerH} />
@@ -146,14 +228,9 @@ export function LineChart({
               y2={y(t)}
               stroke="var(--border-subtle)"
               strokeWidth={1}
+              opacity={0.6}
             />
-            <text
-              x={PAD_L - 6}
-              y={y(t) + 3.5}
-              textAnchor="end"
-              fontSize={11}
-              fill="var(--text-muted)"
-            >
+            <text x={PAD_L - 6} y={y(t) + 3.5} textAnchor="end" fontSize={11} fill="var(--text-muted)">
               {formatY(t)}
             </text>
           </g>
@@ -183,6 +260,18 @@ export function LineChart({
           </text>
         ))}
 
+        {/* hover guide line */}
+        {hoverX !== null && (
+          <line
+            x1={hoverX}
+            x2={hoverX}
+            y1={PAD_T}
+            y2={PAD_T + innerH}
+            stroke="var(--border-strong)"
+            strokeWidth={1}
+          />
+        )}
+
         <g clipPath={`url(#${clipId})`}>
           {seriesPaths.map(({ series: s, d, lonePoints }) => (
             <g key={s.key}>
@@ -200,10 +289,40 @@ export function LineChart({
               {lonePoints.map(({ v, i }) => (
                 <circle key={i} cx={x(i)} cy={y(v!)} r={2.5} fill={s.color} />
               ))}
+              {/* emphasize the hovered point */}
+              {hover !== null && s.values[hover] != null && (
+                <circle cx={x(hover)} cy={y(s.values[hover]!)} r={3.5} fill={s.color} stroke="var(--surface)" strokeWidth={1.5} />
+              )}
             </g>
           ))}
         </g>
       </svg>
+
+      {hover !== null && (
+        <div
+          className={`pointer-events-none absolute top-2 z-20 w-max max-w-[16rem] rounded-card border border-subtle bg-surface p-2 text-label shadow-lg ${
+            tooltipRight ? 'right-2' : 'left-12'
+          }`}
+        >
+          <p className="mb-1 font-medium text-secondary">
+            {tooltipHeaders?.[hover] ?? formatX(xLabels[hover]!, hover)}
+          </p>
+          <ul className="flex flex-col gap-0.5">
+            {series.map((s, si) => {
+              const raw = s.values[hover]
+              const text =
+                tooltipValueFor?.(si, hover) ?? (raw == null ? '—' : formatY(raw))
+              return (
+                <li key={s.key} className="flex items-center gap-1.5">
+                  <span aria-hidden className="inline-block size-2 rounded-full" style={{ backgroundColor: s.color }} />
+                  <span className="text-secondary">{s.label}</span>
+                  <span className="tabular ml-auto pl-3 font-medium">{text}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
 
       {series.length > 1 && (
         <div className="flex flex-wrap gap-x-4 gap-y-1">

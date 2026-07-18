@@ -10,7 +10,12 @@ import { buildDataset } from '../dataset.ts'
 import { sessionTypeSummary } from '../format.ts'
 import { dashboardFixture } from '../test-fixture.ts'
 import type { DashKpi } from '../types.ts'
-import { gpsSessionCompare, gpsSessionOverview, gpsTrendsView } from './gps.ts'
+import {
+  gpsCompareSeries,
+  gpsSessionCompare,
+  gpsSessionOverview,
+  gpsTrendsView,
+} from './gps.ts'
 import { lastSessionGpsView } from './last-session.ts'
 import { bandFor, loadHealthView } from './load-health.ts'
 import { metricTrendView } from './metric-trend.ts'
@@ -87,6 +92,28 @@ describe('gpsSessionCompare', () => {
   })
 })
 
+describe('gpsCompareSeries (chronological multi-metric compare)', () => {
+  it('returns team averages per session in date order, for each metric', () => {
+    // pass sessions out of order → selector sorts chronologically
+    const view = gpsCompareSeries(ds, ['S7', 'S1'], ['total_distance', 'player_load'], null)
+    expect(view.sessions.map((s) => s.id)).toEqual(['S1', 'S7'])
+    const dist = view.metrics.find((m) => m.kpi.key === 'total_distance')!
+    // S1 = mean(4400, 4100) = 4250; S7 = mean(3500, 3300) = 3400 (averages, not totals)
+    expect(dist.means).toEqual([4250, 3400])
+    expect(dist.ns).toEqual([2, 2])
+    const load = view.metrics.find((m) => m.kpi.key === 'player_load')!
+    expect(load.means).toEqual([400, 465])
+  })
+
+  it('leaves a gap (null) for a metric with no data in a session', () => {
+    const view = gpsCompareSeries(ds, ['S3', 'S7'], ['total_distance'], null)
+    const dist = view.metrics[0]!
+    // S3 (recovery) has no total_distance observations → null, never zero
+    expect(dist.means[0]).toBeNull()
+    expect(dist.means[1]).toBe(3400)
+  })
+})
+
 describe('gpsTrendsView', () => {
   it('produces transparent guidance with a target band when the window is complete', () => {
     const view = gpsTrendsView(ds, '2026-09-05', null)
@@ -95,11 +122,15 @@ describe('gpsTrendsView', () => {
     // one intense week over an empty preseason → elevated, recovery emphasis
     expect(view.guidance.label).toBe('recovery emphasis')
     expect(view.guidance.targetBand).not.toBeNull()
-    const acute = view.recommendations.find((r) => r.id === 'acute-vs-chronic')!
-    expect(acute.rule).toMatch(/≥ 20%/)
+    // team ACWR alert is structured happened → number → why → review
+    const teamAcwr = view.recommendations.find((r) => r.id === 'team-acwr')!
+    expect(teamAcwr.headline).toMatch(/elevated acute load/i)
+    expect(teamAcwr.value).toMatch(/Team average ACWR/)
+    expect(teamAcwr.why).toMatch(/threshold/)
+    expect(teamAcwr.review.length).toBeGreaterThan(0)
     // all three athletes lack a complete personal window → stated, not hidden
     const incomplete = view.recommendations.find((r) => r.id === 'incomplete-windows')!
-    expect(incomplete.headline).toMatch(/3 athletes/)
+    expect(incomplete.value).toMatch(/3 athletes/)
   })
 })
 

@@ -149,6 +149,58 @@ export function gpsSessionCompare(
   }
 }
 
+export interface GpsCompareMetricSeries {
+  kpi: DashKpi
+  /** team average per participating athlete, aligned to sessions; null = no data */
+  means: (number | null)[]
+  /** athletes with data per session, aligned to sessions */
+  ns: number[]
+}
+
+export interface GpsCompareSeriesViewModel {
+  /** selected sessions, chronological */
+  sessions: DashSession[]
+  metrics: GpsCompareMetricSeries[]
+}
+
+/**
+ * Session Compare as a chronological trend: for each selected metric, the team
+ * average per participating athlete at each session, in date order. Powers the
+ * line chart + table; team scope is always an average, never a hidden total.
+ */
+export function gpsCompareSeries(
+  dataset: DashboardDataset,
+  sessionIds: string[],
+  kpiKeys: string[],
+  position: string | null,
+): GpsCompareSeriesViewModel {
+  const sessions = sessionIds
+    .map((id) => dataset.sessionById.get(id))
+    .filter((s): s is DashSession => s !== undefined)
+    .sort((a, b) => (a.date === b.date ? a.startTime.localeCompare(b.startTime) : a.date.localeCompare(b.date)))
+  const athleteIds = new Set(
+    dataset.athletes.filter((a) => position === null || a.position === position).map((a) => a.id),
+  )
+
+  const metrics: GpsCompareMetricSeries[] = kpiKeys
+    .map((key) => dataset.kpis.get(key))
+    .filter((k): k is DashKpi => k !== undefined)
+    .map((kpi) => {
+      const means: (number | null)[] = []
+      const ns: number[] = []
+      for (const session of sessions) {
+        const values = (dataset.observationsBySession.get(session.id) ?? [])
+          .filter((o) => o.kpiKey === kpi.key && athleteIds.has(o.athleteId))
+          .map((o) => o.value)
+        ns.push(values.length)
+        means.push(values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null)
+      }
+      return { kpi, means, ns }
+    })
+
+  return { sessions, metrics }
+}
+
 // ---------------------------------------------------------------------------
 // Trends & Recommendations (§5.2): transparent rules over the team-mean day
 // series. Monotony threshold is a fixed published constant; ACWR bands come
@@ -157,14 +209,26 @@ export function gpsSessionCompare(
 
 export const MONOTONY_HIGH = 2.0
 
+/**
+ * A coach-readable alert in the "what happened → number → why → what to review"
+ * shape. The primary card shows only the first four fields; the rule + any
+ * athlete list live behind an info affordance so the alert stays scannable.
+ */
 export interface Recommendation {
   id: string
-  tone: 'warning' | 'neutral' | 'good'
+  tone: 'warning' | 'danger' | 'neutral' | 'good'
+  /** what happened */
   headline: string
-  /** the specific numbers behind the statement */
+  /** the one primary number */
+  value: string
+  /** why it was flagged (the threshold or comparison) */
+  why: string
+  /** what to review — a coach prompt, never a prescription or prediction */
+  review: string
+  /** affected group / athlete count, when applicable */
+  affected: string | null
+  /** the rule verbatim + any athlete list (§6.9), shown behind an info action */
   detail: string
-  /** the rule, stated verbatim (§6.9) */
-  rule: string
 }
 
 export interface GpsTrendsViewModel {
@@ -249,14 +313,40 @@ export function gpsTrendsView(
       guidance = { label, teamAcwr, targetBand: { from: lo, to: hi }, reason: null }
 
       const pctVsChronic = ((acute - chronicWeekly) / chronicWeekly) * 100
-      if (Math.abs(pctVsChronic) >= 20) {
-        const above = pctVsChronic > 0
+      const windowNote = `Team 28-day window complete (${completeness.observed} observed + ${completeness.rest} rest days).`
+      // primary team-load alert, structured as happened → number → why → review
+      if (teamAcwr > thresholds.acwrHighBand) {
         recommendations.push({
-          id: 'acute-vs-chronic',
-          tone: above ? 'warning' : 'neutral',
-          headline: `Team acute load is ${Math.abs(pctVsChronic).toFixed(0)}% ${above ? 'above' : 'below'} the 28-day weekly equivalent`,
-          detail: `7-day team-mean load ${Math.round(acute).toLocaleString('en-US')} AU vs weekly equivalent ${Math.round(chronicWeekly).toLocaleString('en-US')} AU; window complete (${completeness.observed} observed + ${completeness.rest} rest days).`,
-          rule: 'raised when |acute − chronic weekly equivalent| ≥ 20% of the chronic weekly equivalent',
+          id: 'team-acwr',
+          tone: 'danger',
+          headline: 'Substantially elevated acute load',
+          value: `Team average ACWR: ${teamAcwr.toFixed(2)}`,
+          why: `Above the configured ${thresholds.acwrHighBand.toFixed(2)} display threshold`,
+          review: 'Review recent exposure and the upcoming session plan',
+          affected: 'Whole team',
+          detail: `7-day team-mean load ${Math.round(acute).toLocaleString('en-US')} AU is ${Math.abs(pctVsChronic).toFixed(0)}% ${pctVsChronic >= 0 ? 'above' : 'below'} the 28-day weekly equivalent ${Math.round(chronicWeekly).toLocaleString('en-US')} AU. ${windowNote}`,
+        })
+      } else if (teamAcwr > thresholds.acwrElevatedBand) {
+        recommendations.push({
+          id: 'team-acwr',
+          tone: 'warning',
+          headline: 'Elevated acute load',
+          value: `Team average ACWR: ${teamAcwr.toFixed(2)}`,
+          why: `Above the configured ${thresholds.acwrElevatedBand.toFixed(2)} display threshold`,
+          review: 'Review recent exposure and the upcoming session plan',
+          affected: 'Whole team',
+          detail: `7-day team-mean load ${Math.round(acute).toLocaleString('en-US')} AU is ${Math.abs(pctVsChronic).toFixed(0)}% ${pctVsChronic >= 0 ? 'above' : 'below'} the 28-day weekly equivalent ${Math.round(chronicWeekly).toLocaleString('en-US')} AU. ${windowNote}`,
+        })
+      } else if (teamAcwr < thresholds.acwrBelowBand) {
+        recommendations.push({
+          id: 'team-acwr',
+          tone: 'neutral',
+          headline: 'Below recent workload',
+          value: `Team average ACWR: ${teamAcwr.toFixed(2)}`,
+          why: `Below the configured ${thresholds.acwrBelowBand.toFixed(2)} display threshold`,
+          review: 'Room to add load if the session plan calls for it',
+          affected: 'Whole team',
+          detail: `7-day team-mean load ${Math.round(acute).toLocaleString('en-US')} AU vs the 28-day weekly equivalent ${Math.round(chronicWeekly).toLocaleString('en-US')} AU. ${windowNote}`,
         })
       }
     }
@@ -264,16 +354,23 @@ export function gpsTrendsView(
 
   // per-athlete rules reuse the tested readiness rows
   const rows = readinessTableView(dataset, date, position, thresholds)
+  const completeNote =
+    completeness.missing === 0
+      ? '28-day team window complete'
+      : `${completeness.missing} missing team day(s) in the 28-day window`
   const elevated = rows.filter((r) => r.band === 'elevated' || r.band === 'high')
   if (elevated.length > 0) {
     recommendations.push({
       id: 'elevated-athletes',
       tone: 'warning',
-      headline: `${elevated.length} athlete${elevated.length === 1 ? '' : 's'} with elevated acute load`,
-      detail: elevated
-        .map((r) => `${r.name} (ACWR ${r.acwr!.toFixed(2)})`)
-        .join(', '),
-      rule: `raised per athlete when ACWR > ${thresholds.acwrElevatedBand.toFixed(2)} with a complete 28-day window — consider reviewing their next 1–2 sessions`,
+      headline: 'Athletes with elevated acute load',
+      value: `${elevated.length} athlete${elevated.length === 1 ? '' : 's'}`,
+      why: `Individual ACWR above the configured ${thresholds.acwrElevatedBand.toFixed(2)} threshold`,
+      review: 'Review their next 1–2 sessions',
+      affected: elevated.length <= 3 ? elevated.map((r) => r.name).join(', ') : `${elevated.length} athletes`,
+      detail: `Per-athlete ACWR with a complete 28-day window: ${elevated
+        .map((r) => `${r.name} (${r.acwr!.toFixed(2)})`)
+        .join(', ')}. ${completeNote}.`,
     })
   }
   const monotonous = rows.filter((r) => r.monotony !== null && r.monotony >= MONOTONY_HIGH)
@@ -281,9 +378,14 @@ export function gpsTrendsView(
     recommendations.push({
       id: 'high-monotony',
       tone: 'neutral',
-      headline: `${monotonous.length} athlete${monotonous.length === 1 ? '' : 's'} with high 7-day load monotony`,
-      detail: monotonous.map((r) => `${r.name} (${r.monotony!.toFixed(2)})`).join(', '),
-      rule: `raised when 7-day monotony (mean ÷ stdev of daily load) ≥ ${MONOTONY_HIGH.toFixed(1)} — day-to-day variation is low; consider varying session intensity`,
+      headline: 'High 7-day load monotony',
+      value: `${monotonous.length} athlete${monotonous.length === 1 ? '' : 's'}`,
+      why: `7-day monotony (mean ÷ stdev of daily load) ≥ ${MONOTONY_HIGH.toFixed(1)}`,
+      review: 'Consider varying session intensity',
+      affected: monotonous.length <= 3 ? monotonous.map((r) => r.name).join(', ') : `${monotonous.length} athletes`,
+      detail: `Day-to-day load variation is low for: ${monotonous
+        .map((r) => `${r.name} (${r.monotony!.toFixed(2)})`)
+        .join(', ')}.`,
     })
   }
   const incomplete = rows.filter((r) => r.reason === 'incomplete data')
@@ -291,9 +393,13 @@ export function gpsTrendsView(
     recommendations.push({
       id: 'incomplete-windows',
       tone: 'neutral',
-      headline: `${incomplete.length} athlete${incomplete.length === 1 ? '' : 's'} without a computable ACWR`,
-      detail: 'Missing device days poison the 28-day window; values are omitted, never estimated.',
-      rule: 'any missing expected day makes the window incomplete (ADR-005)',
+      headline: 'Athletes without a computable ACWR',
+      value: `${incomplete.length} athlete${incomplete.length === 1 ? '' : 's'}`,
+      why: 'Missing device days in the 28-day window',
+      review: 'Confirm device coverage for these athletes',
+      affected: `${incomplete.length} athletes`,
+      detail:
+        'Missing device days poison the 28-day window; ACWR is omitted, never estimated (ADR-005).',
     })
   }
 
@@ -302,8 +408,11 @@ export function gpsTrendsView(
       id: 'no-alerts',
       tone: 'good',
       headline: 'No load rules triggered for this range',
-      detail: 'Acute vs chronic balance, per-athlete ACWR, and monotony are all inside their published thresholds.',
-      rule: 'shown when no other rule fires',
+      value: 'All clear',
+      why: 'Team ACWR, per-athlete ACWR, and monotony are inside their published thresholds',
+      review: 'No load action indicated',
+      affected: null,
+      detail: 'Shown when no other rule fires.',
     })
   }
 

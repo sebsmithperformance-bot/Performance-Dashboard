@@ -11,6 +11,7 @@ import { SaveViewControl } from '../../../components/controls/SaveViewControl.ts
 import { AlertCard } from '../../../components/ui/AlertCard.tsx'
 import { Badge } from '../../../components/ui/Badge.tsx'
 import { ErrorState } from '../../../components/ui/ErrorState.tsx'
+import { InfoHint } from '../../../components/ui/InfoHint.tsx'
 import { Panel } from '../../../components/ui/Panel.tsx'
 import { Skeleton } from '../../../components/ui/Skeleton.tsx'
 import { useDashboardData } from '../../../lib/dashboard/DashboardDataContext.tsx'
@@ -22,10 +23,16 @@ import type { DashboardDataset } from '../../../lib/dashboard/types.ts'
 import { TeamLoadCharts } from '../TeamLoadCharts.tsx'
 
 const RANGES = [7, 14, 28, 60, 90]
-const TONE_ICON = { warning: TriangleAlert, neutral: Info, good: CircleCheck } as const
+const TONE_ICON = {
+  warning: TriangleAlert,
+  danger: TriangleAlert,
+  neutral: Info,
+  good: CircleCheck,
+} as const
 
-/** Monitoring → GPS → Trends & Recommendations (§5.2): long-range load view
- *  plus transparent rule-based team alerts. Observations, not predictions. */
+/** Monitoring → GPS → Trends & Recommendations (§5.2): concise Session Guidance
+ *  first, then coach-readable alerts, then the detailed trend charts.
+ *  Observations, not predictions (§6.8). */
 export function GpsTrendsPage() {
   const { status, error, dataset, selectedDate, savedViews } = useDashboardData()
 
@@ -66,12 +73,8 @@ function Trends({
     label: `within ${thresholds.acwrBelowBand.toFixed(2)}–${thresholds.acwrElevatedBand.toFixed(2)}`,
   }
 
-  const guidanceTone =
-    view.guidance.label === 'recovery emphasis'
-      ? 'warning'
-      : view.guidance.label === 'not computable'
-        ? 'neutral'
-        : 'good'
+  const g = view.guidance
+  const windowComplete = view.completeness.missing === 0
 
   return (
     <div className="flex flex-col gap-4">
@@ -102,47 +105,33 @@ function Trends({
         />
       </FilterBar>
 
-      <TeamLoadCharts
-        dataset={dataset}
-        date={date}
-        rangeDays={rangeDays}
-        position={position}
-        acwrBand={acwrBand}
-      />
-
-      <Panel
-        icon={Activity}
-        title="Session guidance"
-        keyValue={view.guidance.label}
-      >
-        <div className="flex flex-col gap-3">
-          {view.guidance.teamAcwr !== null && view.guidance.targetBand ? (
-            <>
-              <p className="text-body">
-                Team-mean ACWR is{' '}
-                <span className="tabular font-semibold">{view.guidance.teamAcwr.toFixed(2)}</span> —{' '}
-                <span className="font-semibold">{view.guidance.label}</span>. To land tomorrow's
-                7-day acute load inside the {acwrBand.label} band, target a team-mean session load
-                of{' '}
-                <span className="tabular font-semibold">
-                  {fmt0(view.guidance.targetBand.from)}–{fmt0(view.guidance.targetBand.to)} AU
-                </span>{' '}
-                (0 AU = full recovery day).
-              </p>
-              <p className="text-label text-muted">
-                Calculation: target = band edge × 28-day weekly equivalent − last 6 days of
-                team-mean load; both band edges shown, never a single prescription. This is a
-                workload observation, not medical advice (§6.8).
-              </p>
-            </>
+      {/* Session Guidance — first in the content hierarchy (coach-feedback) */}
+      <Panel icon={Activity} title="Session guidance" keyValue={g.label}>
+        <div className="flex flex-col gap-2">
+          {g.teamAcwr !== null && g.targetBand ? (
+            <p className="text-body">
+              Team-average ACWR is{' '}
+              <span className="tabular font-semibold">{g.teamAcwr.toFixed(2)}</span> —{' '}
+              <span className="font-semibold">{g.label}</span>. To keep tomorrow inside the{' '}
+              {acwrBand.label} band, aim for a team-average session load of{' '}
+              <span className="tabular font-semibold">
+                {fmt0(g.targetBand.from)}–{fmt0(g.targetBand.to)} AU
+              </span>{' '}
+              (0 AU = full recovery).
+              <InfoHint label="How this is calculated">
+                Target = band edge × 28-day weekly equivalent − last 6 days of team-average load.
+                Both band edges are shown, never a single prescription. A workload observation, not
+                medical advice (§6.8).
+              </InfoHint>
+            </p>
           ) : (
-            <p className="text-body text-secondary">{view.guidance.reason}</p>
+            <p className="text-body text-secondary">{g.reason}</p>
           )}
           <p className="flex flex-wrap items-center gap-2 text-label text-muted">
-            <Badge tone={view.completeness.missing === 0 ? 'good' : 'warning'}>
-              {view.completeness.missing === 0
+            <Badge tone={windowComplete ? 'good' : 'warning'}>
+              {windowComplete
                 ? '28-day window complete'
-                : `${view.completeness.missing} missing day${view.completeness.missing === 1 ? '' : 's'} in the 28-day window`}
+                : `${view.completeness.missing} missing day${view.completeness.missing === 1 ? '' : 's'}`}
             </Badge>
             <span className="tabular">
               {view.completeness.observed} observed · {view.completeness.rest} rest ·{' '}
@@ -152,20 +141,46 @@ function Trends({
         </div>
       </Panel>
 
+      {/* Alerts — happened → number → why → review */}
       <section aria-label="Load alerts" className="flex flex-col gap-3">
-        <h2 className="text-subhead font-semibold">Alerts & recommendations</h2>
+        <h2 className="text-subhead font-semibold">Alerts</h2>
         {view.recommendations.map((rec) => (
           <AlertCard key={rec.id} tone={rec.tone} icon={TONE_ICON[rec.tone]} headline={rec.headline}>
-            <p className="tabular">{rec.detail}</p>
-            <p className="mt-1">Rule: {rec.rule}</p>
+            <div className="flex flex-col gap-0.5">
+              <p className="tabular text-body font-semibold text-primary">{rec.value}</p>
+              <p>{rec.why}</p>
+              <p className="text-secondary">
+                <span className="font-medium">Review:</span> {rec.review}
+              </p>
+              <p className="mt-0.5 flex items-center gap-1 text-muted">
+                {rec.affected && <span>{rec.affected}</span>}
+                <InfoHint label="Alert detail">{rec.detail}</InfoHint>
+              </p>
+            </div>
           </AlertCard>
         ))}
       </section>
 
-      <p className="text-label text-muted">
-        Bands: {bandDefs.map((b) => `${b.label} = ${b.definition}`).join(' · ')}. Guidance tone:{' '}
-        {guidanceTone === 'warning' ? 'attention suggested' : 'informational'} — thresholds are
-        editable in KPI Settings → Thresholds.
+      {/* Detailed trend charts below the guidance/alerts */}
+      <TeamLoadCharts
+        dataset={dataset}
+        date={date}
+        rangeDays={rangeDays}
+        position={position}
+        acwrBand={acwrBand}
+      />
+
+      <p className="flex flex-wrap items-center gap-1 text-label text-muted">
+        Bands come from KPI Settings → Thresholds.
+        <InfoHint label="Band definitions">
+          <span className="flex flex-col gap-0.5">
+            {bandDefs.map((b) => (
+              <span key={b.key} className="block">
+                <span className="font-medium">{b.short}</span> — {b.definition}
+              </span>
+            ))}
+          </span>
+        </InfoHint>
       </p>
     </div>
   )

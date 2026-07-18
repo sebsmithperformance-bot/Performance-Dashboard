@@ -67,6 +67,7 @@ export function TeamLoadCharts({
             },
           ]}
           zeroBased
+          smooth
           formatX={shortDay}
           formatY={fmt0}
           ariaLabel={`Team mean daily load over the last ${rangeDays} days`}
@@ -96,6 +97,7 @@ export function TeamLoadCharts({
             },
           ]}
           yBand={acwrBand}
+          smooth
           formatX={shortDay}
           formatY={fmt2}
           ariaLabel={`Team median ACWR over the last ${rangeDays} days`}

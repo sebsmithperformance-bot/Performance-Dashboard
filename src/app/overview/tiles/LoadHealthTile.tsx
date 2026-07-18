@@ -119,13 +119,13 @@ export function LoadHealthTile({ dataset, date }: { dataset: DashboardDataset; d
             <span className="mb-1 block font-medium text-secondary">
               {view.loadKpiLabel}. Bands (editable in KPI Settings → Thresholds):
             </span>
-            <ul className="flex flex-col gap-0.5">
+            <span className="flex flex-col gap-0.5">
               {view.bands.map((b) => (
-                <li key={b.key}>
+                <span key={b.key} className="block">
                   <span className="font-medium">{b.short}</span> — {b.definition}
-                </li>
+                </span>
               ))}
-            </ul>
+            </span>
           </InfoHint>
         </p>
       </div>
