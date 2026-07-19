@@ -12,13 +12,16 @@ import { AlertCard } from '../../../components/ui/AlertCard.tsx'
 import { Badge } from '../../../components/ui/Badge.tsx'
 import { ErrorState } from '../../../components/ui/ErrorState.tsx'
 import { InfoHint } from '../../../components/ui/InfoHint.tsx'
+import { KpiCard, KpiStrip } from '../../../components/ui/KpiCard.tsx'
 import { Panel } from '../../../components/ui/Panel.tsx'
 import { Skeleton } from '../../../components/ui/Skeleton.tsx'
 import { useDashboardData } from '../../../lib/dashboard/DashboardDataContext.tsx'
 import { gpsTrendsView } from '../../../lib/dashboard/selectors/gps.ts'
+import { lastSessionGpsView } from '../../../lib/dashboard/selectors/last-session.ts'
 import { loadBands } from '../../../lib/dashboard/selectors/load-health.ts'
+import { readinessSummary } from '../../../lib/dashboard/selectors/readiness.ts'
 import { useSettings } from '../../../lib/settings/SettingsContext.tsx'
-import { formatInt as fmt0 } from '../../../lib/dashboard/format.ts'
+import { formatInt as fmt0, formatMetricValue } from '../../../lib/dashboard/format.ts'
 import type { DashboardDataset } from '../../../lib/dashboard/types.ts'
 import { TeamLoadCharts } from '../TeamLoadCharts.tsx'
 
@@ -72,6 +75,17 @@ function Trends({
     to: thresholds.acwrElevatedBand,
     label: `within ${thresholds.acwrBelowBand.toFixed(2)}–${thresholds.acwrElevatedBand.toFixed(2)}`,
   }
+
+  const summary = readinessSummary(dataset, date, position, thresholds)
+  const last = lastSessionGpsView(dataset, date, ['high_speed_distance'])
+  const hsdKpi = dataset.kpis.get('high_speed_distance')
+  const hsd = hsdKpi
+    ? formatMetricValue(last?.metrics.find((m) => m.kpiKey === 'high_speed_distance')?.value ?? null, hsdKpi)
+    : { text: '—', unit: null }
+  const loadTrend =
+    summary.avgAcute7d !== null && summary.avgChronicWeekly !== null && summary.avgChronicWeekly > 0
+      ? ((summary.avgAcute7d - summary.avgChronicWeekly) / summary.avgChronicWeekly) * 100
+      : null
 
   const g = view.guidance
   const windowComplete = view.completeness.missing === 0
@@ -141,9 +155,41 @@ function Trends({
         </div>
       </Panel>
 
+      {/* KPI summary strip */}
+      <KpiStrip>
+        <KpiCard
+          label="Median ACWR"
+          value={summary.medianAcwr !== null ? summary.medianAcwr.toFixed(2) : '—'}
+          sub={`${summary.validCount} valid athletes`}
+        />
+        <KpiCard
+          label="Monotony"
+          value={summary.avgMonotony !== null ? summary.avgMonotony.toFixed(2) : '—'}
+          sub="7-day, team avg"
+        />
+        <KpiCard
+          label="28-day Weekly Load"
+          value={summary.avgChronicWeekly !== null ? fmt0(summary.avgChronicWeekly) : '—'}
+          unit="AU"
+          sub="Team avg per athlete"
+        />
+        <KpiCard
+          label="High-Speed Distance"
+          value={hsd.text}
+          unit={hsd.unit ?? undefined}
+          sub={last ? `Team avg · ${last.participants} athletes` : undefined}
+        />
+        <KpiCard
+          label="Recent Load Trend"
+          value={loadTrend !== null ? `${loadTrend > 0 ? '+' : ''}${loadTrend.toFixed(0)}%` : '—'}
+          sub="7-day vs 28-day"
+          accent={loadTrend !== null && Math.abs(loadTrend) >= 20 ? 'warning' : undefined}
+        />
+      </KpiStrip>
+
       {/* Alerts — happened → number → why → review */}
       <section aria-label="Load alerts" className="flex flex-col gap-3">
-        <h2 className="text-subhead font-semibold">Alerts</h2>
+        <h2 className="section-label text-subhead text-secondary">Alerts &amp; observations</h2>
         {view.recommendations.map((rec) => (
           <AlertCard key={rec.id} tone={rec.tone} icon={TONE_ICON[rec.tone]} headline={rec.headline}>
             <div className="flex flex-col gap-0.5">
