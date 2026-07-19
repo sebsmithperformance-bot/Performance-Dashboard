@@ -11,6 +11,7 @@ import { Badge } from '../../components/ui/Badge.tsx'
 import { ChartCard } from '../../components/ui/ChartCard.tsx'
 import { DataTable, type Column } from '../../components/ui/DataTable.tsx'
 import { ErrorState } from '../../components/ui/ErrorState.tsx'
+import { KpiCard, KpiStrip } from '../../components/ui/KpiCard.tsx'
 import { KPIValue } from '../../components/ui/KPIValue.tsx'
 import { Skeleton } from '../../components/ui/Skeleton.tsx'
 import { useDashboardData } from '../../lib/dashboard/DashboardDataContext.tsx'
@@ -134,6 +135,18 @@ function Profile({ dataset, date }: { dataset: DashboardDataset; date: string })
       {!athlete || !view ? (
         <ErrorState title="Pick an athlete" message="Choose an athlete to see their profile." />
       ) : (
+        <div className="flex flex-col gap-4">
+        <KpiStrip>
+          {view.axes.map((a) => (
+            <KpiCard
+              key={a.kpi.key}
+              label={a.kpi.displayName}
+              value={a.value === null ? '—' : formatMetricValue(a.value, a.kpi).text}
+              unit={a.value === null ? undefined : (formatMetricValue(a.value, a.kpi).unit ?? undefined)}
+              sub={a.percentile === null ? 'n/a' : `P${Math.round(a.percentile)} vs ${avgLabel.replace(' average', '')}`}
+            />
+          ))}
+        </KpiStrip>
         <div className="grid items-start gap-4 xl:grid-cols-2">
           <ChartCard
             title={`${athlete.fullName} vs ${avgLabel}`}
@@ -207,6 +220,7 @@ function Profile({ dataset, date }: { dataset: DashboardDataset; date: string })
               before the selected date.
             </p>
           </div>
+        </div>
         </div>
       )}
     </div>

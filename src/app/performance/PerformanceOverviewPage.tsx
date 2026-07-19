@@ -1,4 +1,3 @@
-import { Dumbbell } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import {
   CONTROL_CLASS,
@@ -8,10 +7,8 @@ import {
   SeasonSelector,
 } from '../../components/controls/controls.tsx'
 import { ErrorState } from '../../components/ui/ErrorState.tsx'
-import { KPIValue } from '../../components/ui/KPIValue.tsx'
-import { Panel } from '../../components/ui/Panel.tsx'
+import { KpiCard, KpiStrip } from '../../components/ui/KpiCard.tsx'
 import { Skeleton } from '../../components/ui/Skeleton.tsx'
-import { TrendIndicator } from '../../components/ui/TrendIndicator.tsx'
 import { useDashboardData } from '../../lib/dashboard/DashboardDataContext.tsx'
 import { formatMetricValue, formatPercentDelta } from '../../lib/dashboard/format.ts'
 import { performanceOverview } from '../../lib/dashboard/selectors/performance.ts'
@@ -82,33 +79,22 @@ function Overview({ dataset, date }: { dataset: DashboardDataset; date: string }
         <PositionSelector value={position} onChange={setPosition} />
       </FilterBar>
 
-      <div className="grid items-start gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <KpiStrip>
         {tiles.map((tile) => {
-          const compact = formatMetricValue(tile.median, tile.kpi)
+          const f = formatMetricValue(tile.median, tile.kpi)
+          const delta = formatPercentDelta(tile.medianDeltaPct)
           return (
-            <Panel
+            <KpiCard
               key={tile.kpi.key}
-              icon={Dumbbell}
-              title={tile.kpi.displayName}
-              keyValue={`${compact.text}${compact.unit ? ` ${compact.unit}` : ''}`}
-            >
-              <div className="flex flex-col gap-2">
-                <KPIValue value={tile.median} kpi={tile.kpi} size="big" />
-                <TrendIndicator
-                  deltaPct={tile.medianDeltaPct}
-                  interpretation={tile.kpi.interpretation}
-                  label={`median ${tile.basisLabel}`}
-                />
-                <p className="tabular text-label text-muted">
-                  {tile.withData}/{tile.groupSize} athletes with data · median of latest values
-                  {tile.medianDeltaPct !== null &&
-                    ` · median change ${formatPercentDelta(tile.medianDeltaPct)}`}
-                </p>
-              </div>
-            </Panel>
+              label={tile.kpi.displayName}
+              value={f.text}
+              unit={f.unit ?? undefined}
+              sub={`Median · ${tile.withData}/${tile.groupSize} athletes`}
+              note={delta ? `${delta} ${tile.basisLabel}` : undefined}
+            />
           )
         })}
-      </div>
+      </KpiStrip>
       <p className="text-label text-muted">
         Values are team medians of each athlete's most recent observation — never a combined
         score (§6.2). See Leaderboards for per-athlete detail.
