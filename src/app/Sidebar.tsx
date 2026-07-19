@@ -2,51 +2,39 @@ import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router'
 import { orderByConfig } from '../lib/settings/defaults.ts'
 import { useSettings } from '../lib/settings/SettingsContext.tsx'
-import { ADMIN_ITEMS, PRIMARY_SECTIONS, type SubTab } from './nav.ts'
+import { ADMIN_ITEMS, GPS_SUB_TABS, PRIMARY_SECTIONS, type NavSection, type SubTab } from './nav.ts'
 import type { LucideIcon } from 'lucide-react'
 
-function NavItem({
-  to,
-  icon: Icon,
-  label,
-  collapsed,
-}: {
-  to: string
-  icon: LucideIcon
-  label: string
-  collapsed: boolean
-}) {
+/** Collapsed-rail icon item (icon only, section base as target). */
+function RailItem({ to, icon: Icon, label }: { to: string; icon: LucideIcon; label: string }) {
   return (
     <NavLink
       to={to}
-      title={collapsed ? label : undefined}
+      title={label}
       className={({ isActive }) =>
-        `flex h-10 items-center gap-3 rounded-control px-3 text-body font-medium transition-colors duration-150 ${
-          collapsed ? 'justify-center' : ''
-        } ${
-          isActive
-            ? 'bg-brand-nav text-on-brand'
-            : 'text-secondary hover:bg-surface-2 hover:text-primary'
+        `flex h-10 items-center justify-center rounded-control transition-colors duration-150 ${
+          isActive ? 'bg-[var(--navigation-active)] text-on-brand' : 'text-secondary hover:bg-white/5 hover:text-primary'
         }`
       }
     >
       <Icon aria-hidden className="size-5 shrink-0" strokeWidth={1.75} />
-      {!collapsed && <span className="truncate">{label}</span>}
     </NavLink>
   )
 }
 
-/** Second-level entry shown, indented, under the active primary section. */
-function SubNavItem({ tab }: { tab: SubTab }) {
+/** Expanded leaf item within a section group (indented, subordinate). */
+function LeafItem({ tab, nested = false }: { tab: SubTab; nested?: boolean }) {
   return (
     <NavLink
       to={tab.path}
       end={tab.end}
       className={({ isActive }) =>
-        `flex h-8 items-center rounded-control px-3 text-label font-medium transition-colors duration-150 ${
+        `relative flex h-8 items-center rounded-control pr-3 text-body font-medium transition-colors duration-150 ${
+          nested ? 'pl-7 text-label' : 'pl-3'
+        } ${
           isActive
-            ? 'bg-surface-2 text-primary'
-            : 'text-muted hover:bg-surface-2 hover:text-secondary'
+            ? 'bg-[var(--navigation-active)] font-semibold text-on-brand before:absolute before:top-1 before:bottom-1 before:left-0 before:w-0.5 before:rounded-full before:bg-[var(--navigation-indicator)]'
+            : 'text-secondary hover:bg-white/5 hover:text-primary'
         }`
       }
     >
@@ -55,62 +43,66 @@ function SubNavItem({ tab }: { tab: SubTab }) {
   )
 }
 
+/** One section group: uppercase label + its always-visible leaves. The GPS
+ *  leaf expands to its third-level tabs when a GPS route is active. */
+function SectionGroup({ section, pathname }: { section: NavSection; pathname: string }) {
+  const { settings } = useSettings()
+  const subTabs = orderByConfig(
+    section.subTabs,
+    (t) => t.path,
+    settings.layout.subTabOrder[section.base] ?? [],
+  )
+  const gpsActive = pathname.startsWith('/monitoring/gps')
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="section-label px-3 pt-3 pb-1 text-label text-muted">{section.label}</span>
+      {subTabs.map((tab) => (
+        <div key={tab.path}>
+          <LeafItem tab={tab} />
+          {tab.path === '/monitoring/gps' && gpsActive && (
+            <div className="mt-0.5 flex flex-col gap-0.5">
+              {GPS_SUB_TABS.map((g) => (
+                <LeafItem key={g.path} tab={g} nested />
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function SidebarBody({ collapsed }: { collapsed: boolean }) {
-  // §5.5 layout config: coach-chosen section order (Data Management)
   const { settings } = useSettings()
   const { pathname } = useLocation()
   const sections = orderByConfig(PRIMARY_SECTIONS, (s) => s.base, settings.layout.sectionOrder)
+
+  if (collapsed) {
+    return (
+      <nav aria-label="Primary" className="flex flex-col gap-1 p-2">
+        {sections.map((s) => (
+          <RailItem key={s.base} to={s.base} icon={s.icon} label={s.label} />
+        ))}
+        <div className="mx-1 my-1 border-t border-white/10" />
+        {ADMIN_ITEMS.map((a) => (
+          <RailItem key={a.path} to={a.path} icon={a.icon} label={a.label} />
+        ))}
+      </nav>
+    )
+  }
+
   return (
     <>
-      {/* Penn Navy brand block (§12.2); approved logo asset pending (blocker #5) */}
-      <div className="flex h-16 shrink-0 items-center bg-brand-nav px-4">
-        <span className="text-subhead font-bold tracking-tight text-on-brand">
-          {collapsed ? 'FH' : 'FH Performance'}
-        </span>
-      </div>
-      <nav aria-label="Primary" className="flex flex-col gap-1 p-3">
-        {sections.map((section) => {
-          const active = pathname === section.base || pathname.startsWith(`${section.base}/`)
-          const subTabs = orderByConfig(
-            section.subTabs,
-            (t) => t.path,
-            settings.layout.subTabOrder[section.base] ?? [],
-          )
-          return (
-            <div key={section.base}>
-              <NavItem
-                to={section.base}
-                icon={section.icon}
-                label={section.label}
-                collapsed={collapsed}
-              />
-              {/* subcategories: visible only for the active section when expanded */}
-              {!collapsed && active && subTabs.length > 0 && (
-                <div className="mt-0.5 mb-1 ml-[1.35rem] flex flex-col gap-0.5 border-l border-subtle pl-2">
-                  {subTabs.map((tab) => (
-                    <SubNavItem key={tab.path} tab={tab} />
-                  ))}
-                </div>
-              )}
-            </div>
-          )
-        })}
+      <nav aria-label="Primary" className="flex flex-col px-2 pb-2">
+        {sections.map((section) => (
+          <SectionGroup key={section.base} section={section} pathname={pathname} />
+        ))}
       </nav>
-      <div className="mx-3 border-t border-subtle" />
-      <nav aria-label="Administration" className="flex flex-col gap-1 p-3">
-        {!collapsed && (
-          <span className="px-3 pb-1 text-label font-medium tracking-wide text-muted uppercase">
-            Admin
-          </span>
-        )}
+      <div className="mx-3 border-t border-white/10" />
+      <nav aria-label="Administration" className="flex flex-col gap-0.5 px-2 pt-1 pb-2">
+        <span className="section-label px-3 pt-2 pb-1 text-label text-muted">Admin</span>
         {ADMIN_ITEMS.map((item) => (
-          <NavItem
-            key={item.path}
-            to={item.path}
-            icon={item.icon}
-            label={item.label}
-            collapsed={collapsed}
-          />
+          <LeafItem key={item.path} tab={{ label: item.label, path: item.path }} />
         ))}
       </nav>
     </>
@@ -130,19 +122,19 @@ export function Sidebar({
 }) {
   return (
     <>
-      {/* Desktop sidebar (≥768px): collapsible 240px ↔ 64px (§12.4) */}
+      {/* Desktop sidebar (≥768px): 240px ↔ 64px, pinned below the masthead */}
       <aside
-        className={`sticky top-0 hidden h-screen shrink-0 flex-col border-r border-subtle bg-surface transition-[width] duration-200 ease-out md:flex ${
+        className={`sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 flex-col overflow-y-auto border-r border-subtle bg-[var(--navigation-background)] transition-[width] duration-200 ease-out md:flex ${
           collapsed ? 'w-16' : 'w-60'
         }`}
       >
         <SidebarBody collapsed={collapsed} />
-        <div className="mt-auto p-3">
+        <div className="mt-auto p-2">
           <button
             type="button"
             onClick={onToggleCollapsed}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className={`flex h-10 items-center gap-3 rounded-control px-3 text-secondary hover:bg-surface-2 hover:text-primary ${
+            className={`flex h-10 items-center gap-3 rounded-control px-3 text-secondary hover:bg-white/5 hover:text-primary ${
               collapsed ? 'w-full justify-center' : ''
             }`}
           >
@@ -158,19 +150,24 @@ export function Sidebar({
         </div>
       </aside>
 
-      {/* Mobile off-canvas drawer (<768px, §12.4) */}
+      {/* Mobile off-canvas drawer (<768px) */}
       {drawerOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/60" onClick={onCloseDrawer} aria-hidden />
-          <aside className="absolute inset-y-0 left-0 flex w-60 flex-col border-r border-subtle bg-surface">
-            <button
-              type="button"
-              onClick={onCloseDrawer}
-              aria-label="Close navigation"
-              className="absolute top-3 right-3 z-10 flex size-10 items-center justify-center rounded-control text-on-brand hover:bg-white/10"
-            >
-              <X aria-hidden className="size-5" />
-            </button>
+          <aside className="absolute inset-y-0 left-0 flex w-64 flex-col overflow-y-auto border-r border-subtle bg-[var(--navigation-background)]">
+            <div className="flex h-16 shrink-0 items-center justify-between border-b-2 border-accent bg-brand-nav px-4">
+              <span className="display text-base font-bold tracking-wide text-on-brand uppercase">
+                Penn Field Hockey
+              </span>
+              <button
+                type="button"
+                onClick={onCloseDrawer}
+                aria-label="Close navigation"
+                className="flex size-9 items-center justify-center rounded-control text-on-brand hover:bg-white/10"
+              >
+                <X aria-hidden className="size-5" />
+              </button>
+            </div>
             <SidebarBody collapsed={false} />
           </aside>
         </div>

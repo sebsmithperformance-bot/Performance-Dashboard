@@ -83,7 +83,6 @@ export function DataManagementPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-title font-bold">Data Management</h1>
       <p className="text-label text-muted">
         Structural customization only: what shows and where. Widgets can be hidden or reordered —
         never invented or reprogrammed (§5.5). Saved locally now; persisted server-side per coach

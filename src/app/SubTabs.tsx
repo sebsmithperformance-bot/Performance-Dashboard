@@ -14,10 +14,10 @@ export function SubTabs({ tabs, ariaLabel }: { tabs: SubTab[]; ariaLabel: string
           to={tab.path}
           end={tab.end}
           className={({ isActive }) =>
-            `-mb-px flex h-10 items-center border-b-2 px-4 text-body font-medium whitespace-nowrap transition-colors duration-150 ${
+            `section-label -mb-px flex h-12 items-center border-b-[3px] px-4 text-body whitespace-nowrap transition-colors duration-150 ${
               isActive
                 ? 'border-accent text-primary'
-                : 'border-transparent text-secondary hover:text-primary'
+                : 'border-transparent text-muted hover:text-secondary'
             }`
           }
         >

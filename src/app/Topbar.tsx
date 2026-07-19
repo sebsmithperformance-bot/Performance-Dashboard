@@ -1,105 +1,87 @@
-import { CalendarDays, LogOut, Menu, Upload, Users } from 'lucide-react'
+import { CalendarDays, Upload, Users } from 'lucide-react'
 import { useMemo } from 'react'
-import { useNavigate } from 'react-router'
-import { useAuth } from '../lib/auth/AuthContext.tsx'
+import { useLocation, useNavigate } from 'react-router'
 import { useDashboardData } from '../lib/dashboard/DashboardDataContext.tsx'
 import { formatDayLabel as formatDate, sessionTypeSummary } from '../lib/dashboard/format.ts'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
+import { ADMIN_ITEMS, PRIMARY_SECTIONS } from './nav.ts'
 
-const APP_ENV: string = import.meta.env.VITE_APP_ENV ?? 'local'
+/** Current page title from the route — the primary section, or an admin page. */
+function usePageTitle(): string {
+  const { pathname } = useLocation()
+  const section = PRIMARY_SECTIONS.find(
+    (s) => pathname === s.base || pathname.startsWith(`${s.base}/`),
+  )
+  if (section) return section.label
+  const admin = ADMIN_ITEMS.find((a) => pathname.startsWith(a.path))
+  return admin?.label ?? 'Overview'
+}
 
 /**
- * Top bar (§5): athlete-count badge, session/date context + picker, Import
- * Data action, and an unmissable environment badge (Environments: "a
- * deployment must clearly display its environment").
+ * Page-control bar (§ visual redesign B): current page title on the left; the
+ * few global controls that matter — athlete count, session/date, Import Data —
+ * on the right. Branded chrome (env badge, sign-out, mobile nav) lives in the
+ * masthead above; secondary/page actions live in page-level Customize drawers.
  */
-export function Topbar({ onOpenDrawer }: { onOpenDrawer: () => void }) {
-  const { identity, signOut } = useAuth()
+export function Topbar() {
   const { status, dataset, selectedDate, setSelectedDate } = useDashboardData()
   const navigate = useNavigate()
+  const title = usePageTitle()
   const athletes = dataset?.athletes ?? []
-  const seasonLabel = dataset?.seasonLabel ?? null
   const sessionDates = useMemo(() => [...(dataset?.sessionsByDate.keys() ?? [])], [dataset])
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-3 border-b border-subtle bg-base/95 px-4 backdrop-blur md:px-6">
-      <button
-        type="button"
-        onClick={onOpenDrawer}
-        aria-label="Open navigation"
-        className="flex size-10 items-center justify-center rounded-control text-secondary hover:bg-surface-2 hover:text-primary md:hidden"
-      >
-        <Menu aria-hidden className="size-5" />
-      </button>
+    <header className="sticky top-16 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-subtle bg-base/95 px-5 backdrop-blur md:px-6">
+      <h1 className="display truncate text-xl font-bold tracking-wide text-primary uppercase">
+        {title}
+      </h1>
 
-      <Badge tone="neutral">
-        <Users aria-hidden className="size-3.5" />
-        <span className="tabular">{status === 'ready' ? athletes.length : '—'}</span> athletes
-      </Badge>
-
-      <div className="hidden items-center gap-2 sm:flex">
-        <CalendarDays aria-hidden className="size-4 text-muted" strokeWidth={1.75} />
-        {status === 'ready' && selectedDate ? (
-          <label className="flex items-center gap-2">
-            <span className="sr-only">Session date</span>
-            <select
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="h-9 rounded-control border border-subtle bg-surface-2 px-2 text-body text-primary focus:border-accent"
-            >
-              {sessionDates.map((date) => {
-                const summary = sessionTypeSummary(dataset?.sessionsByDate.get(date) ?? [])
-                return (
-                  <option key={date} value={date}>
-                    {formatDate(date)}
-                    {summary ? ` · ${summary}` : ''}
-                  </option>
-                )
-              })}
-            </select>
-          </label>
-        ) : (
-          <span className="text-label text-muted">
-            {status === 'loading' ? 'Loading dates…' : 'No dataset'}
-          </span>
-        )}
-        {seasonLabel && (
-          <span className="hidden text-label text-muted lg:inline">{seasonLabel}</span>
-        )}
-      </div>
-
-      <div className="ml-auto flex items-center gap-3">
-        <Badge tone="warning">
-          {APP_ENV.toUpperCase()}
-          {/* visually collapses below lg but stays in the accessibility tree */}
-          <span className="sr-only lg:not-sr-only">
-            {' '}
-            · {APP_ENV === 'production' ? 'REAL DATA' : 'SYNTHETIC'}
-          </span>
+      <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        <Badge tone="neutral">
+          <Users aria-hidden className="size-3.5" />
+          <span className="tabular">{status === 'ready' ? athletes.length : '—'}</span>
+          <span className="hidden sm:inline">athletes</span>
         </Badge>
-        {/* Below lg the label collapses to an icon (≥40px target, aria/title
-            preserved; the labeled entry also lives in Admin → Import Data) */}
+
+        <div className="hidden items-center gap-2 sm:flex">
+          <CalendarDays aria-hidden className="size-4 text-muted" strokeWidth={1.75} />
+          {status === 'ready' && selectedDate ? (
+            <label className="flex items-center gap-2">
+              <span className="sr-only">Session date</span>
+              <select
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="h-9 rounded-control border border-subtle bg-input px-2 text-body text-primary focus:border-accent"
+              >
+                {sessionDates.map((date) => {
+                  const summary = sessionTypeSummary(dataset?.sessionsByDate.get(date) ?? [])
+                  return (
+                    <option key={date} value={date}>
+                      {formatDate(date)}
+                      {summary ? ` · ${summary}` : ''}
+                    </option>
+                  )
+                })}
+              </select>
+            </label>
+          ) : (
+            <span className="text-label text-muted">
+              {status === 'loading' ? 'Loading…' : 'No dataset'}
+            </span>
+          )}
+        </div>
+
         <Button
           variant="primary"
           onClick={() => navigate('/admin/import')}
           aria-label="Import Data"
           title="Import Data"
-          className="hidden sm:inline-flex lg:px-4 max-lg:w-10 max-lg:px-0"
+          className="lg:px-4 max-lg:w-9 max-lg:px-0"
         >
           <Upload aria-hidden className="size-4" />
           <span className="hidden lg:inline">Import Data</span>
         </Button>
-        <span className="hidden text-body text-secondary lg:inline">{identity?.displayName}</span>
-        <button
-          type="button"
-          onClick={signOut}
-          aria-label="Sign out"
-          title="Sign out"
-          className="flex size-10 items-center justify-center rounded-control text-secondary hover:bg-surface-2 hover:text-primary"
-        >
-          <LogOut aria-hidden className="size-5" strokeWidth={1.75} />
-        </button>
       </div>
     </header>
   )

@@ -219,7 +219,6 @@ export function ImportPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-title font-bold">Import Data</h1>
       <nav aria-label="Import views" className="flex gap-1 border-b border-subtle">
         {(['new', 'history'] as const).map((t) => (
           <button

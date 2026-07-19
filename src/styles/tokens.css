@@ -12,41 +12,50 @@
   --penn-silver: #8a8d8f;
   --penn-white: #ffffff;
 
-  /* Dark application surfaces */
-  --bg-base: #0b0d10;
-  --bg-surface: #14171c;
-  --bg-surface-2: #1b1f26;
-  --border-subtle: #262b33;
-  --border-strong: #3b424d;
+  /* Dark application surfaces (Penn dark dashboard foundation) */
+  --bg-base: #090b0f; /* darkest — page background */
+  --bg-surface: #11141a; /* standard cards */
+  --bg-surface-2: #171b22; /* raised cards / reveal lists */
+  --bg-input: #1d222b; /* elevated controls / inputs */
+  --border-subtle: #292f39;
+  --border-strong: #3a424e;
 
   /* Text */
   --text-primary: #f5f6f7;
-  --text-secondary: #a7adb8;
-  --text-muted: #808896;
+  --text-secondary: #b3b8c1;
+  --text-muted: #858c97;
   --text-on-brand: #ffffff;
 
-  /* Brand interaction tokens */
+  /* Brand interaction tokens (crimson = brand action, not danger) */
   --accent: var(--penn-crimson);
-  --accent-hover: #b82020; /* UI-derived tint, not a new master brand color */
-  --accent-active: #750000; /* UI-derived shade */
+  --accent-hover: #b21b1b; /* UI-derived tint, not a new master brand color */
+  --accent-active: #760000; /* UI-derived shade */
   --accent-contrast: #ffffff;
   --brand-nav: var(--penn-navy);
   --brand-neutral: var(--penn-silver);
-  --focus-ring: #e05252; /* lighter crimson for visibility on dark surfaces */
+  --focus-ring: #e26464; /* lighter crimson for visibility on dark surfaces */
+
+  /* Navigation structure (Penn Navy anchor + crimson active) */
+  --navigation-background: #0d1016;
+  --navigation-active: rgba(152, 0, 0, 0.28);
+  --navigation-indicator: var(--penn-crimson);
 
   /* Semantic status colors — never conflated with brand red (§12.2 rules) */
   --status-good: #34d399;
   --status-warning: #fbbf24;
   --status-danger: #ef4444;
-  --status-neutral: #808896;
+  --status-neutral: #858c97;
+  --status-info: #60a5fa;
 
-  /* Dark-background chart palette; per-KPI assignment lives in one registry */
-  --chart-series-1: #e05252; /* Penn Crimson tint */
+  /* Dark-background chart palette; per-KPI assignment lives in one registry.
+     Master Penn Crimson/Navy are too dark for lines on dark surfaces, so the
+     series use documented lighter tints (§ chart standards). */
+  --chart-series-1: #e05a5a; /* Penn Crimson tint */
   --chart-series-2: #6688d4; /* Penn Navy tint */
-  --chart-series-3: #b8bcc0; /* Penn Silver tint */
+  --chart-series-3: #b7bcc2; /* Penn Silver tint */
   --chart-series-4: #f3c969;
-  --chart-series-5: #50c2b0;
-  --chart-series-6: #b78ae6;
+  --chart-series-5: #4fc6b2;
+  --chart-series-6: #b98be6;
 
   /* Shadows: floating elements only — flat cards get borders (§12.4) */
   --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -77,10 +86,14 @@
   --color-brand-neutral: var(--brand-neutral);
   --color-focus: var(--focus-ring);
 
+  --color-input: var(--bg-input);
+  --color-nav: var(--navigation-background);
+
   --color-good: var(--status-good);
   --color-warning: var(--status-warning);
   --color-danger: var(--status-danger);
   --color-neutral: var(--status-neutral);
+  --color-info: var(--status-info);
 
   --color-chart-1: var(--chart-series-1);
   --color-chart-2: var(--chart-series-2);
@@ -96,8 +109,13 @@
 }
 
 @theme {
-  /* Typography (§12.3) */
+  /* Typography (§12.3). Body = Inter. Display = a safe CONDENSED athletic
+     stack for short headings/tabs/KPI labels+values (Full Block / Ithaca are
+     not licensed for web here, so we substitute rather than approximate). */
   --font-sans: 'Inter Variable', Inter, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display:
+    'Roboto Condensed', 'Arial Narrow', 'Helvetica Neue Condensed', 'Inter Variable', Inter,
+    sans-serif;
 
   /* Type scale — 14px body is the floor; nothing renders smaller than 12px labels */
   --text-label: 0.75rem; /* 12 — tiny labels, table headers, chips */
@@ -141,6 +159,21 @@ body {
 /* Every numeric KPI/table value aligns vertically (§12.3); apply via .tabular */
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* Small uppercase athletic label — section headers, KPI names, sidebar groups.
+   Condensed display face + restrained tracking (not excessive letter-spacing). */
+.section-label {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+/* Condensed display treatment for page titles and large values. */
+.display {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
 }
 
 /* Visible focus ring on every interactive element (§12.6) */

@@ -72,7 +72,6 @@ export function KpiSettingsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-title font-bold">KPI Settings</h1>
       {status === 'loading' ? (
         <Skeleton className="h-96 w-full" />
       ) : status === 'error' || !dataset ? (
