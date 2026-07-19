@@ -146,7 +146,7 @@ function SessionCompare({
           className="flex flex-col rounded-card border border-subtle bg-surface"
         >
           <div className="flex items-center justify-between gap-2 border-b border-subtle px-3 py-2">
-            <span className="text-label font-medium text-secondary">
+            <span className="section-label text-label text-secondary">
               Sessions ({selectedIds.length})
             </span>
             <span className="flex gap-2 text-label">
@@ -193,8 +193,8 @@ function SessionCompare({
         {/* metrics + chart */}
         <div className="flex min-w-0 flex-col gap-3">
           <div className="flex flex-wrap items-center gap-1">
-            <span className="mr-1 text-label font-medium text-secondary">
-              Metrics ({metricKeys.length}/{MAX_METRICS}):
+            <span className="section-label mr-1 text-label text-secondary">
+              Metrics ({metricKeys.length}/{MAX_METRICS})
             </span>
             {kpis.map((kpi) => {
               const active = metricKeys.includes(kpi.key)
