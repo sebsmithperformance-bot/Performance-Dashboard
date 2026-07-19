@@ -3,9 +3,10 @@
 Live tracker maintained by the orchestrator (docs/orchestration.md). Spec references
 (§) point at `docs/spec/build-prompt.md`.
 
-**Current phase:** Build Order step 4 complete locally (import pipeline + Import Data
-page on the local PGlite backend). Backend spike (§2.1) blocked on AWS account access
-and remains the gate for coach-facing analytics pages.
+**Current phase:** Build Order steps 5–6 complete frontend-first (all coach-facing sections
++ admin customization pages, behind the data/settings seams) plus a coach-feedback polish
+revision. 127 tests green; typecheck/lint/guarded-build green. Backend spike (§2.1) remains
+blocked on AWS account access and is still the gate for anything backend-wired.
 
 ## Blockers / required inputs (owner: Sebastian)
 
@@ -30,8 +31,8 @@ and remains the gate for coach-facing analytics pages.
 | 2    | Synthetic generator + calculation layer                     | **Done** (this session, quality gate green)             |
 | 3    | Design tokens + app shell                                   | **Done** (tokens + shell, session 2)                    |
 | 4    | Import foundation                                           | **Done locally** (session 3; AWS re-homing after spike) |
-| 5    | Coach-facing modules                                        | Not started — gated on spike                            |
-| 6    | Administration                                              | Not started                                             |
+| 5    | Coach-facing modules                                        | **Done (frontend-first)** — all four sections + polish  |
+| 6    | Administration                                              | **Done (frontend-first)** — KPI Settings + Data Mgmt    |
 | 7    | Hardening + launch                                          | Not started                                             |
 
 ## Functional checklist (§13) — condensed
@@ -39,9 +40,11 @@ and remains the gate for coach-facing analytics pages.
 - Platform/data: repo+tooling done. Import pipeline done locally: upload/preview/resolve/
   acknowledge/atomic-commit ✓, hash dedupe ✓, identities remembered ✓, fuzzy-never-creates ✓,
   Import History with per-row before/after ✓. Cognito auth + S3 originals — gated on spike.
-- Overview / Monitoring / Data Trends / Performance modules — not started (gated on spike)
-- Administration — Import Data page done (local backend); KPI Settings / Data Management
-  not started
+- Overview / Monitoring / Data Trends / Performance modules — **done frontend-first**
+  (synthetic data through the seams; averages-by-default, four-state Load Health, smooth
+  charts, guidance-first Trends, radar team comparison)
+- Administration — Import Data page (local backend) + KPI Settings (registry, add-KPI,
+  per-KPI thresholds, operational thresholds, positions) + Data Management (layout) done
 
 ## Non-functional checklist (§14) — items already locked in
 
@@ -156,3 +159,34 @@ and remains the gate for coach-facing analytics pages.
   (Session Overview/Compare/Trends+Recommendations — needs the line-chart component),
   Data Trends shared graph+table, Performance (tiles/leaderboards/profile radar),
   responsive/a11y pass, docs.
+
+### 2026-07-18 — Session 5 (Step 5 complete + coach-feedback revision)
+
+- Completed all coach-facing sections and both admin customization pages (build order
+  steps 5–6, frontend-first), then applied a full coach-feedback revision. Six bounded
+  commits on `dev`; 102 → 127 tests; typecheck, lint, guarded build green throughout.
+- **Navigation/clutter:** sidebar now shows the active section's subcategories; the
+  duplicate content-area tab row is removed (GPS keeps its deeper row). Added a reusable
+  `InfoHint` popover so methodology/formula text lives out of primary page space.
+- **Overview:** Last Session GPS defaults to Player Load and reports the average per
+  participating athlete (never a hidden total); a Team Dashboard Customize drawer picks the
+  GPS metric set. Load Health became four transparent ACWR states (added `acwrHighBand`)
+  with team median ACWR + avg 7-day acute load; session-type annotations on every date
+  option.
+- **Monitoring GPS:** Session Compare rebuilt as a chronological team-average trend — left
+  vertical session selector, smooth monotone `LineChart` (now with hover tooltips), and
+  multi-metric comparison indexed to each metric's first session. Trends leads with concise
+  Session Guidance then restructured alerts (happened → number → why → review). Removed the
+  orphaned HBarChart.
+- **Performance:** Athlete Profile radar overlays a team/position-average reference series
+  (multi-series RadarChart + legend, shared percentile scale, insufficient-sample message).
+- **Admin:** Add-KPI form (safe key gen + dedupe + validation, empty until data mapped;
+  custom KPIs injected into the effective registry, retire/restore/delete) and a per-KPI
+  display-threshold editor (bounds/state/explanation/active, overlap + range validation,
+  reset). Settings model gained `customKpis`, `kpiThresholds`, `acwrHighBand`,
+  `overviewGpsMetrics`; localStorage load() forward-merges them over defaults.
+- Browser-reviewed at 1280/1024/768/390; console clean. Deferred (see visual-review.md):
+  mobile radar spoke-label clipping; wiring per-KPI thresholds into render-time flags.
+- Unchanged and protected: calculation formulas, import pipeline, DB schema, the five
+  replaceable seams. No AWS/backend work — the §2.1 spike remains the gate for anything
+  backend-wired.
