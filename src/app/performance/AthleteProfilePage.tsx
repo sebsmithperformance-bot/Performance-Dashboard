@@ -22,8 +22,9 @@ import {
 import { activePositionGroups, useSettings } from '../../lib/settings/SettingsContext.tsx'
 import type { DashboardDataset } from '../../lib/dashboard/types.ts'
 
-/** Performance → Athlete Profile (§5.4): direction-aware percentile radar
- *  plus raw-value metric comparison. Never a combined score. */
+/** Performance → Athlete Profile (§5.4): direction-aware percentile radar with
+ *  a team/position-average reference overlay, plus raw-value metric comparison.
+ *  Never a combined score. */
 export function AthleteProfilePage() {
   const { status, error, dataset, selectedDate } = useDashboardData()
 
@@ -53,6 +54,11 @@ function Profile({ dataset, date }: { dataset: DashboardDataset; date: string })
     [dataset, athlete, date, comparison],
   )
   const positionGroups = activePositionGroups(settings)
+  // reference-series label follows the chosen comparison group (Team / Position average)
+  const avgLabel =
+    comparison === 'team'
+      ? 'Team average'
+      : `${positionGroups.find((g) => g.id === comparison)?.label ?? comparison} average`
 
   const columns = useMemo<Column<ProfileAxis>[]>(
     () => [
@@ -85,11 +91,13 @@ function Profile({ dataset, date }: { dataset: DashboardDataset; date: string })
           ),
       },
       {
-        key: 'median',
-        header: 'Group median',
+        key: 'groupavg',
+        header: avgLabel,
         align: 'right',
-        sortValue: (a) => a.groupMedian,
-        render: (a) => <KPIValue value={a.groupMedian} kpi={a.kpi} size="small" showUnit={false} />,
+        sortValue: (a) => a.groupAvgValue,
+        render: (a) => (
+          <KPIValue value={a.groupAvgValue} kpi={a.kpi} size="small" showUnit={false} />
+        ),
       },
       {
         key: 'best',
@@ -99,7 +107,7 @@ function Profile({ dataset, date }: { dataset: DashboardDataset; date: string })
         render: (a) => <KPIValue value={a.groupBest} kpi={a.kpi} size="small" showUnit={false} />,
       },
     ],
-    [],
+    [avgLabel],
   )
 
   return (
@@ -128,37 +136,68 @@ function Profile({ dataset, date }: { dataset: DashboardDataset; date: string })
       ) : (
         <div className="grid items-start gap-4 xl:grid-cols-2">
           <ChartCard
-            title={`${athlete.fullName} — percentile radar`}
-            subtitle={`direction-aware percentile of latest values vs ${view.comparisonLabel} · needs ≥ ${view.minComparison} comparison athletes per spoke`}
+            title={`${athlete.fullName} vs ${avgLabel}`}
+            subtitle={`direction-aware percentile of latest values vs ${view.comparisonLabel} · needs at least ${view.minComparison} comparison athletes per spoke`}
             table={{
-              columns: ['Metric', 'Percentile', 'Raw value', 'Comparison n'],
+              columns: [
+                'Metric',
+                `${athlete.fullName} (P)`,
+                `${avgLabel} (P)`,
+                'Athlete raw',
+                `${avgLabel} raw`,
+                'Comparison n',
+              ],
               rows: view.axes.map((a) => [
                 a.kpi.displayName,
-                a.percentile === null ? `— (${a.reason})` : `P${Math.round(a.percentile)}`,
-                a.value === null ? '—' : formatMetricValue(a.value, a.kpi).text,
+                a.percentile === null ? `n/a (${a.reason})` : `P${Math.round(a.percentile)}`,
+                a.groupAvgPercentile === null ? 'n/a' : `P${Math.round(a.groupAvgPercentile)}`,
+                a.value === null ? 'no data' : formatMetricValue(a.value, a.kpi).text,
+                a.groupAvgValue === null ? 'no data' : formatMetricValue(a.groupAvgValue, a.kpi).text,
                 a.comparisonN,
               ]),
             }}
           >
-            <RadarChart
-              axes={view.axes.map((a) => ({
-                key: a.kpi.key,
-                label: a.kpi.displayName.replace(/ — /, ' '),
-                value: a.percentile,
-              }))}
-              ariaLabel={`${athlete.fullName} percentile radar across ${view.axes.length} S&C metrics`}
-            />
+            {view.insufficientComparison ? (
+              <p className="py-10 text-center text-body text-secondary">
+                Not enough comparison athletes to rank {athlete.fullName} against{' '}
+                {view.comparisonLabel} (needs at least {view.minComparison} with data per metric).
+                Pick a broader comparison group.
+              </p>
+            ) : (
+              <RadarChart
+                axes={view.axes.map((a) => ({
+                  key: a.kpi.key,
+                  label: a.kpi.displayName.replace(/ - | — /, ' '),
+                }))}
+                series={[
+                  {
+                    key: 'athlete',
+                    label: athlete.fullName,
+                    color: 'var(--chart-series-1)',
+                    values: view.axes.map((a) => a.percentile),
+                  },
+                  {
+                    key: 'group-avg',
+                    label: avgLabel,
+                    color: 'var(--chart-series-5)',
+                    values: view.axes.map((a) => a.groupAvgPercentile),
+                  },
+                ]}
+                ariaLabel={`${athlete.fullName} versus ${avgLabel} percentile radar across ${view.axes.length} strength and conditioning metrics`}
+              />
+            )}
             <p className="mt-2 text-label text-muted">
-              Spokes marked “n/a” have no valid percentile and are excluded from the shape — the
-              radar never averages into a single score (§6.2).
+              Both series share the 0-100 percentile scale. Spokes with no valid percentile are
+              excluded from a series shape - the radar never averages into a single score (6.2). Raw
+              values sit beside every percentile in the table.
             </p>
           </ChartCard>
 
           <div className="flex flex-col gap-3">
             <h2 className="text-subhead font-semibold">
-              Metric comparison — {athlete.fullName}
+              Metric comparison
               <span className="ml-2 text-label font-normal text-muted">
-                {athlete.position}
+                {athlete.fullName} · {athlete.position}
                 {athlete.jerseyNumber !== null && ` · #${athlete.jerseyNumber}`}
               </span>
             </h2>

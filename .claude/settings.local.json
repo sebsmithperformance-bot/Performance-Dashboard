@@ -11,7 +11,9 @@
       "Bash(psql --version)",
       "Bash(sw_vers)",
       "Bash(curl -sI --max-time 10 https://nodejs.org/dist/)",
-      "Bash(curl -s --max-time 15 https://nodejs.org/dist/latest-v22.x/SHASUMS256.txt)"
+      "Bash(curl -s --max-time 15 https://nodejs.org/dist/latest-v22.x/SHASUMS256.txt)",
+      "Bash(git add *)",
+      "Bash(git commit -q -m 'feat: add athlete profile team comparison *)"
     ]
   }
 }

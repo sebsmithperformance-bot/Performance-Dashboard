@@ -189,6 +189,8 @@ describe('performance selectors', () => {
     expect(squat.value).toBe(190)
     expect(squat.percentile).toBeNull()
     expect(squat.reason).toMatch(/needs ≥ 5 comparison athletes/)
+    // the 3-athlete fixture can never reach the 5-athlete floor → insufficient
+    expect(view.insufficientComparison).toBe(true)
   })
 
   it('computes direction-aware percentiles with enough athletes', () => {
@@ -249,6 +251,11 @@ describe('performance selectors', () => {
     // 5 of 6 comparison values below 145 → P83
     expect(axis.percentile).toBeCloseTo((5 / 6) * 100, 5)
     expect(axis.groupBest).toBe(150)
+    expect(view.insufficientComparison).toBe(false)
+    // team-average reference series: mean(100..150) = 125, ranked in the same group
+    expect(axis.groupAvgValue).toBe(125)
+    // 3 of 6 comparison values below 125 → P50 reference
+    expect(axis.groupAvgPercentile).toBeCloseTo(50, 5)
   })
 })
 

@@ -98,6 +98,10 @@ export interface ProfileAxis {
   value: number | null
   /** direction-aware percentile among the comparison group; null = not computable */
   percentile: number | null
+  /** comparison-group mean value; null when no comparison data */
+  groupAvgValue: number | null
+  /** direction-aware percentile of the group mean, same scale as `percentile` */
+  groupAvgPercentile: number | null
   /** comparison athletes with a value (excluding the focal athlete) */
   comparisonN: number
   groupMedian: number | null
@@ -111,6 +115,26 @@ export interface AthleteProfileViewModel {
   axes: ProfileAxis[]
   minComparison: number
   comparisonLabel: string
+  /** true when no axis could be ranked (comparison group too small) */
+  insufficientComparison: boolean
+}
+
+/** direction-aware percentile of `value` within `others` (0–100). */
+function percentileOf(
+  value: number,
+  others: number[],
+  interpretation: DashKpi['interpretation'],
+): number | null {
+  if (interpretation !== 'higher_is_better' && interpretation !== 'lower_is_better') return null
+  const below = others.filter((v) =>
+    interpretation === 'higher_is_better' ? v < value : v > value,
+  ).length
+  const equal = others.filter((v) => v === value).length
+  return ((below + equal / 2) / others.length) * 100
+}
+
+function mean(values: number[]): number | null {
+  return values.length === 0 ? null : values.reduce((a, b) => a + b, 0) / values.length
 }
 
 function latestValue(
@@ -162,26 +186,35 @@ export function athleteProfileView(
         .map((a) => latestValue(dataset, a.id, kpi.key, endDate))
         .filter((v): v is number => v !== null)
 
+      const groupAvgValue = mean(others)
+      const rankable =
+        others.length >= MIN_COMPARISON_ATHLETES &&
+        (kpi.interpretation === 'higher_is_better' || kpi.interpretation === 'lower_is_better')
+
       let percentile: number | null = null
       let reason: string | null = null
       if (value === null) {
         reason = 'no observation for this athlete'
       } else if (others.length < MIN_COMPARISON_ATHLETES) {
         reason = `needs ≥ ${MIN_COMPARISON_ATHLETES} comparison athletes (have ${others.length})`
-      } else if (kpi.interpretation === 'higher_is_better' || kpi.interpretation === 'lower_is_better') {
-        const below = others.filter((v) =>
-          kpi.interpretation === 'higher_is_better' ? v < value : v > value,
-        ).length
-        const equal = others.filter((v) => v === value).length
-        percentile = ((below + equal / 2) / others.length) * 100
+      } else if (rankable) {
+        percentile = percentileOf(value, others, kpi.interpretation)
       } else {
         reason = 'neutral metric — no direction to rank'
       }
+
+      // the group-average reference series shares the athlete's percentile scale
+      const groupAvgPercentile =
+        rankable && groupAvgValue !== null
+          ? percentileOf(groupAvgValue, others, kpi.interpretation)
+          : null
 
       return {
         kpi,
         value,
         percentile,
+        groupAvgValue,
+        groupAvgPercentile,
         comparisonN: others.length,
         groupMedian: median(others),
         groupBest:
@@ -200,5 +233,6 @@ export function athleteProfileView(
     minComparison: MIN_COMPARISON_ATHLETES,
     comparisonLabel:
       comparisonPosition === null ? 'whole team' : `${comparisonPosition} group`,
+    insufficientComparison: axes.every((a) => a.percentile === null),
   }
 }
