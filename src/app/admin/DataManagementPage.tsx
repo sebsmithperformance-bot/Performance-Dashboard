@@ -84,9 +84,7 @@ export function DataManagementPage() {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-label text-muted">
-        Structural customization only: what shows and where. Widgets can be hidden or reordered —
-        never invented or reprogrammed (§5.5). Saved locally now; persisted server-side per coach
-        account once the AWS backend lands, so the layout follows you across devices.
+        Structural customization only — show, hide, and reorder. Saved locally on this build.
       </p>
 
       <Panel icon={LayoutList} title="Primary section order" keyValue="sidebar">

@@ -196,9 +196,8 @@ function KpiRegistry({ kpis }: { kpis: DashKpi[] }) {
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <p className="max-w-2xl text-label text-muted">
-            Click a KPI to edit its display configuration and thresholds. Canonical storage units
-            and calculation formulas are locked (§6.3) — changing a display unit converts values at
-            render time and never rewrites stored records.
+            Click a KPI to edit its display config and thresholds. Storage units and formulas are
+            locked (§6.3).
           </p>
           <Button variant="secondary" onClick={() => setAdding(true)}>
             <Plus aria-hidden className="size-4" />
