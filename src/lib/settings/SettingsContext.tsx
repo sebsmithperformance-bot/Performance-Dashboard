@@ -9,10 +9,12 @@ import { canConvert, type Unit } from '../units/index.ts'
 import type { DashKpi } from '../dashboard/types.ts'
 import { defaultSettings } from './defaults.ts'
 import type {
+  CustomKpiDef,
   DashboardLayoutConfig,
   DashboardSettings,
   DisplayPreferences,
   KpiOverride,
+  KpiThreshold,
   PositionGroup,
   SettingsRepository,
   ThresholdSettings,
@@ -25,6 +27,8 @@ interface SettingsValue {
   updateLayout: (patch: Partial<DashboardLayoutConfig>) => void
   updateDisplay: (patch: Partial<DisplayPreferences>) => void
   setPositions: (positions: PositionGroup[]) => void
+  setCustomKpis: (defs: CustomKpiDef[]) => void
+  setKpiThresholds: (kpiKey: string, thresholds: KpiThreshold[]) => void
   resetLayout: () => void
   resetThresholds: () => void
 }
@@ -58,6 +62,13 @@ export function SettingsProvider({
       updateLayout: (patch) => commit({ ...settings, layout: { ...settings.layout, ...patch } }),
       updateDisplay: (patch) => commit({ ...settings, display: { ...settings.display, ...patch } }),
       setPositions: (positions) => commit({ ...settings, positions }),
+      setCustomKpis: (customKpis) => commit({ ...settings, customKpis }),
+      setKpiThresholds: (kpiKey, thresholds) => {
+        const next = { ...settings.kpiThresholds }
+        if (thresholds.length === 0) delete next[kpiKey]
+        else next[kpiKey] = thresholds
+        commit({ ...settings, kpiThresholds: next })
+      },
       resetLayout: () => commit({ ...settings, layout: defaultSettings().layout }),
       resetThresholds: () => commit({ ...settings, thresholds: defaultSettings().thresholds }),
     }
@@ -84,6 +95,38 @@ export function positionLabel(settings: DashboardSettings, positionId: string): 
   // built-ins keep the singular canonical name for per-athlete rows unless renamed
   if (group.builtin && group.label === `${positionId}s`) return positionId
   return group.label
+}
+
+/** Map a coach-defined KPI to a registry entry (empty until data is mapped). */
+export function customKpiToDashKpi(def: CustomKpiDef): DashKpi {
+  return {
+    key: def.key,
+    displayName: def.displayName,
+    category: def.category,
+    canonicalUnit: def.canonicalUnit,
+    unit: def.unit,
+    decimalPlaces: def.decimalPlaces,
+    interpretation: def.interpretation,
+    visibility: def.visibility,
+    source: def.source,
+  }
+}
+
+/**
+ * Generate a safe, unique internal key from a display name. Non-alphanumerics
+ * collapse to underscores; collisions with existing keys get a numeric suffix.
+ */
+export function makeKpiKey(displayName: string, existingKeys: Iterable<string>): string {
+  const taken = new Set(existingKeys)
+  const base =
+    displayName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'kpi'
+  if (!taken.has(base)) return base
+  let n = 2
+  while (taken.has(`${base}_${n}`)) n += 1
+  return `${base}_${n}`
 }
 
 /**

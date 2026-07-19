@@ -55,6 +55,40 @@ it('KPI Settings edits flow into the effective registry', async () => {
   })
 })
 
+it('Add KPI validates, persists a definition, and rejects a duplicate name', async () => {
+  const repo = createMemorySettingsRepository()
+  renderWith(repo, <KpiSettingsPage />)
+
+  fireEvent.click(await screen.findByRole('button', { name: /Add KPI/ }))
+  const drawer = await screen.findByRole('dialog')
+  const addButton = within(drawer).getByRole('button', { name: 'Add KPI' })
+  // required field: disabled until a display name is entered
+  expect(addButton).toHaveProperty('disabled', true)
+
+  fireEvent.change(within(drawer).getByLabelText('Display name'), {
+    target: { value: 'Repeated Sprint Efforts' },
+  })
+  expect(within(drawer).getByText('repeated_sprint_efforts')).toBeTruthy()
+  expect(addButton).toHaveProperty('disabled', false)
+  fireEvent.click(addButton)
+
+  // persisted through the seam and injected into the effective registry
+  const saved = repo.load().customKpis
+  expect(saved).toHaveLength(1)
+  expect(saved[0]).toMatchObject({ key: 'repeated_sprint_efforts', source: 'TeamBuildr' })
+  expect(await screen.findByText('Repeated Sprint Efforts')).toBeTruthy()
+  expect(screen.getByText('custom')).toBeTruthy()
+
+  // a duplicate display name is rejected (Add disabled, message shown)
+  fireEvent.click(screen.getByRole('button', { name: /Add KPI/ }))
+  const drawer2 = await screen.findByRole('dialog')
+  fireEvent.change(within(drawer2).getByLabelText('Display name'), {
+    target: { value: 'repeated sprint efforts' },
+  })
+  expect(within(drawer2).getByText('name already used')).toBeTruthy()
+  expect(within(drawer2).getByRole('button', { name: 'Add KPI' })).toHaveProperty('disabled', true)
+})
+
 it('Data Management hides a widget and the Team Dashboard honors it', async () => {
   const repo = createMemorySettingsRepository()
   const dm = renderWith(repo, <DataManagementPage />)

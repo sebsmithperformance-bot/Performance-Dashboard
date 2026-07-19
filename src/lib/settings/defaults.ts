@@ -65,6 +65,8 @@ export function defaultSettings(): DashboardSettings {
       // empty = DEFAULT_OVERVIEW_GPS_METRICS
       overviewGpsMetrics: [],
     },
+    customKpis: [],
+    kpiThresholds: {},
   }
 }
 

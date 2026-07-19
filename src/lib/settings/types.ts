@@ -8,6 +8,47 @@
 import type { ComparisonBasis, DashKpi, KpiInterpretation, KpiVisibility } from '../dashboard/types.ts'
 
 /**
+ * A coach-defined KPI. It joins the registry through the settings seam and
+ * stays empty (no observations) until source data is mapped or imported —
+ * calculation formulas are never authored here (§6.3). Retiring hides it
+ * without deleting the definition.
+ */
+export interface CustomKpiDef {
+  key: string
+  displayName: string
+  category: DashKpi['category']
+  /** approved storage unit — fixed once created */
+  canonicalUnit: string
+  unit: string
+  decimalPlaces: number
+  interpretation: KpiInterpretation
+  visibility: KpiVisibility
+  /** TeamBuildr | PlayerData | Perch | Derived */
+  source: string
+  /** how same-athlete values combine in team views, where supported */
+  aggregation: 'sum' | 'mean' | 'max' | 'latest'
+  validMin: number | null
+  validMax: number | null
+  retired: boolean
+}
+
+/**
+ * A per-KPI display threshold band. Affects only transparent display
+ * interpretation and flags — it never changes stored values and never creates
+ * an injury prediction (§6.8). Open-ended bounds use null.
+ */
+export interface KpiThreshold {
+  id: string
+  label: string
+  lower: number | null
+  upper: number | null
+  /** semantic display category (never colour alone in the UI) */
+  state: 'good' | 'warning' | 'danger' | 'neutral'
+  explanation: string
+  active: boolean
+}
+
+/**
  * Operational thresholds shown transparently in the UI (§6.9). These tune the
  * *published bands and gates*, never the calculation formulas themselves.
  */
@@ -86,6 +127,10 @@ export interface DashboardSettings {
   layout: DashboardLayoutConfig
   positions: PositionGroup[]
   display: DisplayPreferences
+  /** coach-defined KPI definitions layered onto the registry */
+  customKpis: CustomKpiDef[]
+  /** per-KPI display threshold bands, keyed by KPI key */
+  kpiThresholds: Record<string, KpiThreshold[]>
 }
 
 /**

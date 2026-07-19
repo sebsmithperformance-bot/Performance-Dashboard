@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_THRESHOLDS } from '../../settings/defaults.ts'
-import { applyKpiOverride } from '../../settings/SettingsContext.tsx'
+import { applyKpiOverride, makeKpiKey } from '../../settings/SettingsContext.tsx'
 import { buildDataset } from '../dataset.ts'
 import { sessionTypeSummary } from '../format.ts'
 import { dashboardFixture } from '../test-fixture.ts'
@@ -292,6 +292,16 @@ describe('settings overrides', () => {
     expect(DEFAULT_THRESHOLDS.speedFlagThresholdPct).toBe(90)
     expect(DEFAULT_THRESHOLDS.acwrElevatedBand).toBeCloseTo(1.3, 10)
     expect(DEFAULT_THRESHOLDS.acwrHighBand).toBeCloseTo(1.5, 10)
+  })
+
+  it('makeKpiKey generates safe keys and resolves collisions', () => {
+    expect(makeKpiKey('Repeated Sprint Efforts!', [])).toBe('repeated_sprint_efforts')
+    expect(makeKpiKey('  ', [])).toBe('kpi')
+    // collision handling appends the next free numeric suffix
+    expect(makeKpiKey('Total Distance', ['total_distance'])).toBe('total_distance_2')
+    expect(makeKpiKey('Total Distance', ['total_distance', 'total_distance_2'])).toBe(
+      'total_distance_3',
+    )
   })
 })
 

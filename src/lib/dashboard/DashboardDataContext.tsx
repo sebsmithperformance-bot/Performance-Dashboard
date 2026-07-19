@@ -5,7 +5,7 @@
  * never touch the provider internals.
  */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { applyKpiOverride, useSettings } from '../settings/SettingsContext.tsx'
+import { applyKpiOverride, customKpiToDashKpi, useSettings } from '../settings/SettingsContext.tsx'
 import type {
   DashAvailabilityDay,
   DashboardDataProvider,
@@ -53,6 +53,12 @@ export function DashboardDataProviderBoundary({
     const kpis = new Map(
       [...dataset.kpis].map(([key, kpi]) => [key, applyKpiOverride(kpi, settings.kpi[key])]),
     )
+    // coach-defined KPIs join the registry (empty until data is mapped); display
+    // overrides still layer on top, and existing keys are never clobbered.
+    for (const def of settings.customKpis) {
+      if (def.retired || kpis.has(def.key)) continue
+      kpis.set(def.key, applyKpiOverride(customKpiToDashKpi(def), settings.kpi[def.key]))
+    }
     let availability = dataset.availability
     let availabilityByKey = dataset.availabilityByKey
     if (availabilityOverrides.length > 0) {
@@ -63,7 +69,7 @@ export function DashboardDataProviderBoundary({
       availability = [...availabilityByKey.values()]
     }
     return { ...dataset, kpis, availability, availabilityByKey }
-  }, [dataset, settings.kpi, availabilityOverrides])
+  }, [dataset, settings.kpi, settings.customKpis, availabilityOverrides])
 
   useEffect(() => {
     let cancelled = false

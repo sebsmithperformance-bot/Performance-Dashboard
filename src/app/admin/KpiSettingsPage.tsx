@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Lock, RotateCcw, Settings2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Lock, Plus, RotateCcw, Settings2, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { CONTROL_CLASS, LabeledControl } from '../../components/controls/controls.tsx'
 import { Badge } from '../../components/ui/Badge.tsx'
@@ -9,10 +9,29 @@ import { ErrorState } from '../../components/ui/ErrorState.tsx'
 import { Panel } from '../../components/ui/Panel.tsx'
 import { Skeleton } from '../../components/ui/Skeleton.tsx'
 import { useDashboardData } from '../../lib/dashboard/DashboardDataContext.tsx'
-import { useSettings } from '../../lib/settings/SettingsContext.tsx'
-import type { PositionGroup, ThresholdSettings } from '../../lib/settings/types.ts'
+import { makeKpiKey, useSettings } from '../../lib/settings/SettingsContext.tsx'
+import type {
+  CustomKpiDef,
+  KpiThreshold,
+  PositionGroup,
+  ThresholdSettings,
+} from '../../lib/settings/types.ts'
 import { canConvert, type Unit } from '../../lib/units/index.ts'
 import type { DashKpi, KpiInterpretation, KpiVisibility } from '../../lib/dashboard/types.ts'
+
+const SOURCES = ['TeamBuildr', 'PlayerData', 'Perch', 'Derived']
+const AGGREGATIONS: { value: CustomKpiDef['aggregation']; label: string }[] = [
+  { value: 'mean', label: 'Average per athlete' },
+  { value: 'sum', label: 'Team total' },
+  { value: 'max', label: 'Maximum' },
+  { value: 'latest', label: 'Latest value' },
+]
+const THRESHOLD_STATES: { value: KpiThreshold['state']; label: string; tone: 'good' | 'warning' | 'danger' | 'neutral' }[] = [
+  { value: 'good', label: 'Good', tone: 'good' },
+  { value: 'warning', label: 'Watch', tone: 'warning' },
+  { value: 'danger', label: 'Flag', tone: 'danger' },
+  { value: 'neutral', label: 'Neutral', tone: 'neutral' },
+]
 
 const ALL_UNITS: Unit[] = [
   'yd',
@@ -73,8 +92,15 @@ export function KpiSettingsPage() {
 }
 
 function KpiRegistry({ kpis }: { kpis: DashKpi[] }) {
-  const { settings, updateKpi } = useSettings()
+  const { settings, updateKpi, setCustomKpis } = useSettings()
   const [editing, setEditing] = useState<DashKpi | null>(null)
+  const [adding, setAdding] = useState(false)
+
+  const customKeys = useMemo(
+    () => new Set(settings.customKpis.map((c) => c.key)),
+    [settings.customKpis],
+  )
+  const retiredCustom = settings.customKpis.filter((c) => c.retired)
 
   const columns = useMemo<Column<DashKpi>[]>(
     () => [
@@ -85,9 +111,22 @@ function KpiRegistry({ kpis }: { kpis: DashKpi[] }) {
         render: (k) => (
           <span className="font-medium">
             {k.displayName}
+            {customKeys.has(k.key) && (
+              <span className="ml-2 align-middle">
+                <Badge tone="brand">custom</Badge>
+              </span>
+            )}
             {settings.kpi[k.key] && (
               <span className="ml-2 align-middle">
-                <Badge tone="brand">customized</Badge>
+                <Badge tone="neutral">customized</Badge>
+              </span>
+            )}
+            {(settings.kpiThresholds[k.key]?.length ?? 0) > 0 && (
+              <span className="ml-2 align-middle">
+                <Badge tone="neutral">
+                  {settings.kpiThresholds[k.key]!.length} threshold
+                  {settings.kpiThresholds[k.key]!.length === 1 ? '' : 's'}
+                </Badge>
               </span>
             )}
           </span>
@@ -147,22 +186,48 @@ function KpiRegistry({ kpis }: { kpis: DashKpi[] }) {
         ),
       },
     ],
-    [settings.kpi],
+    [settings.kpi, settings.kpiThresholds, customKeys],
   )
+
+  const restore = (key: string) =>
+    setCustomKpis(settings.customKpis.map((c) => (c.key === key ? { ...c, retired: false } : c)))
 
   return (
     <Panel icon={Settings2} title="KPI registry" keyValue={`${kpis.length} KPIs`}>
       <div className="flex flex-col gap-3">
-        <p className="text-label text-muted">
-          Click a KPI to edit its display configuration. Canonical storage units and calculation
-          formulas are locked (§6.3) — changing a display unit converts values at render time and
-          never rewrites stored records.
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <p className="max-w-2xl text-label text-muted">
+            Click a KPI to edit its display configuration and thresholds. Canonical storage units
+            and calculation formulas are locked (§6.3) — changing a display unit converts values at
+            render time and never rewrites stored records.
+          </p>
+          <Button variant="secondary" onClick={() => setAdding(true)}>
+            <Plus aria-hidden className="size-4" />
+            Add KPI
+          </Button>
+        </div>
         <DataTable columns={columns} rows={kpis} rowKey={(k) => k.key} onRowClick={setEditing} />
+        {retiredCustom.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 text-label text-muted">
+            <span>Retired custom KPIs:</span>
+            {retiredCustom.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => restore(c.key)}
+                className="text-accent underline decoration-dotted hover:text-primary"
+              >
+                restore {c.displayName}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+      {adding && <AddKpiDrawer existingKeys={kpis.map((k) => k.key)} onClose={() => setAdding(false)} />}
       {editing && (
         <KpiEditor
           kpi={editing}
+          isCustom={customKeys.has(editing.key)}
           hasOverride={settings.kpi[editing.key] !== undefined}
           onClose={() => setEditing(null)}
           onSave={(override) => {
@@ -179,14 +244,248 @@ function KpiRegistry({ kpis }: { kpis: DashKpi[] }) {
   )
 }
 
+/** Add KPI form — a definition only; the KPI stays empty until data is mapped. */
+function AddKpiDrawer({
+  existingKeys,
+  onClose,
+}: {
+  existingKeys: string[]
+  onClose: () => void
+}) {
+  const { settings, setCustomKpis } = useSettings()
+  const [displayName, setDisplayName] = useState('')
+  const [category, setCategory] = useState<DashKpi['category']>('GPS')
+  const [source, setSource] = useState('TeamBuildr')
+  const [canonicalUnit, setCanonicalUnit] = useState<Unit>('count')
+  const [displayUnit, setDisplayUnit] = useState<Unit>('count')
+  const [decimalPlaces, setDecimalPlaces] = useState(0)
+  const [interpretation, setInterpretation] = useState<KpiInterpretation>('higher_is_better')
+  const [aggregation, setAggregation] = useState<CustomKpiDef['aggregation']>('mean')
+  const [visibility, setVisibility] = useState<KpiVisibility>({
+    overview: false,
+    monitoring: true,
+    trends: true,
+    leaderboards: false,
+    profile: false,
+  })
+  const [validMin, setValidMin] = useState('')
+  const [validMax, setValidMax] = useState('')
+
+  const trimmed = displayName.trim()
+  const allKeys = new Set([...existingKeys, ...settings.customKpis.map((c) => c.key)])
+  const previewKey = trimmed ? makeKpiKey(trimmed, allKeys) : ''
+  const duplicateName =
+    trimmed !== '' &&
+    [...settings.customKpis].some((c) => c.displayName.toLowerCase() === trimmed.toLowerCase())
+  const min = validMin.trim() === '' ? null : Number(validMin)
+  const max = validMax.trim() === '' ? null : Number(validMax)
+  const rangeInvalid = min !== null && max !== null && min >= max
+  const unitOptions = ALL_UNITS.filter((u) => canConvert(canonicalUnit, u))
+  const canSave = trimmed !== '' && !duplicateName && !rangeInvalid
+
+  const save = () => {
+    if (!canSave) return
+    const def: CustomKpiDef = {
+      key: makeKpiKey(trimmed, allKeys),
+      displayName: trimmed,
+      category,
+      canonicalUnit,
+      unit: canConvert(canonicalUnit, displayUnit) ? displayUnit : canonicalUnit,
+      decimalPlaces,
+      interpretation,
+      visibility,
+      source,
+      aggregation,
+      validMin: min !== null && Number.isFinite(min) ? min : null,
+      validMax: max !== null && Number.isFinite(max) ? max : null,
+      retired: false,
+    }
+    setCustomKpis([...settings.customKpis, def])
+    onClose()
+  }
+
+  return (
+    <Drawer title="Add KPI" onClose={onClose}>
+      <div className="flex flex-col gap-4">
+        <div className="rounded-control border border-subtle bg-surface-2 p-3 text-label text-secondary">
+          A new KPI is a definition only — it stays empty until its source data is mapped during
+          import. Calculation formulas are never authored here (§6.3).
+        </div>
+
+        <LabeledControl label="Display name">
+          <input
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="e.g. Repeated Sprint Efforts"
+            className={`${CONTROL_CLASS} w-full`}
+          />
+        </LabeledControl>
+        {trimmed !== '' && (
+          <p className="text-label text-muted">
+            Internal key:{' '}
+            <span className="tabular font-medium text-secondary">{previewKey}</span>
+            {duplicateName && <span className="ml-2 text-danger">name already used</span>}
+          </p>
+        )}
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <LabeledControl label="Source">
+            <select value={source} onChange={(e) => setSource(e.target.value)} className={CONTROL_CLASS}>
+              {SOURCES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </LabeledControl>
+          <LabeledControl label="Category">
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as DashKpi['category'])}
+              className={CONTROL_CLASS}
+            >
+              {(['Strength', 'Power', 'GPS', 'Load'] as const).map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </LabeledControl>
+          <LabeledControl label="Storage unit">
+            <select
+              value={canonicalUnit}
+              onChange={(e) => {
+                const u = e.target.value as Unit
+                setCanonicalUnit(u)
+                setDisplayUnit(u)
+              }}
+              className={CONTROL_CLASS}
+            >
+              {ALL_UNITS.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </select>
+          </LabeledControl>
+          <LabeledControl label="Display unit">
+            <select
+              value={displayUnit}
+              onChange={(e) => setDisplayUnit(e.target.value as Unit)}
+              className={CONTROL_CLASS}
+            >
+              {unitOptions.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </select>
+          </LabeledControl>
+          <LabeledControl label="Decimals">
+            <select
+              value={decimalPlaces}
+              onChange={(e) => setDecimalPlaces(Number(e.target.value))}
+              className={CONTROL_CLASS}
+            >
+              {[0, 1, 2, 3].map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </LabeledControl>
+          <LabeledControl label="Interpretation">
+            <select
+              value={interpretation}
+              onChange={(e) => setInterpretation(e.target.value as KpiInterpretation)}
+              className={CONTROL_CLASS}
+            >
+              {INTERPRETATIONS.map((i) => (
+                <option key={i.value} value={i.value}>
+                  {i.label}
+                </option>
+              ))}
+            </select>
+          </LabeledControl>
+          <LabeledControl label="Aggregation">
+            <select
+              value={aggregation}
+              onChange={(e) => setAggregation(e.target.value as CustomKpiDef['aggregation'])}
+              className={CONTROL_CLASS}
+            >
+              {AGGREGATIONS.map((a) => (
+                <option key={a.value} value={a.value}>
+                  {a.label}
+                </option>
+              ))}
+            </select>
+          </LabeledControl>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <LabeledControl label="Valid minimum (optional)">
+            <input
+              type="number"
+              value={validMin}
+              onChange={(e) => setValidMin(e.target.value)}
+              className={CONTROL_CLASS}
+            />
+          </LabeledControl>
+          <LabeledControl label="Valid maximum (optional)">
+            <input
+              type="number"
+              value={validMax}
+              onChange={(e) => setValidMax(e.target.value)}
+              className={CONTROL_CLASS}
+            />
+          </LabeledControl>
+        </div>
+        {rangeInvalid && (
+          <p className="text-label text-danger">Valid minimum must be below the maximum.</p>
+        )}
+
+        <fieldset className="flex flex-col gap-1">
+          <legend className="mb-1 text-label font-medium text-secondary">Visible on</legend>
+          {SURFACES.map((surface) => (
+            <label
+              key={surface.key}
+              className="flex items-center gap-2 rounded-control px-2 py-1 text-body hover:bg-surface-2"
+            >
+              <input
+                type="checkbox"
+                checked={visibility[surface.key]}
+                onChange={(e) => setVisibility((v) => ({ ...v, [surface.key]: e.target.checked }))}
+                className="accent-(--accent)"
+              />
+              {surface.label}
+            </label>
+          ))}
+        </fieldset>
+
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={save} disabled={!canSave}>
+            Add KPI
+          </Button>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    </Drawer>
+  )
+}
+
 function KpiEditor({
   kpi,
+  isCustom,
   hasOverride,
   onClose,
   onSave,
   onReset,
 }: {
   kpi: DashKpi
+  isCustom: boolean
   hasOverride: boolean
   onClose: () => void
   onSave: (override: {
@@ -199,6 +498,7 @@ function KpiEditor({
   }) => void
   onReset: () => void
 }) {
+  const { settings, setCustomKpis } = useSettings()
   const [displayName, setDisplayName] = useState(kpi.displayName)
   const [displayUnit, setDisplayUnit] = useState(kpi.unit)
   const [decimalPlaces, setDecimalPlaces] = useState(kpi.decimalPlaces)
@@ -207,6 +507,15 @@ function KpiEditor({
   const [visibility, setVisibility] = useState<KpiVisibility>({ ...kpi.visibility })
 
   const unitOptions = ALL_UNITS.filter((u) => canConvert(kpi.canonicalUnit as Unit, u))
+
+  const retireCustom = () => {
+    setCustomKpis(settings.customKpis.map((c) => (c.key === kpi.key ? { ...c, retired: true } : c)))
+    onClose()
+  }
+  const deleteCustom = () => {
+    setCustomKpis(settings.customKpis.filter((c) => c.key !== kpi.key))
+    onClose()
+  }
 
   return (
     <Drawer title={`${kpi.displayName} — settings`} onClose={onClose}>
@@ -322,6 +631,8 @@ function KpiEditor({
           </div>
         )}
 
+        <KpiThresholdsSection kpi={kpi} />
+
         <div className="flex flex-wrap gap-2">
           <Button
             onClick={() =>
@@ -343,9 +654,189 @@ function KpiEditor({
               Reset to defaults
             </Button>
           )}
+          {isCustom && (
+            <>
+              <Button variant="secondary" onClick={retireCustom}>
+                Retire KPI
+              </Button>
+              <Button variant="secondary" onClick={deleteCustom}>
+                <Trash2 aria-hidden className="size-4" />
+                Delete
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </Drawer>
+  )
+}
+
+/** Per-KPI display threshold bands (interpretation only — never stored values,
+ *  never injury predictions §6.8). Lives inside the KPI editor drawer. */
+function KpiThresholdsSection({ kpi }: { kpi: DashKpi }) {
+  const { settings, setKpiThresholds } = useSettings()
+  const thresholds = settings.kpiThresholds[kpi.key] ?? []
+  const surfaces = SURFACES.filter((s) => kpi.visibility[s.key]).map((s) => s.label)
+
+  const patch = (id: string, changes: Partial<KpiThreshold>) =>
+    setKpiThresholds(
+      kpi.key,
+      thresholds.map((t) => (t.id === id ? { ...t, ...changes } : t)),
+    )
+  const add = () =>
+    setKpiThresholds(kpi.key, [
+      ...thresholds,
+      {
+        id: `t${Date.now().toString(36)}`,
+        label: 'New band',
+        lower: null,
+        upper: null,
+        state: 'neutral',
+        explanation: '',
+        active: true,
+      },
+    ])
+  const remove = (id: string) =>
+    setKpiThresholds(
+      kpi.key,
+      thresholds.filter((t) => t.id !== id),
+    )
+
+  // flag overlapping active ranges (null bounds are open-ended)
+  const overlaps = (a: KpiThreshold, b: KpiThreshold) => {
+    const aLo = a.lower ?? -Infinity
+    const aHi = a.upper ?? Infinity
+    const bLo = b.lower ?? -Infinity
+    const bHi = b.upper ?? Infinity
+    return aLo < bHi && bLo < aHi
+  }
+  const active = thresholds.filter((t) => t.active)
+  const hasOverlap = active.some((t, i) => active.slice(i + 1).some((o) => overlaps(t, o)))
+  const hasInverted = thresholds.some(
+    (t) => t.lower !== null && t.upper !== null && t.lower >= t.upper,
+  )
+
+  return (
+    <div className="flex flex-col gap-2 rounded-control border border-subtle p-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-label font-medium text-secondary">Display thresholds</span>
+        <button
+          type="button"
+          onClick={add}
+          className="inline-flex items-center gap-1 text-label text-accent hover:underline"
+        >
+          <Plus aria-hidden className="size-3.5" />
+          Add band
+        </button>
+      </div>
+      <p className="text-label text-muted">
+        Bands flag values for interpretation only — they never change stored data or predict injury
+        (§6.8).{' '}
+        {surfaces.length > 0
+          ? `Applied where this KPI shows: ${surfaces.join(', ')}.`
+          : 'This KPI is hidden everywhere, so bands are not shown yet.'}
+      </p>
+      {thresholds.length === 0 ? (
+        <p className="text-label text-muted">No thresholds defined.</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {thresholds.map((t) => (
+            <li key={t.id} className="flex flex-col gap-2 rounded-control bg-surface-2 p-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  value={t.label}
+                  aria-label="Band label"
+                  onChange={(e) => patch(t.id, { label: e.target.value })}
+                  className={`${CONTROL_CLASS} w-36`}
+                />
+                <select
+                  value={t.state}
+                  aria-label="Band state"
+                  onChange={(e) => patch(t.id, { state: e.target.value as KpiThreshold['state'] })}
+                  className={CONTROL_CLASS}
+                >
+                  {THRESHOLD_STATES.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+                <label className="flex items-center gap-1 text-label text-secondary">
+                  <input
+                    type="checkbox"
+                    checked={t.active}
+                    onChange={(e) => patch(t.id, { active: e.target.checked })}
+                    className="accent-(--accent)"
+                  />
+                  active
+                </label>
+                <button
+                  type="button"
+                  aria-label={`Remove ${t.label}`}
+                  onClick={() => remove(t.id)}
+                  className="ml-auto text-muted hover:text-danger"
+                >
+                  <Trash2 aria-hidden className="size-4" />
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-label text-secondary">
+                <label className="flex items-center gap-1">
+                  lower
+                  <input
+                    type="number"
+                    value={t.lower ?? ''}
+                    onChange={(e) =>
+                      patch(t.id, { lower: e.target.value === '' ? null : Number(e.target.value) })
+                    }
+                    className={`${CONTROL_CLASS} w-24`}
+                  />
+                </label>
+                <label className="flex items-center gap-1">
+                  upper
+                  <input
+                    type="number"
+                    value={t.upper ?? ''}
+                    onChange={(e) =>
+                      patch(t.id, { upper: e.target.value === '' ? null : Number(e.target.value) })
+                    }
+                    className={`${CONTROL_CLASS} w-24`}
+                  />
+                </label>
+                <span className="tabular text-muted">{kpi.unit}</span>
+              </div>
+              <input
+                type="text"
+                value={t.explanation}
+                aria-label="Band explanation"
+                placeholder="short explanation (optional)"
+                onChange={(e) => patch(t.id, { explanation: e.target.value })}
+                className={`${CONTROL_CLASS} w-full`}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+      {hasInverted && (
+        <p className="text-label text-danger">
+          Each band’s lower bound must be below its upper bound.
+        </p>
+      )}
+      {hasOverlap && (
+        <p className="text-label text-warning">
+          Active bands overlap — a value could match more than one band.
+        </p>
+      )}
+      {thresholds.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setKpiThresholds(kpi.key, [])}
+          className="self-start text-label text-secondary underline decoration-dotted hover:text-primary"
+        >
+          Reset thresholds
+        </button>
+      )}
+    </div>
   )
 }
 
