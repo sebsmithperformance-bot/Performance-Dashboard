@@ -133,6 +133,42 @@ export function athleteReadinessSeries(
   })
 }
 
+export interface ReadinessSummary {
+  avgAcute7d: number | null
+  avgChronicWeekly: number | null
+  medianAcwr: number | null
+  avgMonotony: number | null
+  avgStrain: number | null
+  validCount: number
+  incompleteCount: number
+  groupSize: number
+}
+
+/** Team-level readiness aggregates for the KPI strip — averages per athlete
+ *  (median where the metric is a median), computed from the tested rows. */
+export function readinessSummary(
+  dataset: DashboardDataset,
+  date: string,
+  position: string | null,
+  thresholds: ThresholdSettings = DEFAULT_THRESHOLDS,
+): ReadinessSummary {
+  const rows = readinessTableView(dataset, date, position, thresholds)
+  const mean = (vals: (number | null)[]): number | null => {
+    const nums = vals.filter((v): v is number => v !== null)
+    return nums.length === 0 ? null : nums.reduce((a, b) => a + b, 0) / nums.length
+  }
+  return {
+    avgAcute7d: mean(rows.map((r) => r.acute7d)),
+    avgChronicWeekly: mean(rows.map((r) => r.chronicWeekly)),
+    medianAcwr: median(rows.map((r) => r.acwr).filter((v): v is number => v !== null)),
+    avgMonotony: mean(rows.map((r) => r.monotony)),
+    avgStrain: mean(rows.map((r) => r.strain)),
+    validCount: rows.filter((r) => r.acwr !== null).length,
+    incompleteCount: rows.filter((r) => r.reason === 'incomplete data').length,
+    groupSize: rows.length,
+  }
+}
+
 export function readinessTableView(
   dataset: DashboardDataset,
   date: string,

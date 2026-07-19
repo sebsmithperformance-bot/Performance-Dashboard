@@ -13,11 +13,13 @@ import { Badge } from '../../components/ui/Badge.tsx'
 import { ChartCard } from '../../components/ui/ChartCard.tsx'
 import { DataTable, type Column } from '../../components/ui/DataTable.tsx'
 import { ErrorState } from '../../components/ui/ErrorState.tsx'
+import { KpiCard, KpiStrip } from '../../components/ui/KpiCard.tsx'
 import { Skeleton } from '../../components/ui/Skeleton.tsx'
 import { useDashboardData } from '../../lib/dashboard/DashboardDataContext.tsx'
 import { kpiColor } from '../../lib/dashboard/kpi-colors.ts'
 import {
   athleteReadinessSeries,
+  readinessSummary,
   readinessTableView,
   type ReadinessRow,
 } from '../../lib/dashboard/selectors/readiness.ts'
@@ -79,6 +81,7 @@ function Readiness({
     label: `within ${thresholds.acwrBelowBand.toFixed(2)}–${thresholds.acwrElevatedBand.toFixed(2)}`,
   }
   const bandDefs = loadBands(thresholds)
+  const summary = readinessSummary(dataset, date, position, thresholds)
 
   return (
     <div className="flex flex-col gap-4">
@@ -127,6 +130,43 @@ function Readiness({
           }}
         />
       </FilterBar>
+
+      <KpiStrip>
+        <KpiCard
+          label="Avg 7-day Load"
+          value={summary.avgAcute7d !== null ? fmt0(summary.avgAcute7d) : '—'}
+          unit="AU"
+          sub="Team avg per athlete"
+        />
+        <KpiCard
+          label="28-day Weekly Equiv."
+          value={summary.avgChronicWeekly !== null ? fmt0(summary.avgChronicWeekly) : '—'}
+          unit="AU"
+          sub="Team avg per athlete"
+        />
+        <KpiCard
+          label="Median ACWR"
+          value={summary.medianAcwr !== null ? fmt2(summary.medianAcwr) : '—'}
+          sub={`${summary.validCount} valid athletes`}
+        />
+        <KpiCard
+          label="Monotony"
+          value={summary.avgMonotony !== null ? fmt2(summary.avgMonotony) : '—'}
+          sub="7-day, team avg"
+        />
+        <KpiCard
+          label="Strain"
+          value={summary.avgStrain !== null ? fmt0(summary.avgStrain) : '—'}
+          sub="7-day, team avg"
+        />
+        <KpiCard label="Valid Athletes" value={String(summary.validCount)} sub="complete window" />
+        <KpiCard
+          label="Incomplete"
+          value={String(summary.incompleteCount)}
+          sub="missing device days"
+          accent={summary.incompleteCount > 0 ? 'warning' : undefined}
+        />
+      </KpiStrip>
 
       {mode === 'team' ? (
         <TeamLoadCharts

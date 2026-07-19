@@ -1,10 +1,8 @@
-import { UsersRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { DistributionBar } from '../../components/charts/DistributionBar.tsx'
 import { FilterBar, PositionSelector, SeasonSelector } from '../../components/controls/controls.tsx'
-import { Badge } from '../../components/ui/Badge.tsx'
 import { Button } from '../../components/ui/Button.tsx'
 import { DataTable, type Column } from '../../components/ui/DataTable.tsx'
+import { KpiCard, KpiStrip } from '../../components/ui/KpiCard.tsx'
 import { Drawer } from '../../components/ui/Drawer.tsx'
 import { ErrorState } from '../../components/ui/ErrorState.tsx'
 import { Skeleton } from '../../components/ui/Skeleton.tsx'
@@ -133,23 +131,23 @@ function AvailabilityRoster({
         </span>
       </FilterBar>
 
-      <section className="rounded-card border border-subtle bg-surface p-5">
-        <div className="mb-3 flex items-center gap-2">
-          <UsersRound aria-hidden className="size-5 text-secondary" strokeWidth={1.75} />
-          <h2 className="text-subhead font-semibold">
-            {view.counts.full_go}/{view.totalActive} Full Go
-          </h2>
-          {view.noEntry > 0 && <Badge tone="neutral">{view.noEntry} without an entry</Badge>}
-        </div>
-        <DistributionBar
-          segments={STATUS_META.map((s) => ({
-            key: s.key,
-            label: s.label,
-            count: view.counts[s.key],
-            color: s.color,
-          }))}
+      <KpiStrip>
+        <KpiCard label="Full Go" value={String(view.counts.full_go)} sub="cleared to train" accent="good" />
+        <KpiCard
+          label="Limited"
+          value={String(view.counts.limited)}
+          sub="modified participation"
+          accent={view.counts.limited > 0 ? 'warning' : undefined}
         />
-      </section>
+        <KpiCard
+          label="Out"
+          value={String(view.counts.out)}
+          sub="unavailable"
+          accent={view.counts.out > 0 ? 'danger' : undefined}
+        />
+        <KpiCard label="Unreported" value={String(view.noEntry)} sub="no entry today" />
+        <KpiCard label="Active Roster" value={String(view.totalActive)} sub="athletes" />
+      </KpiStrip>
 
       <DataTable columns={columns} rows={rows} rowKey={(r) => r.athlete.id} onRowClick={setEditing} />
 
