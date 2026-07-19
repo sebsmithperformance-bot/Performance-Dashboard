@@ -280,7 +280,7 @@ export function LineChart({
                   d={d}
                   fill="none"
                   stroke={s.color}
-                  strokeWidth={1.75}
+                  strokeWidth={2.25}
                   strokeLinejoin="round"
                   strokeLinecap="round"
                 />

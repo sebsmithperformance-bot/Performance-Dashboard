@@ -98,7 +98,7 @@ export function DataTable<Row>({
               {columns.map((column, i) => (
                 <td
                   key={column.key}
-                  className={`h-10 border-b border-subtle px-3 py-1.5 whitespace-nowrap group-hover:bg-surface-2 ${
+                  className={`h-11 border-b border-subtle px-3 py-1.5 whitespace-nowrap group-hover:bg-surface-2 ${
                     column.align === 'right' ? 'text-right' : 'text-left'
                   } ${i === 0 ? 'sticky left-0 z-[5] bg-base group-hover:bg-surface-2' : ''}`}
                 >

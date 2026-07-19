@@ -26,7 +26,7 @@ export function ChartCard({
     <section className="rounded-card border border-subtle bg-surface p-5">
       <header className="flex flex-wrap items-center gap-3">
         <div className="min-w-0">
-          <h3 className="text-subhead font-semibold">{title}</h3>
+          <h3 className="section-label text-subhead text-primary">{title}</h3>
           {subtitle && <p className="text-label text-muted">{subtitle}</p>}
         </div>
         <div className="ml-auto flex items-center gap-2">

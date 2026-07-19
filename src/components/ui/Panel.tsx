@@ -32,7 +32,7 @@ export function Panel({
         className="flex h-12 w-full items-center gap-3 px-5 text-left"
       >
         <Icon aria-hidden className="size-5 shrink-0 text-secondary" strokeWidth={1.75} />
-        <span className="text-subhead font-semibold">{title}</span>
+        <span className="section-label text-subhead text-primary">{title}</span>
         {condensed && keyValue !== undefined && (
           <span className="tabular ml-auto text-body font-semibold text-secondary">{keyValue}</span>
         )}
