@@ -19,6 +19,7 @@ import {
 import { lastSessionGpsView } from './last-session.ts'
 import { bandFor, loadHealthView } from './load-health.ts'
 import { metricTrendView } from './metric-trend.ts'
+import { overviewKpiStrip } from './overview-kpis.ts'
 import {
   athleteProfileView,
   leaderboardView,
@@ -256,6 +257,26 @@ describe('performance selectors', () => {
     expect(axis.groupAvgValue).toBe(125)
     // 3 of 6 comparison values below 125 → P50 reference
     expect(axis.groupAvgPercentile).toBeCloseTo(50, 5)
+  })
+})
+
+describe('overview KPI strip', () => {
+  it('leads with Available then Player Load, all real values, counts stay counts', () => {
+    const strip = overviewKpiStrip(ds, '2026-09-05')
+    // Availability is a count, Player Load is the team GPS average (labeled)
+    expect(strip[0]?.id).toBe('available')
+    expect(strip[1]?.id).toBe('player_load')
+    expect(strip[1]?.sub).toMatch(/Team Average/)
+    // S7 player_load mean = mean(480, 450) = 465
+    expect(strip[1]?.value).toBe('465')
+    // never NaN/Infinity/undefined text
+    for (const k of strip) {
+      expect(k.value).not.toMatch(/NaN|Infinity|undefined/)
+    }
+    // median ACWR + speed flags + completeness cards are present
+    expect(strip.map((k) => k.id)).toEqual(
+      expect.arrayContaining(['median_acwr', 'speed_flags', 'completeness', 'acute7']),
+    )
   })
 })
 

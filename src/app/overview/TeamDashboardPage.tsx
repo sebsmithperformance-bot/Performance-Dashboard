@@ -3,9 +3,11 @@ import { Button } from '../../components/ui/Button.tsx'
 import { Drawer } from '../../components/ui/Drawer.tsx'
 import { EmptyState } from '../../components/ui/EmptyState.tsx'
 import { ErrorState } from '../../components/ui/ErrorState.tsx'
+import { KpiCard, KpiStrip, SectionHeader } from '../../components/ui/KpiCard.tsx'
 import { Skeleton } from '../../components/ui/Skeleton.tsx'
 import { LayoutDashboard, RotateCcw, SlidersHorizontal } from 'lucide-react'
 import { useDashboardData } from '../../lib/dashboard/DashboardDataContext.tsx'
+import { overviewKpiStrip } from '../../lib/dashboard/selectors/overview-kpis.ts'
 import {
   DEFAULT_OVERVIEW_GPS_METRICS,
   OVERVIEW_GPS_SUPPORTED,
@@ -151,18 +153,37 @@ export function TeamDashboardPage() {
     return Tile ? <Tile key={id} dataset={dataset} date={selectedDate} /> : null
   }
 
+  const kpis = overviewKpiStrip(dataset, selectedDate, settings.thresholds)
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end">
-        <button
-          type="button"
-          onClick={() => setCustomizeOpen(true)}
-          className="inline-flex h-9 items-center gap-2 rounded-control border border-subtle px-3 text-label font-medium text-secondary hover:border-strong hover:text-primary"
-        >
-          <SlidersHorizontal aria-hidden className="size-4" />
-          Customize
-        </button>
-      </div>
+    <div className="flex flex-col gap-6">
+      <section aria-label="Team snapshot" className="flex flex-col gap-3">
+        <SectionHeader title="Team Snapshot">
+          <button
+            type="button"
+            onClick={() => setCustomizeOpen(true)}
+            className="inline-flex h-9 items-center gap-2 rounded-control border border-subtle px-3 text-label font-medium text-secondary hover:border-strong hover:text-primary"
+          >
+            <SlidersHorizontal aria-hidden className="size-4" />
+            Customize
+          </button>
+        </SectionHeader>
+        <KpiStrip>
+          {kpis.map((k) => (
+            <KpiCard
+              key={k.id}
+              label={k.label}
+              value={k.value}
+              unit={k.unit}
+              sub={k.sub}
+              note={k.note}
+              accent={k.accent}
+            />
+          ))}
+        </KpiStrip>
+      </section>
+
+      <div className="flex flex-col gap-4">
       {segments.map((segment, i) =>
         segment.fullWidth ? (
           segment.ids.map(renderTile)
@@ -177,6 +198,7 @@ export function TeamDashboardPage() {
           </div>
         ),
       )}
+      </div>
       {customizeOpen && (
         <CustomizeDrawer dataset={dataset} onClose={() => setCustomizeOpen(false)} />
       )}

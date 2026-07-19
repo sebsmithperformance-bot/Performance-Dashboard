@@ -109,13 +109,14 @@
 }
 
 @theme {
-  /* Typography (§12.3). Body = Inter. Display = a safe CONDENSED athletic
-     stack for short headings/tabs/KPI labels+values (Full Block / Ithaca are
-     not licensed for web here, so we substitute rather than approximate). */
-  --font-sans: 'Inter Variable', Inter, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display:
-    'Roboto Condensed', 'Arial Narrow', 'Helvetica Neue Condensed', 'Inter Variable', Inter,
-    sans-serif;
+  /* Typography (§12.3). Swiss 721 is the single primary family everywhere
+     (owner preference) — no second athletic/condensed display font. The
+     heading hierarchy comes from weight + capitalization + letter-spacing, not
+     a different face. Swiss 721 is a licensed local font we do not bundle;
+     the stack degrades to the Helvetica/Arial family it belongs to. */
+  --font-sans: 'Swiss 721', 'Swiss 721 BT', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* display == primary family; kept as a seam only, never a different font */
+  --font-display: var(--font-sans);
 
   /* Type scale — 14px body is the floor; nothing renders smaller than 12px labels */
   --text-label: 0.75rem; /* 12 — tiny labels, table headers, chips */
