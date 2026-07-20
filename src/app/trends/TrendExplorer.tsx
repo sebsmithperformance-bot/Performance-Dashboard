@@ -99,28 +99,35 @@ function Explorer({
   const groups = activePositionGroups(settings)
 
   const [kpiKey, setKpiKey] = useState(kpis[0]?.key ?? '')
-  const [mode, setMode] = useState<TrendMode>('group')
+  // one smooth Team Average line is the coach default
+  const [mode, setMode] = useState<TrendMode>('team')
   const [position, setPosition] = useState<string | null>(null)
   const [athleteId, setAthleteId] = useState<string | null>(dataset.athletes[0]?.id ?? null)
   const [range, setRange] = useState({ from: dataset.seasonStart, to: endDate })
 
+  // switching sub-tab swaps the catalog (S&C ↔ GPS); a metric from the other
+  // catalog would render empty, so fall back to the first of this one
+  const effectiveKpiKey = kpis.some((k) => k.key === kpiKey) ? kpiKey : (kpis[0]?.key ?? '')
+
   const view = useMemo(
     () =>
-      metricTrendView(dataset, kpiKey, range.from, range.to, mode, {
+      metricTrendView(dataset, effectiveKpiKey, range.from, range.to, mode, {
         position,
         athleteId,
         groups,
       }),
-    [dataset, kpiKey, range, mode, position, athleteId, groups],
+    [dataset, effectiveKpiKey, range, mode, position, athleteId, groups],
   )
 
   const chartSeries = view.series.map((s, i) => ({
     key: s.key,
     label: s.label,
     color:
-      mode === 'individual' && i === 0
-        ? kpiColor(kpiKey)
-        : GROUP_COLORS[i % GROUP_COLORS.length]!,
+      mode === 'team'
+        ? kpiColor(effectiveKpiKey)
+        : mode === 'individual' && i === 0
+          ? kpiColor(effectiveKpiKey)
+          : GROUP_COLORS[i % GROUP_COLORS.length]!,
     values: s.values,
   }))
 
@@ -191,18 +198,19 @@ function Explorer({
     <div className="flex flex-col gap-4">
       <FilterBar>
         <SeasonSelector seasonLabel={dataset.seasonLabel} />
-        <MetricSelector kpis={kpis} value={kpiKey} onChange={setKpiKey} />
+        <MetricSelector kpis={kpis} value={effectiveKpiKey} onChange={setKpiKey} />
         <LabeledControl label="Lens">
           <select
             value={mode}
             onChange={(e) => setMode(e.target.value as TrendMode)}
             className={CONTROL_CLASS}
           >
+            <option value="team">Team average</option>
             <option value="group">Group</option>
             <option value="individual">Individual</option>
           </select>
         </LabeledControl>
-        {mode === 'group' ? (
+        {mode === 'team' || mode === 'group' ? (
           <PositionSelector value={position} onChange={setPosition} />
         ) : (
           <AthleteSelector
@@ -215,7 +223,7 @@ function Explorer({
         <SaveViewControl
           page={pageId}
           store={savedViews}
-          getCurrentConfig={() => ({ kpiKey, mode, position, athleteId, range })}
+          getCurrentConfig={() => ({ kpiKey: effectiveKpiKey, mode, position, athleteId, range })}
           onApply={(config) => {
             const key = config['kpiKey'] as string | undefined
             if (key && kpis.some((k) => k.key === key)) setKpiKey(key)
@@ -234,7 +242,13 @@ function Explorer({
         <>
           <ChartCard
             title={`${kpi.displayName} — trend`}
-            subtitle={`${mode === 'group' ? 'group means' : 'athlete vs team mean'} · daily mean when a date has multiple sessions · gaps = no observation`}
+            subtitle={`${
+              mode === 'team'
+                ? 'average per athlete'
+                : mode === 'group'
+                  ? 'group means'
+                  : 'athlete vs team mean'
+            } · daily mean when a date has multiple sessions · gaps = no observation`}
             table={{
               columns: ['Date', ...chartSeries.map((s) => s.label)],
               rows: view.dates.map((date, i) => [

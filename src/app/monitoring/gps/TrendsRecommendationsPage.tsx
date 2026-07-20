@@ -214,6 +214,7 @@ function Trends({
         rangeDays={rangeDays}
         position={position}
         acwrBand={acwrBand}
+        thresholds={thresholds}
       />
 
       <p className="flex flex-wrap items-center gap-1 text-label text-muted">

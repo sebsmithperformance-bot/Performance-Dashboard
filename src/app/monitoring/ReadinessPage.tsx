@@ -175,6 +175,7 @@ function Readiness({
           rangeDays={rangeDays}
           position={position}
           acwrBand={acwrBand}
+          thresholds={thresholds}
         />
       ) : (
         <Individuals

@@ -22,6 +22,8 @@ export interface YBand {
   from: number
   to: number
   label: string
+  /** zone fill; defaults to the "good" token when omitted */
+  color?: string
 }
 
 const W = 720
@@ -94,6 +96,10 @@ export function LineChart({
   series,
   height = 240,
   yBand = null,
+  yBands,
+  pointColors,
+  onPointClick,
+  selectedIndex = null,
   zeroBased = false,
   smooth = false,
   formatX = (label) => label,
@@ -109,6 +115,13 @@ export function LineChart({
   series: LineChartSeries[]
   height?: number
   yBand?: YBand | null
+  /** multiple semantic y zones (e.g. ACWR grey/green/yellow/red) */
+  yBands?: YBand[]
+  /** per-point marker colour for the first series, aligned to xLabels */
+  pointColors?: (string | null)[]
+  /** makes each point clickable (a coach can inspect one day) */
+  onPointClick?: (index: number) => void
+  selectedIndex?: number | null
   zeroBased?: boolean
   smooth?: boolean
   formatX?: (label: string, index: number) => string
@@ -126,11 +139,12 @@ export function LineChart({
     return <p className="py-8 text-center text-label text-muted">no plottable data in this range</p>
   }
 
+  const zones = yBands ?? (yBand ? [yBand] : [])
   let yMin = Math.min(...allValues)
   let yMax = Math.max(...allValues)
-  if (yBand) {
-    yMin = Math.min(yMin, yBand.from)
-    yMax = Math.max(yMax, yBand.to)
+  for (const z of zones) {
+    if (Number.isFinite(z.from)) yMin = Math.min(yMin, z.from)
+    if (Number.isFinite(z.to)) yMax = Math.max(yMax, z.to)
   }
   if (zeroBased) yMin = Math.min(0, yMin)
   const spanPad = (yMax - yMin || Math.abs(yMax) || 1) * 0.06
@@ -208,16 +222,21 @@ export function LineChart({
           <rect x={PAD_L} y={PAD_T} width={innerW} height={innerH} />
         </clipPath>
 
-        {yBand && (
-          <rect
-            x={PAD_L}
-            y={y(yBand.to)}
-            width={innerW}
-            height={Math.max(0, y(yBand.from) - y(yBand.to))}
-            fill="var(--status-good)"
-            opacity={0.08}
-          />
-        )}
+        {zones.map((z, i) => {
+          const top = y(Math.min(z.to, yMax))
+          const bottom = y(Math.max(z.from, yMin))
+          return (
+            <rect
+              key={`${z.label}-${i}`}
+              x={PAD_L}
+              y={top}
+              width={innerW}
+              height={Math.max(0, bottom - top)}
+              fill={z.color ?? 'var(--status-good)'}
+              opacity={0.1}
+            />
+          )
+        })}
 
         {ticks.map((t) => (
           <g key={t}>
@@ -235,17 +254,18 @@ export function LineChart({
             </text>
           </g>
         ))}
-        {yBand && (
+        {zones.map((z, i) => (
           <text
+            key={`lbl-${z.label}-${i}`}
             x={W - PAD_R - 4}
-            y={y(yBand.to) + 12}
+            y={Math.max(PAD_T + 10, y(Math.min(z.to, yMax)) + 11)}
             textAnchor="end"
             fontSize={10}
             fill="var(--text-muted)"
           >
-            {yBand.label}
+            {z.label}
           </text>
-        )}
+        ))}
 
         {xTickIdx.map((i) => (
           <text
@@ -273,7 +293,7 @@ export function LineChart({
         )}
 
         <g clipPath={`url(#${clipId})`}>
-          {seriesPaths.map(({ series: s, d, lonePoints }) => (
+          {seriesPaths.map(({ series: s, d, lonePoints }, si) => (
             <g key={s.key}>
               {d && (
                 <path
@@ -289,6 +309,22 @@ export function LineChart({
               {lonePoints.map(({ v, i }) => (
                 <circle key={i} cx={x(i)} cy={y(v!)} r={2.5} fill={s.color} />
               ))}
+              {/* per-point semantic markers (e.g. ACWR band colours) */}
+              {si === 0 &&
+                pointColors &&
+                s.values.map((v, i) =>
+                  v === null ? null : (
+                    <circle
+                      key={`pt-${i}`}
+                      cx={x(i)}
+                      cy={y(v)}
+                      r={selectedIndex === i ? 5 : 3.5}
+                      fill={pointColors[i] ?? s.color}
+                      stroke="var(--bg-surface)"
+                      strokeWidth={selectedIndex === i ? 2 : 1}
+                    />
+                  ),
+                )}
               {/* emphasize the hovered point */}
               {hover !== null && s.values[hover] != null && (
                 <circle cx={x(hover)} cy={y(s.values[hover]!)} r={3.5} fill={s.color} stroke="var(--surface)" strokeWidth={1.5} />
@@ -296,6 +332,21 @@ export function LineChart({
             </g>
           ))}
         </g>
+
+        {/* click targets — a coach can inspect any single day */}
+        {onPointClick &&
+          xLabels.map((_, i) => (
+            <rect
+              key={`hit-${i}`}
+              x={x(i) - Math.max(6, innerW / xLabels.length / 2)}
+              y={PAD_T}
+              width={Math.max(12, innerW / xLabels.length)}
+              height={innerH}
+              fill="transparent"
+              className="cursor-pointer"
+              onClick={() => onPointClick(i)}
+            />
+          ))}
       </svg>
 
       {hover !== null && (

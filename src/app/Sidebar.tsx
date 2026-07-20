@@ -54,8 +54,11 @@ function SectionGroup({ section, pathname }: { section: NavSection; pathname: st
   )
   const gpsActive = pathname.startsWith('/monitoring/gps')
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="section-label px-3 pt-3 pb-1 text-label text-muted">{section.label}</span>
+    <div className="mt-3 flex flex-col gap-0.5 border-t border-white/10 pt-3 first:mt-0 first:border-t-0 first:pt-0">
+      {/* category headers read as structure, not as another clickable row */}
+      <span className="section-label px-3 pb-1.5 text-[0.6875rem] text-brand-neutral">
+        {section.label}
+      </span>
       {subTabs.map((tab) => (
         <div key={tab.path}>
           <LeafItem tab={tab} />
@@ -99,8 +102,8 @@ function SidebarBody({ collapsed }: { collapsed: boolean }) {
         ))}
       </nav>
       <div className="mx-3 border-t border-white/10" />
-      <nav aria-label="Administration" className="flex flex-col gap-0.5 px-2 pt-1 pb-2">
-        <span className="section-label px-3 pt-2 pb-1 text-label text-muted">Admin</span>
+      <nav aria-label="Administration" className="flex flex-col gap-0.5 px-2 pt-3 pb-2">
+        <span className="section-label px-3 pb-1.5 text-[0.6875rem] text-brand-neutral">Admin</span>
         {ADMIN_ITEMS.map((item) => (
           <LeafItem key={item.path} tab={{ label: item.label, path: item.path }} />
         ))}

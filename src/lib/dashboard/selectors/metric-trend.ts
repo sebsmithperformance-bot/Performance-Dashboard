@@ -23,7 +23,9 @@ export interface MetricTrendViewModel {
   series: TrendSeries[]
 }
 
-export type TrendMode = 'group' | 'individual'
+/** team = one smooth Team Average line (the coach default); group = one line per
+ *  position group; individual = an athlete against the team mean. */
+export type TrendMode = 'team' | 'group' | 'individual'
 
 /** athleteId → (date → mean value) for one KPI in [from, to] */
 function dailyValuesByAthlete(
@@ -92,7 +94,18 @@ export function metricTrendView(
   }
 
   let series: TrendSeries[] = []
-  if (mode === 'group') {
+  if (mode === 'team') {
+    // one line: the average per athlete across the selected scope
+    const scoped = dataset.athletes.filter(
+      (a) => options.position == null || a.position === options.position,
+    )
+    const label =
+      options.position == null
+        ? 'Team average'
+        : `${options.groups.find((g) => g.id === options.position)?.label ?? options.position} average`
+    const one = meanSeries(scoped.map((a) => a.id), 'team', label)
+    series = one.memberCount > 0 ? [one] : []
+  } else if (mode === 'group') {
     const groups =
       options.position != null
         ? options.groups.filter((g) => g.id === options.position)
