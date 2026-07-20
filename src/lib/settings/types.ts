@@ -178,6 +178,17 @@ export interface CompetitionSettings {
   splitScreen: boolean
 }
 
+/**
+ * Annual Plan link (§11) — a single configured Excel workbook link/path, the
+ * leanest possible integration. No sheet parsing, editing, or sync; a future
+ * workbook reader replaces the link card behind this same interface.
+ */
+export interface AnnualPlanSettings {
+  fileName: string | null
+  fileUrl: string | null
+  lastUpdated: string | null
+}
+
 export interface DashboardSettings {
   version: 1
   /** per-KPI display overrides, keyed by KPI key */
@@ -192,6 +203,8 @@ export interface DashboardSettings {
   kpiThresholds: Record<string, KpiThreshold[]>
   /** standalone Competition configuration (§10) */
   competition: CompetitionSettings
+  /** single configured Annual Plan workbook link (§11) */
+  annualPlan: AnnualPlanSettings
 }
 
 /**

@@ -120,6 +120,7 @@ export function defaultSettings(): DashboardSettings {
     customKpis: [],
     kpiThresholds: {},
     competition: defaultCompetition(),
+    annualPlan: { fileName: null, fileUrl: null, lastUpdated: null },
   }
 }
 

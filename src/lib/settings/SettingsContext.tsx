@@ -9,6 +9,7 @@ import { canConvert, type Unit } from '../units/index.ts'
 import type { DashKpi } from '../dashboard/types.ts'
 import { defaultSettings } from './defaults.ts'
 import type {
+  AnnualPlanSettings,
   CompetitionSettings,
   CustomKpiDef,
   DashboardLayoutConfig,
@@ -31,6 +32,7 @@ interface SettingsValue {
   setCustomKpis: (defs: CustomKpiDef[]) => void
   setKpiThresholds: (kpiKey: string, thresholds: KpiThreshold[]) => void
   updateCompetition: (patch: Partial<CompetitionSettings>) => void
+  setAnnualPlan: (plan: AnnualPlanSettings) => void
   resetLayout: () => void
   resetThresholds: () => void
 }
@@ -73,6 +75,7 @@ export function SettingsProvider({
       },
       updateCompetition: (patch) =>
         commit({ ...settings, competition: { ...settings.competition, ...patch } }),
+      setAnnualPlan: (annualPlan) => commit({ ...settings, annualPlan }),
       resetLayout: () => commit({ ...settings, layout: defaultSettings().layout }),
       resetThresholds: () => commit({ ...settings, thresholds: defaultSettings().thresholds }),
     }
