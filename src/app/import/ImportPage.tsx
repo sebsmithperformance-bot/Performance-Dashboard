@@ -240,7 +240,7 @@ export function ImportPage() {
         <Skeleton className="h-40 w-full" />
       ) : tab === 'history' ? (
         <>
-          <HistoryView db={db} />
+          <HistoryView db={db} onNewImport={() => setTab('new')} />
           <div>
             <Button
               variant="ghost"
