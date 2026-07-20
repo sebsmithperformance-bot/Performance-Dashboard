@@ -262,21 +262,32 @@ describe('performance selectors', () => {
 
 describe('overview KPI strip', () => {
   it('leads with Available then Player Load, all real values, counts stay counts', () => {
-    const strip = overviewKpiStrip(ds, '2026-09-05')
+    const { cards, sessionCaption } = overviewKpiStrip(ds, '2026-09-05')
     // Availability is a count, Player Load is the team GPS average (labeled)
-    expect(strip[0]?.id).toBe('available')
-    expect(strip[1]?.id).toBe('player_load')
-    expect(strip[1]?.sub).toMatch(/Team Average/)
+    expect(cards[0]?.id).toBe('available')
+    expect(cards[1]?.id).toBe('player_load')
+    expect(cards[1]?.sub).toMatch(/Team Average/)
     // S7 player_load mean = mean(480, 450) = 465
-    expect(strip[1]?.value).toBe('465')
+    expect(cards[1]?.value).toBe('465')
+    // the strip states which session the GPS averages came from
+    expect(sessionCaption).toMatch(/Game W2/)
     // never NaN/Infinity/undefined text
-    for (const k of strip) {
+    for (const k of cards) {
       expect(k.value).not.toMatch(/NaN|Infinity|undefined/)
     }
     // median ACWR + speed flags + completeness cards are present
-    expect(strip.map((k) => k.id)).toEqual(
+    expect(cards.map((k) => k.id)).toEqual(
       expect.arrayContaining(['median_acwr', 'speed_flags', 'completeness', 'acute7']),
     )
+  })
+
+  it('renders one GPS card per coach-selected metric (strip owns GPS)', () => {
+    const { cards } = overviewKpiStrip(ds, '2026-09-05', undefined, ['top_speed'])
+    const gpsIds = cards.map((c) => c.id)
+    expect(gpsIds).toContain('top_speed')
+    // the unselected GPS metrics are not duplicated onto the strip
+    expect(gpsIds).not.toContain('player_load')
+    expect(gpsIds).not.toContain('total_distance')
   })
 })
 

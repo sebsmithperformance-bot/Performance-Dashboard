@@ -247,6 +247,7 @@ function Explorer({
               xLabels={view.dates}
               series={chartSeries}
               height={280}
+              smooth
               formatX={shortDay}
               formatY={fmt}
               ariaLabel={`${kpi.displayName} trend from ${range.from} to ${range.to}`}

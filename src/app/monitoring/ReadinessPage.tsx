@@ -341,6 +341,7 @@ function Individuals({
                 },
               ]}
               zeroBased
+              smooth
               formatX={shortDay}
               formatY={fmt0}
               ariaLabel={`${selected.name} daily load, last ${rangeDays} days`}
@@ -368,6 +369,7 @@ function Individuals({
                 },
               ]}
               yBand={acwrBand}
+              smooth
               formatX={shortDay}
               formatY={fmt2}
               ariaLabel={`${selected.name} ACWR, last ${rangeDays} days`}

@@ -12,6 +12,7 @@ export function Panel({
   title,
   keyValue,
   defaultCondensed = false,
+  className = '',
   children,
 }: {
   icon: LucideIcon
@@ -19,12 +20,14 @@ export function Panel({
   /** The one number/summary shown while condensed. */
   keyValue?: string
   defaultCondensed?: boolean
+  /** layout hook, e.g. h-full so grid rows align without blank space */
+  className?: string
   children: ReactNode
 }) {
   const [condensed, setCondensed] = useState(defaultCondensed)
 
   return (
-    <section className="rounded-card border border-subtle bg-surface">
+    <section className={`rounded-card border border-subtle bg-surface ${className}`}>
       <button
         type="button"
         onClick={() => setCondensed((c) => !c)}

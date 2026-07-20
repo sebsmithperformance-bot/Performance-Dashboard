@@ -12,10 +12,14 @@ export interface OverviewWidgetDef {
   fullWidth?: boolean
 }
 
+/**
+ * Four half-width panels → an even two-column grid with no ragged gap. The
+ * last-session GPS numbers live in the Team Snapshot strip instead, so the
+ * strip and the panels never show the same metric twice.
+ */
 export const OVERVIEW_WIDGETS: OverviewWidgetDef[] = [
   { id: 'availability', label: 'Availability' },
-  { id: 'last_session_gps', label: 'Last Session GPS' },
   { id: 'load_health', label: 'Load Health' },
   { id: 'sc_change', label: 'S&C % Change' },
-  { id: 'athlete_flags', label: 'Athlete Flags', fullWidth: true },
+  { id: 'athlete_flags', label: 'Athlete Flags' },
 ]

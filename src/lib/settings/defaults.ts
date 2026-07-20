@@ -64,6 +64,7 @@ export function defaultSettings(): DashboardSettings {
       athletesDefaultHiddenKpis: ['yards_per_minute', 'sprint_distance', 'high_intensity_events'],
       // empty = DEFAULT_OVERVIEW_GPS_METRICS
       overviewGpsMetrics: [],
+      kpiCardSize: 'compact',
     },
     customKpis: [],
     kpiThresholds: {},

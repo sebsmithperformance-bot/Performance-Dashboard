@@ -46,16 +46,23 @@ function renderWithProvider(ui: React.ReactNode) {
 
 afterEach(cleanup)
 
-it('Team Dashboard renders all five tiles from the seam with correct content', async () => {
+it('Team Dashboard renders the KPI strip and panels from the seam with correct content', async () => {
   renderWithProvider(<TeamDashboardPage />)
+
+  // Team Snapshot strip owns the GPS numbers (no duplicate Last Session panel)
+  await screen.findByText('Team Snapshot')
+  expect(screen.queryByText('Last Session GPS')).toBeNull()
+  // Player Load leads the GPS cards: S7 mean(480, 450) = 465
+  // (the fixture registry uses raw keys as display names)
+  expect(screen.getByText('player_load')).toBeTruthy()
+  expect(screen.getByText('465')).toBeTruthy()
 
   // availability tile: counts + reveal-in-place
   await screen.findByText('Availability')
   fireEvent.click(screen.getByText('Limited').closest('button')!)
   expect(await screen.findByText('Lift only')).toBeTruthy()
 
-  // last session + flags tiles both reference the latest game
-  expect(screen.getByText('Last Session GPS')).toBeTruthy()
+  // the strip caption and the flags panel both reference the latest game
   expect(screen.getAllByText(/Game W2/).length).toBeGreaterThanOrEqual(2)
 
   // load health: early-season honesty — incomplete, no fabricated ACWR

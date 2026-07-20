@@ -17,15 +17,15 @@ import { useSettings } from '../../lib/settings/SettingsContext.tsx'
 import type { DashboardDataset } from '../../lib/dashboard/types.ts'
 import { AvailabilityTile } from './tiles/AvailabilityTile.tsx'
 import { FlagsTile } from './tiles/FlagsTile.tsx'
-import { LastSessionTile } from './tiles/LastSessionTile.tsx'
 import { LoadHealthTile } from './tiles/LoadHealthTile.tsx'
 import { ScChangeTile } from './tiles/ScChangeTile.tsx'
 import { OVERVIEW_PAGE_ID, OVERVIEW_WIDGETS } from './widgets.ts'
 
 type TileProps = { dataset: DashboardDataset; date: string }
 
-/** Team Dashboard → Customize: which GPS metrics the Last Session tile shows.
- *  One page-level control, secondary to normal viewing (coach-feedback). */
+/** Team Dashboard → Customize: which GPS metrics the Team Snapshot strip shows
+ *  and how dense the cards are. One page-level control, secondary to normal
+ *  viewing (coach-feedback). */
 function CustomizeDrawer({ dataset, onClose }: { dataset: DashboardDataset; onClose: () => void }) {
   const { settings, updateDisplay } = useSettings()
   const selected =
@@ -46,10 +46,31 @@ function CustomizeDrawer({ dataset, onClose }: { dataset: DashboardDataset; onCl
     <Drawer title="Customize Team Dashboard" onClose={onClose}>
       <div className="flex flex-col gap-4">
         <div>
-          <p className="text-body font-medium">Last Session GPS metrics</p>
+          <p className="text-body font-medium">Card size</p>
+          <p className="text-label text-muted">Compact fits more per row; wide gives each card room.</p>
+        </div>
+        <div role="group" aria-label="Card size" className="flex gap-2">
+          {(['compact', 'wide'] as const).map((s) => (
+            <button
+              key={s}
+              type="button"
+              aria-pressed={settings.display.kpiCardSize === s}
+              onClick={() => updateDisplay({ kpiCardSize: s })}
+              className={`h-9 flex-1 rounded-control border px-3 text-label font-medium capitalize ${
+                settings.display.kpiCardSize === s
+                  ? 'border-accent bg-accent/15 text-primary'
+                  : 'border-subtle text-secondary hover:border-strong hover:text-primary'
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+
+        <div>
+          <p className="text-body font-medium">Team Snapshot GPS metrics</p>
           <p className="text-label text-muted">
-            Choose which GPS metrics appear on the tile. Values are averages per participating
-            athlete.
+            Averages per participating athlete from the latest session.
           </p>
         </div>
         <fieldset className="flex flex-col gap-1">
@@ -73,7 +94,10 @@ function CustomizeDrawer({ dataset, onClose }: { dataset: DashboardDataset; onCl
           })}
         </fieldset>
         <div>
-          <Button variant="secondary" onClick={() => updateDisplay({ overviewGpsMetrics: [] })}>
+          <Button
+            variant="secondary"
+            onClick={() => updateDisplay({ overviewGpsMetrics: [], kpiCardSize: 'compact' })}
+          >
             <RotateCcw aria-hidden className="size-4" />
             Reset to default
           </Button>
@@ -88,7 +112,6 @@ function CustomizeDrawer({ dataset, onClose }: { dataset: DashboardDataset; onCl
 
 const TILE_COMPONENTS: Record<string, ComponentType<TileProps>> = {
   availability: AvailabilityTile,
-  last_session_gps: LastSessionTile,
   load_health: LoadHealthTile,
   sc_change: ScChangeTile,
   athlete_flags: FlagsTile,
@@ -136,29 +159,21 @@ export function TeamDashboardPage() {
     )
   }
 
-  // Consecutive half-width tiles pack into two independently-stacking columns
-  // (no row-aligned gaps, visual-review #2); full-width tiles break the flow.
-  const segments: { fullWidth: boolean; ids: string[] }[] = []
-  for (const widget of visible) {
-    const last = segments[segments.length - 1]
-    if (widget.fullWidth || !last || last.fullWidth) {
-      segments.push({ fullWidth: widget.fullWidth ?? false, ids: [widget.id] })
-    } else {
-      last.ids.push(widget.id)
-    }
-  }
-
-  const renderTile = (id: string) => {
-    const Tile = TILE_COMPONENTS[id]
-    return Tile ? <Tile key={id} dataset={dataset} date={selectedDate} /> : null
-  }
-
-  const kpis = overviewKpiStrip(dataset, selectedDate, settings.thresholds)
+  const size = settings.display.kpiCardSize
+  const strip = overviewKpiStrip(
+    dataset,
+    selectedDate,
+    settings.thresholds,
+    settings.display.overviewGpsMetrics,
+  )
 
   return (
     <div className="flex flex-col gap-6">
       <section aria-label="Team snapshot" className="flex flex-col gap-3">
         <SectionHeader title="Team Snapshot">
+          {strip.sessionCaption && (
+            <span className="mr-auto text-label text-muted">{strip.sessionCaption}</span>
+          )}
           <button
             type="button"
             onClick={() => setCustomizeOpen(true)}
@@ -168,8 +183,8 @@ export function TeamDashboardPage() {
             Customize
           </button>
         </SectionHeader>
-        <KpiStrip>
-          {kpis.map((k) => (
+        <KpiStrip size={size}>
+          {strip.cards.map((k) => (
             <KpiCard
               key={k.id}
               label={k.label}
@@ -178,26 +193,26 @@ export function TeamDashboardPage() {
               sub={k.sub}
               note={k.note}
               accent={k.accent}
+              size={size}
             />
           ))}
         </KpiStrip>
       </section>
 
-      <div className="flex flex-col gap-4">
-      {segments.map((segment, i) =>
-        segment.fullWidth ? (
-          segment.ids.map(renderTile)
-        ) : (
-          <div key={i} className="grid items-start gap-4 md:grid-cols-2">
-            <div className="flex min-w-0 flex-col gap-4">
-              {segment.ids.filter((_, j) => j % 2 === 0).map(renderTile)}
+      {/* Even two-column grid: each row's panels stretch to the same height, so
+          there is no ragged blank space between them. */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {visible.map((widget) => {
+          const Tile = TILE_COMPONENTS[widget.id]
+          return Tile ? (
+            <div
+              key={widget.id}
+              className="flex min-w-0 [&>section]:h-full [&>section]:w-full"
+            >
+              <Tile dataset={dataset} date={selectedDate} />
             </div>
-            <div className="flex min-w-0 flex-col gap-4">
-              {segment.ids.filter((_, j) => j % 2 === 1).map(renderTile)}
-            </div>
-          </div>
-        ),
-      )}
+          ) : null
+        })}
       </div>
       {customizeOpen && (
         <CustomizeDrawer dataset={dataset} onClose={() => setCustomizeOpen(false)} />
