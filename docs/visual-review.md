@@ -70,3 +70,50 @@ KPI Settings).
 2. Per-KPI display thresholds are defined and validated in KPI Settings but not yet wired
    into every KPIValue render as coloured flags — the definition/validation/storage layer
    is complete; render-time application is a small follow-up.
+
+## Session 6 (2026-07-19) — reference visual redesign
+
+Translated the supplied reference performance-dashboard screenshots into Penn branding
+(no gold, no football terminology/positions, no Send Report, no injury-risk language).
+Reviewed at 1440 / 1024 / 768 / 390.
+
+**Routes actually opened and reviewed:** Overview Team Dashboard, Overview Athletes,
+Monitoring Availability, Monitoring Readiness, GPS Session Overview, GPS Session Compare,
+GPS Trends & Recommendations, Data Trends Performance, Performance Overview, Leaderboards,
+Athlete Profile, KPI Settings, Data Management. (Data Trends → GPS was not opened
+separately — it is the same TrendExplorer component as Data Trends → Performance.)
+
+**Verified good**
+
+- Two-level shell: Penn Navy masthead (text-only wordmark — no licensed Penn logo asset
+  exists, so none is recreated) with a thin crimson divider, then a compact page-control
+  bar (page title + athlete count + session date + Import Data).
+- Sidebar is a grouped tree with uppercase section labels and always-visible leaves;
+  active rows use a crimson-tinted background + left indicator; GPS expands to its third
+  level. Collapsed = icon rail. Mobile off-canvas drawer shows the full tree.
+- Uppercase condensed sub-tabs with a crimson underline; muted inactive.
+- Dense KPI strips on Overview, Availability, Readiness, Trends, Performance Overview and
+  Athlete Profile — small uppercase label, large tabular value, short descriptor, one
+  interpretation line, thin semantic top border paired with text.
+- Overview: Team Snapshot is the single source for last-session GPS averages (one card per
+  coach-selected metric + session caption + per-metric delta); the duplicate Last Session
+  GPS panel is gone. The four remaining panels form an even two-column grid whose rows
+  stretch to equal heights — no ragged blank space.
+- KPI card density is coach-selectable (compact ≈7/row; wide ≈4/row with descriptors that
+  wrap instead of truncating), in the Team Dashboard Customize drawer.
+- Charts: smooth monotone curves everywhere (Overview/Readiness/Compare/Trends/Data
+  Trends), 2.25px lines, restrained gridlines, visible gaps for missing data, accessible
+  table fallback.
+- Typography is Swiss 721 only (Helvetica/Arial fallback) — hierarchy comes from weight,
+  capitalization and tracking, not a second display font.
+- Topbar no longer truncates the page title at 768; masthead uses a "Penn FH" short form
+  below sm. No console errors at any width; no page-level horizontal overflow.
+
+**Follow-ups (deferred, non-blocking)**
+
+1. Athlete Profile radar spoke labels still clip at 390px (pre-existing).
+2. Per-KPI display thresholds remain definition-only (not yet render-time flags).
+3. Equal-height rows leave some internal whitespace at the bottom of the shorter panel in
+   a row — inherent to matched rows; revisit only if it reads as empty.
+4. Session Overview keeps its existing position/ranking layout; the reference's split
+   position-breakdown + ranked-bar panels were not rebuilt (its IA was already approved).

@@ -26,7 +26,11 @@ export function Masthead({ onOpenDrawer }: { onOpenDrawer: () => void }) {
       </button>
 
       <div className="flex min-w-0 items-baseline gap-2 md:gap-3">
-        <span className="display truncate text-lg font-bold tracking-wide text-on-brand uppercase">
+        {/* short form below sm so the wordmark never truncates mid-word */}
+        <span className="display text-lg font-bold tracking-wide text-on-brand uppercase sm:hidden">
+          Penn FH
+        </span>
+        <span className="display hidden truncate text-lg font-bold tracking-wide text-on-brand uppercase sm:inline">
           Penn Field Hockey
         </span>
         <span className="section-label hidden text-label text-brand-neutral sm:inline">

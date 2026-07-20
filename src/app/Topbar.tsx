@@ -33,11 +33,12 @@ export function Topbar() {
 
   return (
     <header className="sticky top-16 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-subtle bg-base/95 px-5 backdrop-blur md:px-6">
-      <h1 className="display truncate text-xl font-bold tracking-wide text-primary uppercase">
+      {/* the title keeps its space; the controls compress instead */}
+      <h1 className="display shrink-0 text-xl font-bold tracking-wide text-primary uppercase">
         {title}
       </h1>
 
-      <div className="ml-auto flex items-center gap-2 sm:gap-3">
+      <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
         <Badge tone="neutral">
           <Users aria-hidden className="size-3.5" />
           <span className="tabular">{status === 'ready' ? athletes.length : '—'}</span>
@@ -52,7 +53,7 @@ export function Topbar() {
               <select
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="h-9 rounded-control border border-subtle bg-input px-2 text-body text-primary focus:border-accent"
+                className="h-9 max-w-[12rem] min-w-0 truncate rounded-control border border-subtle bg-input px-2 text-body text-primary focus:border-accent lg:max-w-none"
               >
                 {sessionDates.map((date) => {
                   const summary = sessionTypeSummary(dataset?.sessionsByDate.get(date) ?? [])

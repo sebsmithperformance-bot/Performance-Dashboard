@@ -4,9 +4,11 @@ Live tracker maintained by the orchestrator (docs/orchestration.md). Spec refere
 (§) point at `docs/spec/build-prompt.md`.
 
 **Current phase:** Build Order steps 5–6 complete frontend-first (all coach-facing sections
-+ admin customization pages, behind the data/settings seams) plus a coach-feedback polish
-revision. 127 tests green; typecheck/lint/guarded-build green. Backend spike (§2.1) remains
-blocked on AWS account access and is still the gate for anything backend-wired.
++ admin customization pages, behind the data/settings seams), plus a coach-feedback polish
+revision and a reference-driven visual redesign (Penn masthead, grouped sidebar tree,
+dense KPI strips, Swiss 721). 129 tests green; typecheck/lint/guarded-build green. Backend
+spike (§2.1) remains blocked on AWS account access and is still the gate for anything
+backend-wired.
 
 ## Blockers / required inputs (owner: Sebastian)
 
@@ -190,3 +192,26 @@ blocked on AWS account access and is still the gate for anything backend-wired.
 - Unchanged and protected: calculation formulas, import pipeline, DB schema, the five
   replaceable seams. No AWS/backend work — the §2.1 spike remains the gate for anything
   backend-wired.
+
+### 2026-07-19 — Session 6 (reference visual redesign)
+
+- Translated the supplied reference performance-dashboard screenshots into Penn branding
+  in nine bounded commits (`584a98b` → head). No gold palette, football terminology,
+  football positions, Send Report, or injury-risk language was carried over.
+- **Shell:** Penn Navy masthead with a crimson divider and a text-only wordmark (no
+  approved Penn logo asset exists in the repo, so none is recreated); compact page-control
+  bar owning the page title; sidebar rebuilt as a grouped tree with uppercase section
+  labels, always-visible leaves, crimson-tinted active rows and a left indicator (GPS
+  expands to its third level; collapsed = icon rail); uppercase condensed sub-tabs.
+- **Tokens/typography:** palette aligned to the Penn spec (`bg-input`, `navigation-*`,
+  `status-info`, documented chart tints); Swiss 721 is the single family everywhere —
+  hierarchy comes from weight/caps/tracking, not a second display font (Inter removed).
+- **KPI system:** new `KpiCard`/`KpiStrip`/`SectionHeader`; dense strips added to Overview,
+  Availability, Readiness, GPS Trends, Performance Overview and Athlete Profile; coach-
+  selectable compact/wide card density (`DisplayPreferences.kpiCardSize`).
+- **Overview:** Team Snapshot is now the single source of last-session GPS averages (the
+  duplicate Last Session GPS panel was deleted); the remaining four panels form an even
+  two-column grid with equal-height rows.
+- **Charts:** smooth monotone curves, 2.25px lines and restrained gridlines across every
+  line chart; 44px table rows.
+- Tests 127 → 129. Typecheck, lint and the guarded production build are green.
