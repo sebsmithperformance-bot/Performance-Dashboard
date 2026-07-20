@@ -15,7 +15,6 @@ import { dateWindow, readinessTableView } from './readiness.ts'
 export function monitoringGpsKpis(dataset: DashboardDataset): DashKpi[] {
   const order = [
     'total_distance',
-    'player_load',
     'workload',
     'high_speed_distance',
     'top_speed',
@@ -258,7 +257,7 @@ function teamDaySeries(
     for (const session of fieldSessions) {
       const obs = dataset.observationsBySession.get(session.id) ?? []
       for (const athlete of athletes) {
-        const o = obs.find((x) => x.athleteId === athlete.id && x.kpiKey === 'player_load')
+        const o = obs.find((x) => x.athleteId === athlete.id && x.kpiKey === 'workload')
         if (o) values.push(o.value)
       }
     }

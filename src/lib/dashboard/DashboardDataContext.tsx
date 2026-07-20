@@ -6,6 +6,9 @@
  */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { applyKpiOverride, customKpiToDashKpi, useSettings } from '../settings/SettingsContext.tsx'
+
+/** §5: KPIs kept out of every coach-facing surface (still stored/imported). */
+const COACH_HIDDEN_KPIS = new Set(['player_load'])
 import type {
   DashAvailabilityDay,
   DashboardDataProvider,
@@ -50,8 +53,14 @@ export function DashboardDataProviderBoundary({
   // observations stay canonical.
   const effectiveDataset = useMemo<DashboardDataset | null>(() => {
     if (!dataset) return null
+    // §5: Player Load is not front-facing — the 1–10 Workload metric replaces it
+    // everywhere in the coach UI. Observations stay canonical (imports, raw
+    // records, and back-compat fixtures keep player_load); it is only removed
+    // from the display registry so no coach surface lists or defaults to it.
     const kpis = new Map(
-      [...dataset.kpis].map(([key, kpi]) => [key, applyKpiOverride(kpi, settings.kpi[key])]),
+      [...dataset.kpis]
+        .filter(([key]) => !COACH_HIDDEN_KPIS.has(key))
+        .map(([key, kpi]) => [key, applyKpiOverride(kpi, settings.kpi[key])]),
     )
     // coach-defined KPIs join the registry (empty until data is mapped); display
     // overrides still layer on top, and existing keys are never clobbered.

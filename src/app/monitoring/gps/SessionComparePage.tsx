@@ -69,7 +69,7 @@ function SessionCompare({
   const [selectedIds, setSelectedIds] = useState<string[]>(() =>
     candidates.slice(0, 6).map((s) => s.id),
   )
-  const [metricKeys, setMetricKeys] = useState<string[]>(() => [kpis[0]?.key ?? 'player_load'])
+  const [metricKeys, setMetricKeys] = useState<string[]>(() => [kpis[0]?.key ?? 'total_distance'])
   const [position, setPosition] = useState<string | null>(null)
 
   const view = useMemo(
@@ -131,7 +131,7 @@ function SessionCompare({
             const mk = (config['metricKeys'] as string[] | undefined)?.filter((k) =>
               dataset.kpis.has(k),
             )
-            setMetricKeys(mk && mk.length > 0 ? mk.slice(0, MAX_METRICS) : [kpis[0]?.key ?? 'player_load'])
+            setMetricKeys(mk && mk.length > 0 ? mk.slice(0, MAX_METRICS) : [kpis[0]?.key ?? 'total_distance'])
             setPosition((config['position'] as string | null) ?? null)
             const ids = (config['selectedIds'] as string[] | undefined) ?? []
             setSelectedIds(ids.filter((id) => dataset.sessionById.has(id)))

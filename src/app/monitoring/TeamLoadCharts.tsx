@@ -22,6 +22,8 @@ import { DEFAULT_THRESHOLDS } from '../../lib/settings/defaults.ts'
 import type { ThresholdSettings } from '../../lib/settings/types.ts'
 import type { DashboardDataset } from '../../lib/dashboard/types.ts'
 
+const fmt1 = (v: number) => v.toFixed(1)
+
 export interface AcwrBand {
   from: number
   to: number
@@ -180,13 +182,13 @@ export function TeamLoadCharts({
       </ChartCard>
 
       <ChartCard
-        title="Daily Load — team mean"
+        title="Daily Workload — team mean"
         subtitle={view.loadKpiLabel}
         table={{
-          columns: ['Date', 'Mean load (AU)', 'Athletes with data'],
+          columns: ['Date', 'Mean Workload (1–10)', 'Athletes with data'],
           rows: view.days.map((d) => [
             formatDayLabel(d.date),
-            d.meanLoad === null ? '—' : fmt0(d.meanLoad),
+            d.meanLoad === null ? '—' : fmt1(d.meanLoad),
             d.observedCount,
           ]),
         }}
@@ -196,8 +198,8 @@ export function TeamLoadCharts({
           series={[
             {
               key: 'meanLoad',
-              label: 'Mean load',
-              color: kpiColor('player_load'),
+              label: 'Mean Workload',
+              color: kpiColor('workload'),
               values: view.days.map((d) => d.meanLoad),
             },
           ]}
@@ -207,8 +209,8 @@ export function TeamLoadCharts({
           selectedIndex={selected}
           onPointClick={(i) => setSelected((cur) => (cur === i ? null : i))}
           formatX={shortDay}
-          formatY={fmt0}
-          ariaLabel={`Team mean daily load over the last ${rangeDays} days`}
+          formatY={fmt1}
+          ariaLabel={`Team mean daily Workload over the last ${rangeDays} days`}
         />
       </ChartCard>
     </div>

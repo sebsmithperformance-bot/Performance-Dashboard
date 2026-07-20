@@ -36,6 +36,8 @@ import type { DashboardDataset } from '../../lib/dashboard/types.ts'
 
 const RANGES = [14, 28, 60, 90]
 
+const fmt1 = (v: number) => v.toFixed(1)
+
 const BAND_TONE: Record<LoadBand, 'good' | 'warning' | 'neutral' | 'danger'> = {
   below: 'neutral',
   within: 'good',
@@ -133,15 +135,13 @@ function Readiness({
 
       <KpiStrip>
         <KpiCard
-          label="Avg 7-day Load"
+          label="Avg 7-day Workload"
           value={summary.avgAcute7d !== null ? fmt0(summary.avgAcute7d) : '—'}
-          unit="AU"
           sub="Team avg per athlete"
         />
         <KpiCard
           label="28-day Weekly Equiv."
           value={summary.avgChronicWeekly !== null ? fmt0(summary.avgChronicWeekly) : '—'}
-          unit="AU"
           sub="Team avg per athlete"
         />
         <KpiCard
@@ -302,7 +302,7 @@ function Individuals({
           return observed.length >= 2 ? (
             <Sparkline
               values={observed}
-              color={kpiColor('player_load')}
+              color={kpiColor('workload')}
               width={90}
               height={24}
               ariaLabel={`${r.name} observed daily loads, last 14 days`}
@@ -321,13 +321,13 @@ function Individuals({
       {selected && series && (
         <div className="grid items-start gap-4 xl:grid-cols-2">
           <ChartCard
-            title={`${selected.name} — daily load`}
-            subtitle="observed load; confirmed rest = 0; gaps = missing device data"
+            title={`${selected.name} — daily Workload`}
+            subtitle="observed Workload; confirmed rest = 0; gaps = missing device data"
             table={{
-              columns: ['Date', 'Load (AU)'],
+              columns: ['Date', 'Workload (1–10)'],
               rows: series.map((d) => [
                 formatDayLabel(d.date),
-                d.load === null ? '— (missing)' : fmt0(d.load),
+                d.load === null ? '— (missing)' : fmt1(d.load),
               ]),
             }}
           >
@@ -336,16 +336,16 @@ function Individuals({
               series={[
                 {
                   key: 'load',
-                  label: 'Daily load',
-                  color: kpiColor('player_load'),
+                  label: 'Daily Workload',
+                  color: kpiColor('workload'),
                   values: series.map((d) => d.load),
                 },
               ]}
               zeroBased
               smooth
               formatX={shortDay}
-              formatY={fmt0}
-              ariaLabel={`${selected.name} daily load, last ${rangeDays} days`}
+              formatY={fmt1}
+              ariaLabel={`${selected.name} daily Workload, last ${rangeDays} days`}
             />
           </ChartCard>
           <ChartCard

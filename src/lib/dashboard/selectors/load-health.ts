@@ -162,6 +162,6 @@ export function loadHealthView(
     teamMedianAcwr: median(validAcwrs),
     avgAcute7dLoad:
       acuteLoads.length > 0 ? acuteLoads.reduce((a, b) => a + b, 0) / acuteLoads.length : null,
-    loadKpiLabel: 'Player Load (7d acute vs 28d weekly equivalent)',
+    loadKpiLabel: 'Workload 1–10 (7-day acute vs 28-day weekly equivalent)',
   }
 }

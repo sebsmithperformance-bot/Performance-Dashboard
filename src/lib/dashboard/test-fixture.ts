@@ -176,22 +176,36 @@ export function dashboardFixture(): DashboardDataset {
       obs('A1', 'S7', 'top_speed', 15.5), // 86.1% of 18.0 → flag
       obs('A2', 'S1', 'top_speed', 16.0),
       obs('A2', 'S7', 'top_speed', 15.8), // 1 prior → insufficient baseline
+      // Player Load stays in the fixture for back-compat, but the coach UI reads
+      // the 1–10 Workload source instead (§5). Both are seeded on the same
+      // (athlete, session) pairs so the daily-load / ACWR windows have data.
       obs('A1', 'S1', 'player_load', 420),
+      obs('A1', 'S1', 'workload', 6.0),
       obs('A1', 'S1', 'total_distance', 4400),
       obs('A2', 'S1', 'player_load', 380),
+      obs('A2', 'S1', 'workload', 5.5),
       obs('A2', 'S1', 'total_distance', 4100),
       obs('A1', 'S2', 'player_load', 500),
+      obs('A1', 'S2', 'workload', 7.0),
       obs('A1', 'S2', 'total_distance', 3600),
       // A2 participated in S2 but produced NO observations → device missing
       obs('A1', 'S3', 'player_load', 120),
+      obs('A1', 'S3', 'workload', 2.0),
       obs('A2', 'S3', 'player_load', 110),
+      obs('A2', 'S3', 'workload', 2.0),
       obs('A3', 'S3', 'player_load', 90),
+      obs('A3', 'S3', 'workload', 1.5),
       obs('A1', 'S4', 'player_load', 400),
+      obs('A1', 'S4', 'workload', 6.0),
       obs('A2', 'S4', 'player_load', 390),
+      obs('A2', 'S4', 'workload', 5.5),
       obs('A1', 'S5', 'player_load', 210),
+      obs('A1', 'S5', 'workload', 3.0),
       obs('A1', 'S7', 'player_load', 480),
+      obs('A1', 'S7', 'workload', 7.0),
       obs('A1', 'S7', 'total_distance', 3500),
       obs('A2', 'S7', 'player_load', 450),
+      obs('A2', 'S7', 'workload', 6.5),
       obs('A2', 'S7', 'total_distance', 3300),
       obs('A1', 'L1', 'back_squat_top_load', 180),
       obs('A1', 'L2', 'back_squat_top_load', 185),

@@ -114,8 +114,8 @@ export interface DisplayPreferences {
   defaultScChangeKpi: string | null
   /** metric columns hidden by default on the Overview Athletes table */
   athletesDefaultHiddenKpis: string[]
-  /** GPS metric keys shown in the Overview Team Snapshot strip, in order;
-   *  empty = the canonical default set (Player Load leads) */
+  /** GPS metric keys shown on the Last Session GPS tile, in order;
+   *  empty = the canonical default set (Player Load is never included) */
   overviewGpsMetrics: string[]
   /** KPI card density — compact packs more per row, wide gives each card room */
   kpiCardSize: 'compact' | 'wide'

@@ -168,9 +168,8 @@ function Trends({
           sub="7-day, team avg"
         />
         <KpiCard
-          label="28-day Weekly Load"
+          label="28-day Weekly Workload"
           value={summary.avgChronicWeekly !== null ? fmt0(summary.avgChronicWeekly) : '—'}
-          unit="AU"
           sub="Team avg per athlete"
         />
         <KpiCard

@@ -112,7 +112,7 @@ export function teamReadinessView(
   return {
     days: points,
     groupSize: athletes.length,
-    loadKpiLabel: 'Player Load — mean across athletes with device data',
+    loadKpiLabel: 'Workload 1–10 — mean across athletes with a session record',
   }
 }
 

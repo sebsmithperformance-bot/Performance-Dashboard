@@ -39,8 +39,8 @@ describe('readiness selectors', () => {
   it('computes acute load per athlete with ADR-005 day semantics', () => {
     const rows = readinessTableView(ds, '2026-09-05', null)
     const a1 = rows.find((r) => r.athleteId === 'A1')!
-    // A1 observed every participated day: 420+500+120+400+210+480
-    expect(a1.acute7d).toBe(2130)
+    // A1 observed every participated day (Workload 1–10): 6+7+2+6+3+7
+    expect(a1.acute7d).toBe(31)
     expect(a1.monotony).not.toBeNull()
     // A2's device-missing day (S2) poisons her 7-day window
     const a2 = rows.find((r) => r.athleteId === 'A2')!
@@ -54,7 +54,7 @@ describe('readiness selectors', () => {
     const view = teamReadinessView(ds, '2026-09-05', 7, null)
     const last = view.days[view.days.length - 1]!
     expect(last.date).toBe('2026-09-05')
-    expect(last.meanLoad).toBeCloseTo((480 + 450) / 2, 5)
+    expect(last.meanLoad).toBeCloseTo((7.0 + 6.5) / 2, 5)
     expect(last.observedCount).toBe(2)
     expect(last.validAcwrCount).toBe(0)
   })
@@ -74,9 +74,9 @@ describe('gpsSessionOverview', () => {
     const view = gpsSessionOverview(ds, '2026-09-04', null, null)
     expect(view.sessionsOnDate.map((s) => s.id)).toEqual(['S4', 'S5']) // lift excluded
     expect(view.session?.id).toBe('S4')
-    const load = view.teamStats.find((s) => s.kpi.key === 'player_load')!
-    expect(load.mean).toBeCloseTo(395, 5)
-    expect(load.top).toBe(400)
+    const load = view.teamStats.find((s) => s.kpi.key === 'workload')!
+    expect(load.mean).toBeCloseTo((6.0 + 5.5) / 2, 5)
+    expect(load.top).toBe(6.0)
     expect(load.n).toBe(2)
   })
 })
@@ -261,14 +261,16 @@ describe('performance selectors', () => {
 })
 
 describe('overview KPI strip', () => {
-  it('leads with Available then Player Load, all real values, counts stay counts', () => {
+  it('leads with Available then the first GPS metric, all real values, counts stay counts', () => {
     const { cards, sessionCaption } = overviewKpiStrip(ds, '2026-09-05')
-    // Availability is a count, Player Load is the team GPS average (labeled)
+    // Availability is a count; the first GPS card is the team average (labeled).
+    // Player Load is never front-facing, so total_distance leads (§5).
     expect(cards[0]?.id).toBe('available')
-    expect(cards[1]?.id).toBe('player_load')
+    expect(cards[1]?.id).toBe('total_distance')
     expect(cards[1]?.sub).toMatch(/Team Average/)
-    // S7 player_load mean = mean(480, 450) = 465
-    expect(cards[1]?.value).toBe('465')
+    // S7 total_distance mean = mean(3500, 3300) = 3400
+    expect(cards[1]?.value.replace(/,/g, '')).toBe('3400')
+    expect(cards.map((k) => k.id)).not.toContain('player_load')
     // the strip states which session the GPS averages came from
     expect(sessionCaption).toMatch(/Game W2/)
     // never NaN/Infinity/undefined text
@@ -338,14 +340,15 @@ describe('settings overrides', () => {
 })
 
 describe('coach-feedback: overview presentation', () => {
-  it('Last Session GPS leads with Player Load and labels values as averages', () => {
+  it('Last Session GPS leads with a GPS metric (never Player Load) and labels averages', () => {
     const v = lastSessionGpsView(ds, '2026-09-05')!
-    // default metric set leads with Player Load (coach-feedback default)
-    expect(v.metrics[0]?.kpiKey).toBe('player_load')
+    // Player Load is not front-facing; the default set leads with total_distance (§5)
+    expect(v.metrics[0]?.kpiKey).toBe('total_distance')
+    expect(v.metrics.map((m) => m.kpiKey)).not.toContain('player_load')
     // team scope is always average per participating athlete, never a total
     expect(v.metrics.every((m) => m.aggLabel === 'average per athlete')).toBe(true)
-    // S7 player_load = mean(480, 450) = 465
-    expect(v.metrics[0]?.value).toBe(465)
+    // S7 total_distance = mean(3500, 3300) = 3400
+    expect(v.metrics[0]?.value).toBe(3400)
   })
 
   it('honours the coach-selected GPS metric set and drops unknown keys', () => {

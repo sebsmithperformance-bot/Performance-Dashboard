@@ -17,22 +17,20 @@ export const DEFAULT_THRESHOLDS: ThresholdSettings = {
 }
 
 /**
- * Canonical GPS metrics on the Overview Last Session GPS tile — Player Load
- * leads (coach-feedback default). Coaches add/remove via the Team Dashboard
- * Customize drawer; an empty override falls back to this list.
+ * Canonical GPS metrics on the Team Snapshot → Last Session GPS tile. Player
+ * Load is not front-facing (§5), so it never leads or appears here. Coaches
+ * add/remove via the Customize drawer; an empty override falls back to this.
  */
 export const DEFAULT_OVERVIEW_GPS_METRICS = [
-  'player_load',
   'total_distance',
   'high_speed_distance',
   'top_speed',
 ]
 
-/** GPS/Load metrics the coach may surface on the Team Dashboard, canonical
- *  order. The Customize drawer offers exactly these; selection is stored in
- *  DisplayPreferences.overviewGpsMetrics. */
+/** GPS/Load metrics the coach may surface on the Last Session GPS tile,
+ *  canonical order. The Customize drawer offers exactly these; selection is
+ *  stored in DisplayPreferences.overviewGpsMetrics. Player Load is excluded. */
 export const OVERVIEW_GPS_SUPPORTED = [
-  'player_load',
   'total_distance',
   'high_speed_distance',
   'top_speed',

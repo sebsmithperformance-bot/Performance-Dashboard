@@ -38,7 +38,6 @@ export interface AthletesTableViewModel {
 
 const GPS_ORDER = [
   'total_distance',
-  'player_load',
   'workload',
   'high_speed_distance',
   'top_speed',

@@ -84,9 +84,8 @@ export function overviewKpiStrip(
       ...gpsCards,
       {
         id: 'acute7',
-        label: 'Acute 7-day Load',
+        label: 'Acute 7-day Workload',
         value: lh.avgAcute7dLoad !== null ? formatInt(lh.avgAcute7dLoad) : '—',
-        unit: 'AU',
         sub: 'Team avg per athlete',
       },
       {

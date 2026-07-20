@@ -8,7 +8,10 @@ import type { DayLoad } from '../../calculations/index.ts'
 import { addDays } from '../../calculations/index.ts'
 import type { DashboardDataset } from '../types.ts'
 
-export const LOAD_KPI = 'player_load'
+/** §5: the coach-facing daily load metric is the 1–10 Workload source, not
+ *  Player Load. Drives the 7-day acute, 28-day chronic, ACWR, monotony and
+ *  strain windows; one consistent metric, never mixed with Player Load. */
+export const LOAD_KPI = 'workload'
 
 /** date-keyed DayLoad map for one athlete, from season start to endDate. */
 export function dailyLoadByDate(
