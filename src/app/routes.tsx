@@ -7,6 +7,7 @@ import { CompetitionSettingsPage } from './admin/CompetitionSettingsPage.tsx'
 import { DataManagementPage } from './admin/DataManagementPage.tsx'
 import { KpiSettingsPage } from './admin/KpiSettingsPage.tsx'
 import { AnnualPlanPage } from './annual-plan/AnnualPlanPage.tsx'
+import { CompetitionLayout } from './competition/CompetitionContext.tsx'
 import { IndividualLeaderboardPage } from './competition/IndividualLeaderboardPage.tsx'
 import { KpiLeaderboardsPage } from './competition/KpiLeaderboardsPage.tsx'
 import { TeamStandingsPage } from './competition/TeamStandingsPage.tsx'
@@ -96,7 +97,7 @@ export function AppRoutes() {
           <Route path="athlete-profile" element={<AthleteProfilePage />} />
         </Route>
 
-        <Route path="/competition" element={<SectionPage />}>
+        <Route path="/competition" element={<CompetitionLayout />}>
           <Route index element={<Navigate to="/competition/team-standings" replace />} />
           <Route path="team-standings" element={<TeamStandingsPage />} />
           <Route path="individual-leaderboard" element={<IndividualLeaderboardPage />} />

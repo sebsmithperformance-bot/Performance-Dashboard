@@ -27,6 +27,7 @@ export function createLocalSettingsRepository(): SettingsRepository {
           display: { ...base.display, ...stored.display },
           customKpis: stored.customKpis ?? base.customKpis,
           kpiThresholds: stored.kpiThresholds ?? base.kpiThresholds,
+          competition: { ...base.competition, ...stored.competition },
         }
       } catch {
         return base

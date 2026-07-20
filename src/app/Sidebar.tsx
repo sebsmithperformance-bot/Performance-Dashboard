@@ -66,15 +66,26 @@ function StandaloneItem({ section }: { section: NavSection }) {
   )
 }
 
+/** Competition page → its visibility flag (§10 Competition Settings). */
+const COMPETITION_PAGE_FLAG: Record<string, 'teamStandings' | 'individualLeaderboard' | 'kpiLeaderboards'> = {
+  '/competition/team-standings': 'teamStandings',
+  '/competition/individual-leaderboard': 'individualLeaderboard',
+  '/competition/kpi-leaderboards': 'kpiLeaderboards',
+}
+
 /** One section group: uppercase label + its always-visible leaves (§2). */
 function SectionGroup({ section }: { section: NavSection }) {
   const { settings } = useSettings()
   if (section.subTabs.length === 0) return <StandaloneItem section={section} />
+  const pages = settings.competition.pages
   const subTabs = orderByConfig(
     section.subTabs,
     (t) => t.path,
     settings.layout.subTabOrder[section.base] ?? [],
-  )
+  ).filter((t) => {
+    const flag = COMPETITION_PAGE_FLAG[t.path]
+    return flag ? pages[flag] : true
+  })
   return (
     <div className="mt-3 flex flex-col gap-0.5 border-t border-white/10 pt-3 first:mt-0 first:border-t-0 first:pt-0">
       {/* category headers read as structure, not as another clickable row */}

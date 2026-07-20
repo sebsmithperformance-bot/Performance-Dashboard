@@ -121,6 +121,63 @@ export interface DisplayPreferences {
   kpiCardSize: 'compact' | 'wide'
 }
 
+/** An intra-squad competition team (§10). */
+export interface CompetitionTeam {
+  id: string
+  name: string
+}
+
+/** A dated place→points scale (§10). The profile effective on a session's date
+ *  is the one with the latest effectiveFrom on or before it. */
+export interface ScoringProfile {
+  id: string
+  name: string
+  /** ISO date; applies to sessions on/after this date */
+  effectiveFrom: string
+  /** points by finishing place: placePoints[0] = 1st place; places past the
+   *  end score 0 */
+  placePoints: number[]
+}
+
+/** Whether a KPI generates competition points, and in which scoring modes. */
+export interface CompetitionKpiEligibility {
+  absolute: boolean
+  /** relative-to-bodyweight — only where a body weight exists for the athlete */
+  relative: boolean
+}
+
+export interface CompetitionSavedRange {
+  id: string
+  label: string
+  from: string
+  to: string
+}
+
+/**
+ * Competition configuration (§10) — a self-contained points game, isolated
+ * from all performance monitoring. Points never appear outside the Competition
+ * section, and only explicitly eligible KPIs score (never Workload, ACWR,
+ * monotony, strain, availability, health, or completeness).
+ */
+export interface CompetitionSettings {
+  teams: CompetitionTeam[]
+  /** athleteId → teamId; unassigned athletes fall back to a deterministic
+   *  round-robin over the configured teams so the prototype is never empty */
+  athleteTeam: Record<string, string>
+  /** athleteId → body weight in lb, for relative scoring */
+  bodyWeightLb: Record<string, number>
+  /** kpiKey → eligibility; a KPI absent here is not scored */
+  eligibleKpis: Record<string, CompetitionKpiEligibility>
+  scoringProfiles: ScoringProfile[]
+  defaultProfileId: string
+  savedRanges: CompetitionSavedRange[]
+  /** per-page visibility inside the Competition section */
+  pages: { teamStandings: boolean; individualLeaderboard: boolean; kpiLeaderboards: boolean }
+  /** display flags for a kiosk/TV context (§10 config surface) */
+  tvRotation: boolean
+  splitScreen: boolean
+}
+
 export interface DashboardSettings {
   version: 1
   /** per-KPI display overrides, keyed by KPI key */
@@ -133,6 +190,8 @@ export interface DashboardSettings {
   customKpis: CustomKpiDef[]
   /** per-KPI display threshold bands, keyed by KPI key */
   kpiThresholds: Record<string, KpiThreshold[]>
+  /** standalone Competition configuration (§10) */
+  competition: CompetitionSettings
 }
 
 /**

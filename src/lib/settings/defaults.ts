@@ -4,7 +4,12 @@
  * defaults to DEFAULT_THRESHOLDS, so calculations behave identically with or
  * without the settings context.
  */
-import type { DashboardSettings, PositionGroup, ThresholdSettings } from './types.ts'
+import type {
+  CompetitionSettings,
+  DashboardSettings,
+  PositionGroup,
+  ThresholdSettings,
+} from './types.ts'
 
 export const DEFAULT_THRESHOLDS: ThresholdSettings = {
   speedFlagThresholdPct: 90, // §5.1 whiteboard rule
@@ -40,6 +45,54 @@ export const OVERVIEW_GPS_SUPPORTED = [
   'workload',
 ]
 
+/** S&C KPIs that generate competition points out of the box (§10). Load, GPS,
+ *  workload and health metrics are deliberately excluded — they never score. */
+const DEFAULT_COMPETITION_ABSOLUTE = [
+  'back_squat_top_load',
+  'bench_press_top_load',
+  'trap_bar_deadlift_top_load',
+  'power_clean_top_load',
+  'back_squat_mean_power',
+  'power_clean_peak_power',
+]
+const DEFAULT_COMPETITION_RELATIVE = [
+  'back_squat_top_load',
+  'bench_press_top_load',
+  'trap_bar_deadlift_top_load',
+  'power_clean_top_load',
+]
+
+export function defaultCompetition(): CompetitionSettings {
+  const eligibleKpis: CompetitionSettings['eligibleKpis'] = {}
+  for (const key of DEFAULT_COMPETITION_ABSOLUTE) {
+    eligibleKpis[key] = { absolute: true, relative: DEFAULT_COMPETITION_RELATIVE.includes(key) }
+  }
+  return {
+    // two on-brand demo teams so Team Standings is populated in the prototype;
+    // athletes auto-assign round-robin until the coach sets explicit teams
+    teams: [
+      { id: 'crimson', name: 'Crimson' },
+      { id: 'navy', name: 'Navy' },
+    ],
+    athleteTeam: {},
+    bodyWeightLb: {},
+    eligibleKpis,
+    scoringProfiles: [
+      {
+        id: 'default',
+        name: 'Standard place points',
+        effectiveFrom: '1970-01-01',
+        placePoints: [10, 7, 5, 3, 2, 1],
+      },
+    ],
+    defaultProfileId: 'default',
+    savedRanges: [],
+    pages: { teamStandings: true, individualLeaderboard: true, kpiLeaderboards: true },
+    tvRotation: false,
+    splitScreen: false,
+  }
+}
+
 export const DEFAULT_POSITIONS: PositionGroup[] = [
   { id: 'Goalkeeper', label: 'Goalkeepers', builtin: true, retired: false },
   { id: 'Defender', label: 'Defenders', builtin: true, retired: false },
@@ -66,6 +119,7 @@ export function defaultSettings(): DashboardSettings {
     },
     customKpis: [],
     kpiThresholds: {},
+    competition: defaultCompetition(),
   }
 }
 
