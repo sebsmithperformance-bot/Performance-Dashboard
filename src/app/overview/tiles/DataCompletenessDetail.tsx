@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { InfoHint } from '../../../components/ui/InfoHint.tsx'
 import { formatDayLabel } from '../../../lib/dashboard/format.ts'
 import { lastSessionGpsView } from '../../../lib/dashboard/selectors/last-session.ts'
 import type { DashboardDataset } from '../../../lib/dashboard/types.ts'
@@ -70,8 +71,14 @@ export function DataCompletenessDetail({
           </ul>
         )}
       </div>
-      <p className="text-label text-muted">
-        A missing record poisons that athlete’s rolling windows — it is never counted as zero.
+      <p className="flex items-center gap-1 text-label text-muted">
+        Missing is never counted as zero.
+        <InfoHint label="About data completeness">
+          A record is complete when a participating athlete produced a device observation for the
+          session. A missing record is held out of that athlete’s rolling 7- and 28-day Workload
+          windows (it poisons them) rather than being treated as a zero, so ACWR and trends stay
+          honest.
+        </InfoHint>
       </p>
     </div>
   )

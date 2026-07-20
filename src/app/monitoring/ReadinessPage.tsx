@@ -14,6 +14,7 @@ import { ChartCard } from '../../components/ui/ChartCard.tsx'
 import { DataTable, type Column } from '../../components/ui/DataTable.tsx'
 import { ErrorState } from '../../components/ui/ErrorState.tsx'
 import { KpiCard, KpiStrip } from '../../components/ui/KpiCard.tsx'
+import { InfoHint } from '../../components/ui/InfoHint.tsx'
 import { Skeleton } from '../../components/ui/Skeleton.tsx'
 import { useDashboardData } from '../../lib/dashboard/DashboardDataContext.tsx'
 import { kpiColor } from '../../lib/dashboard/kpi-colors.ts'
@@ -189,10 +190,21 @@ function Readiness({
         />
       )}
 
-      <p className="text-label text-muted">
-        Bands: {bandDefs.map((b) => `${b.label} = ${b.definition}`).join(' · ')}. ACWR appears only
-        when the full 28-day window is complete (§6.7) — these are workload observations, not
-        injury predictions (§6.8).
+      <p className="flex items-center gap-1 text-label text-muted">
+        Workload observations, not injury predictions.
+        <InfoHint label="About ACWR, monotony and strain">
+          <span className="mb-1 block font-medium text-secondary">Thresholds &amp; formulas</span>
+          <span className="mb-2 block">
+            {bandDefs.map((b) => `${b.label} = ${b.definition}`).join(' · ')}. ACWR appears only when
+            the full 28-day window is complete.
+          </span>
+          <span className="block">
+            <span className="font-medium">ACWR</span> = 7-day acute Workload ÷ 28-day chronic weekly
+            equivalent. <span className="font-medium">Monotony</span> = mean daily Workload ÷ its
+            standard deviation over the window. <span className="font-medium">Strain</span> = weekly
+            Workload × monotony. Bands are editable in KPI Settings → Thresholds.
+          </span>
+        </InfoHint>
       </p>
     </div>
   )

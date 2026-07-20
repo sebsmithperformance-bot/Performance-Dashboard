@@ -100,7 +100,7 @@ export function TeamLoadCharts({
     <div className="flex flex-col gap-4">
       <ChartCard
         title="Team ACWR"
-        subtitle={`median across athletes with a complete 28-day window · click a point for that day`}
+        subtitle="median ACWR · click a point for that day"
         table={{
           columns: ['Date', 'Median ACWR', 'State', 'Valid windows'],
           rows: view.days.map((d) => [
