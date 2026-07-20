@@ -13,10 +13,10 @@ export interface RadarSeries {
   values: (number | null)[]
 }
 
-const SIZE = 340
+const SIZE = 460
 const CX = SIZE / 2
 const CY = SIZE / 2
-const R = 112
+const R = 168
 const RINGS = [25, 50, 75, 100]
 
 function polar(angle: number, radius: number): [number, number] {
@@ -45,7 +45,7 @@ export function RadarChart({
     <div className="flex flex-col items-center gap-2">
       <svg
         viewBox={`0 0 ${SIZE} ${SIZE}`}
-        className="mx-auto h-auto w-full max-w-sm"
+        className="mx-auto h-auto w-full max-w-xl"
         role="img"
         aria-label={ariaLabel}
       >
@@ -54,24 +54,25 @@ export function RadarChart({
             key={ring}
             points={axes.map((_, i) => polar(angleOf(i), (ring / 100) * R).join(',')).join(' ')}
             fill="none"
-            stroke="var(--border-subtle)"
-            strokeWidth={1}
+            // the 50 ring is the benchmark midpoint — draw it a touch stronger
+            stroke={ring === 50 ? 'var(--border-strong)' : 'var(--border-subtle)'}
+            strokeWidth={ring === 50 ? 1.25 : 1}
           />
         ))}
         {axes.map((axis, i) => {
           const [sx, sy] = polar(angleOf(i), R)
-          const [lx, ly] = polar(angleOf(i), R + 22)
+          const [lx, ly] = polar(angleOf(i), R + 26)
           return (
             <g key={axis.key}>
               <line x1={CX} y1={CY} x2={sx} y2={sy} stroke="var(--border-subtle)" strokeWidth={1} />
-              <text x={lx} y={ly} textAnchor="middle" fontSize={10} fill="var(--text-secondary)">
+              <text x={lx} y={ly} textAnchor="middle" fontSize={12} fill="var(--text-secondary)">
                 {axis.label}
               </text>
             </g>
           )
         })}
-        <text x={CX} y={CY - R * 0.5 + 3} textAnchor="middle" fontSize={8} fill="var(--text-muted)">
-          P50
+        <text x={CX} y={CY - R * 0.5 + 4} textAnchor="middle" fontSize={11} fill="var(--text-muted)">
+          50
         </text>
 
         {series.map((s) => {

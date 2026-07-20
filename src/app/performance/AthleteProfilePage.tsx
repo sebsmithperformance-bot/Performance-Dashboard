@@ -11,7 +11,7 @@ import { Badge } from '../../components/ui/Badge.tsx'
 import { ChartCard } from '../../components/ui/ChartCard.tsx'
 import { DataTable, type Column } from '../../components/ui/DataTable.tsx'
 import { ErrorState } from '../../components/ui/ErrorState.tsx'
-import { KpiCard, KpiStrip } from '../../components/ui/KpiCard.tsx'
+import { InfoHint } from '../../components/ui/InfoHint.tsx'
 import { KPIValue } from '../../components/ui/KPIValue.tsx'
 import { Skeleton } from '../../components/ui/Skeleton.tsx'
 import { useDashboardData } from '../../lib/dashboard/DashboardDataContext.tsx'
@@ -135,27 +135,27 @@ function Profile({ dataset, date }: { dataset: DashboardDataset; date: string })
       {!athlete || !view ? (
         <ErrorState title="Pick an athlete" message="Choose an athlete to see their profile." />
       ) : (
-        <div className="flex flex-col gap-4">
-        <KpiStrip>
-          {view.axes.map((a) => (
-            <KpiCard
-              key={a.kpi.key}
-              label={a.kpi.displayName}
-              value={a.value === null ? '—' : formatMetricValue(a.value, a.kpi).text}
-              unit={a.value === null ? undefined : (formatMetricValue(a.value, a.kpi).unit ?? undefined)}
-              sub={a.percentile === null ? 'n/a' : `P${Math.round(a.percentile)} vs ${avgLabel.replace(' average', '')}`}
-            />
-          ))}
-        </KpiStrip>
-        <div className="grid items-start gap-4 xl:grid-cols-2">
+        <div className="grid items-start gap-4 xl:grid-cols-5">
+          {/* Radar is the visual focus: ~60% of the first row on desktop, first on mobile */}
+          <div className="xl:col-span-3">
           <ChartCard
             title={`${athlete.fullName} vs ${avgLabel}`}
-            subtitle={`direction-aware percentile of latest values vs ${view.comparisonLabel} · needs at least ${view.minComparison} comparison athletes per spoke`}
+            subtitle="Direction-aware percentiles · benchmark = 50"
+            actions={
+              <InfoHint label="About the radar percentiles" align="start">
+                <span className="mb-1 block font-medium text-secondary">50 is the benchmark</span>
+                Each spoke is a 0–100 direction-aware percentile of the athlete’s latest value within
+                the selected comparison group. The reference polygon sits at exactly 50 on every
+                axis — it represents the {avgLabel.replace(' average', '')} benchmark midpoint.
+                Spokes without ≥ {view.minComparison} comparison athletes are left out; the radar
+                never averages into a single score.
+              </InfoHint>
+            }
             table={{
               columns: [
                 'Metric',
                 `${athlete.fullName} (P)`,
-                `${avgLabel} (P)`,
+                'Benchmark (P)',
                 'Athlete raw',
                 `${avgLabel} raw`,
                 'Comparison n',
@@ -163,7 +163,7 @@ function Profile({ dataset, date }: { dataset: DashboardDataset; date: string })
               rows: view.axes.map((a) => [
                 a.kpi.displayName,
                 a.percentile === null ? `n/a (${a.reason})` : `P${Math.round(a.percentile)}`,
-                a.groupAvgPercentile === null ? 'n/a' : `P${Math.round(a.groupAvgPercentile)}`,
+                a.percentile === null ? 'n/a' : 'P50',
                 a.value === null ? 'no data' : formatMetricValue(a.value, a.kpi).text,
                 a.groupAvgValue === null ? 'no data' : formatMetricValue(a.groupAvgValue, a.kpi).text,
                 a.comparisonN,
@@ -173,8 +173,8 @@ function Profile({ dataset, date }: { dataset: DashboardDataset; date: string })
             {view.insufficientComparison ? (
               <p className="py-10 text-center text-body text-secondary">
                 Not enough comparison athletes to rank {athlete.fullName} against{' '}
-                {view.comparisonLabel} (needs at least {view.minComparison} with data per metric).
-                Pick a broader comparison group.
+                {view.comparisonLabel} — needs ≥ {view.minComparison} with data per metric. Pick a
+                broader comparison group.
               </p>
             ) : (
               <RadarChart
@@ -190,37 +190,34 @@ function Profile({ dataset, date }: { dataset: DashboardDataset; date: string })
                     values: view.axes.map((a) => a.percentile),
                   },
                   {
-                    key: 'group-avg',
+                    // §8: the benchmark polygon is exactly 50 on every axis, not the
+                    // percentile-of-mean (which would drift away from the midpoint)
+                    key: 'benchmark',
                     label: avgLabel,
                     color: 'var(--chart-series-5)',
-                    values: view.axes.map((a) => a.groupAvgPercentile),
+                    values: view.axes.map((a) => (a.percentile === null ? null : 50)),
                   },
                 ]}
-                ariaLabel={`${athlete.fullName} versus ${avgLabel} percentile radar across ${view.axes.length} strength and conditioning metrics`}
+                ariaLabel={`${athlete.fullName} versus ${avgLabel} (benchmark 50) percentile radar across ${view.axes.length} metrics`}
               />
             )}
-            <p className="mt-2 text-label text-muted">
-              Both series share the 0-100 percentile scale. Spokes with no valid percentile are
-              excluded from a series shape - the radar never averages into a single score (6.2). Raw
-              values sit beside every percentile in the table.
-            </p>
           </ChartCard>
+          </div>
 
-          <div className="flex flex-col gap-3">
+          {/* Raw KPI summary + comparison values + completeness (~40%) */}
+          <div className="flex flex-col gap-2 xl:col-span-2">
             <h2 className="text-subhead font-semibold">
-              Metric comparison
+              Raw values
               <span className="ml-2 text-label font-normal text-muted">
-                {athlete.fullName} · {athlete.position}
+                {athlete.position}
                 {athlete.jerseyNumber !== null && ` · #${athlete.jerseyNumber}`}
               </span>
             </h2>
             <DataTable columns={columns} rows={view.axes} rowKey={(a) => a.kpi.key} />
             <p className="text-label text-muted">
-              Raw value and sample size appear beside every percentile; latest observation at or
-              before the selected date.
+              Raw value, units and sample size beside every percentile.
             </p>
           </div>
-        </div>
         </div>
       )}
     </div>
