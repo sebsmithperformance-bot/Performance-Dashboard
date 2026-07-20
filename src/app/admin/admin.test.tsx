@@ -102,7 +102,7 @@ it('Data Management hides a widget and the Team Dashboard honors it', async () =
   dm.unmount()
 
   renderWith(repo, <TeamSnapshotPage />)
-  await screen.findByText('Athlete Flags')
+  await screen.findByText('Speed Flags')
   expect(screen.queryByText('Availability')).toBeNull()
   expect(screen.getByText('Load Health')).toBeTruthy()
 })

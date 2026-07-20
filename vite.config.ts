@@ -64,6 +64,8 @@ function devSyntheticData(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss(), devSyntheticData()],
+  // honor a harness-assigned PORT so parallel sessions don't collide on 5173
+  server: process.env.PORT ? { port: Number(process.env.PORT) } : undefined,
   // PGlite ships its own WASM assets; pre-bundling breaks their resolution
   optimizeDeps: { exclude: ['@electric-sql/pglite'] },
   test: {

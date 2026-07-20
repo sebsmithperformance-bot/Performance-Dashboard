@@ -6,6 +6,7 @@
       "runtimeExecutable": "/Users/sebastiansmith/.local/node/bin/npm",
       "runtimeArgs": ["run", "dev"],
       "port": 5173,
+      "autoPort": true,
       "env": {
         "PATH": "/Users/sebastiansmith/.local/node/bin:/usr/bin:/bin:/usr/sbin:/sbin"
       }

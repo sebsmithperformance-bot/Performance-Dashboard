@@ -46,56 +46,64 @@ function renderWithProvider(ui: React.ReactNode) {
 
 afterEach(cleanup)
 
-it('Team Dashboard renders the KPI strip and panels from the seam with correct content', async () => {
-  renderWithProvider(<TeamSnapshotPage />)
+it('Team Snapshot is a grid of clickable tiles only — no tables/charts on the page', async () => {
+  const { container } = renderWithProvider(<TeamSnapshotPage />)
 
-  // Team Snapshot strip owns the GPS numbers (no duplicate Last Session panel)
   await screen.findByText('Team Snapshot')
-  expect(screen.queryByText('Last Session GPS')).toBeNull()
-  // Player Load leads the GPS cards: S7 mean(480, 450) = 465
-  // (the fixture registry uses raw keys as display names)
-  expect(screen.getByText('player_load')).toBeTruthy()
-  expect(screen.getByText('465')).toBeTruthy()
+  // the seven tiles are present as buttons; the page itself carries no table
+  for (const label of [
+    'Availability',
+    'Workload',
+    'Load Health',
+    'Speed Flags',
+    'Last Session GPS',
+    'S&C Change',
+    'Data Completeness',
+  ]) {
+    const tile = screen.getByText(label).closest('button')!
+    expect(tile.tagName).toBe('BUTTON')
+    expect(within(tile).getByText('View details')).toBeTruthy()
+  }
+  expect(container.querySelector('table')).toBeNull()
+})
 
-  // availability tile: counts + reveal-in-place
-  await screen.findByText('Availability')
-  fireEvent.click(screen.getByText('Limited').closest('button')!)
-  expect(await screen.findByText('Lift only')).toBeTruthy()
+it('clicking the Availability tile opens its drill-down drawer', async () => {
+  renderWithProvider(<TeamSnapshotPage />)
+  await screen.findByText('Team Snapshot')
+  fireEvent.click(screen.getByText('Availability').closest('button')!)
 
-  // the strip caption and the flags panel both reference the latest game
-  expect(screen.getAllByText(/Game W2/).length).toBeGreaterThanOrEqual(2)
+  const drawer = await screen.findByRole('dialog')
+  // roster breakdown + status filter reveal-in-place inside the drawer
+  fireEvent.click(within(drawer).getByRole('button', { name: /Limited/ }))
+  expect(await within(drawer).findByText('Lift only')).toBeTruthy()
+})
 
-  // load health: early-season honesty — incomplete, no fabricated ACWR
-  expect(screen.getByText('Load Health')).toBeTruthy()
-  expect(screen.getAllByText(/Incomplete data/).length).toBeGreaterThan(0)
-  expect(screen.getByText(/not injury predictions/)).toBeTruthy()
+it('Load Health and Speed Flags drawers keep observation language and transparent rules', async () => {
+  renderWithProvider(<TeamSnapshotPage />)
+  await screen.findByText('Team Snapshot')
 
-  // flags: Ada flagged with transparent rule + exposure context; Bea insufficient, separate
-  expect(screen.getByText(/Ada Fast — 86\.1% of baseline top speed/)).toBeTruthy()
-  expect(screen.getByText(/exposure 58 min/)).toBeTruthy()
-  const insufficientToggle = screen.getByRole('button', {
-    name: /1 athlete with insufficient baseline/,
+  fireEvent.click(screen.getByText('Load Health').closest('button')!)
+  const lhDrawer = await screen.findByRole('dialog')
+  expect(within(lhDrawer).getByText(/observations, not predictions/)).toBeTruthy()
+  fireEvent.keyDown(window, { key: 'Escape' })
+
+  fireEvent.click(screen.getByText('Speed Flags').closest('button')!)
+  const flagDrawer = await screen.findByRole('dialog')
+  expect(within(flagDrawer).getByText(/Ada Fast — 86\.1% of baseline top speed/)).toBeTruthy()
+  expect(within(flagDrawer).getByText(/exposure 58 min/)).toBeTruthy()
+})
+
+it('S&C Change drawer refuses zero baselines with a stated reason', async () => {
+  renderWithProvider(<TeamSnapshotPage />)
+  await screen.findByText('Team Snapshot')
+  fireEvent.click(screen.getByText('S&C Change').closest('button')!)
+  const drawer = await screen.findByRole('dialog')
+  fireEvent.change(within(drawer).getByLabelText('KPI'), {
+    target: { value: 'power_clean_top_load' },
   })
-  fireEvent.click(insufficientToggle)
-  expect(screen.getByText(/Bea Steady · Midfielder · 1\/3 baseline sessions/)).toBeTruthy()
-})
-
-it('tiles condense to their compact state and expand back', async () => {
-  renderWithProvider(<TeamSnapshotPage />)
-  const availabilityHeader = (await screen.findByText('Availability')).closest('button')!
-  expect(availabilityHeader.getAttribute('aria-expanded')).toBe('true')
-  fireEvent.click(availabilityHeader)
-  expect(availabilityHeader.getAttribute('aria-expanded')).toBe('false')
-  expect(within(availabilityHeader).getByText(/1\/3 Full Go/)).toBeTruthy()
-})
-
-it('S&C tile refuses zero baselines with a stated reason', async () => {
-  renderWithProvider(<TeamSnapshotPage />)
-  await screen.findByText('S&C % Change')
-  fireEvent.change(screen.getByLabelText('KPI'), { target: { value: 'power_clean_top_load' } })
-  fireEvent.change(screen.getByLabelText('Basis'), { target: { value: 'prior_session' } })
-  fireEvent.click(screen.getByRole('button', { name: /No comparison/ }))
-  expect(await screen.findByText(/baseline is zero — change not calculated/)).toBeTruthy()
+  fireEvent.change(within(drawer).getByLabelText('Basis'), { target: { value: 'prior_session' } })
+  fireEvent.click(within(drawer).getByRole('button', { name: /No comparison/ }))
+  expect(await within(drawer).findByText(/baseline is zero — change not calculated/)).toBeTruthy()
 })
 
 it('Athletes page: same-date sessions stay separate; lift session swaps the KPI catalog', async () => {

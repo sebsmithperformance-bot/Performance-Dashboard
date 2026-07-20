@@ -197,7 +197,6 @@ export function DataManagementPage() {
                   {widget.label}
                 </span>
               </label>
-              {widget.fullWidth && <span className="text-label text-muted">full width</span>}
               <ReorderButtons
                 label={widget.label}
                 isFirst={i === 0}
