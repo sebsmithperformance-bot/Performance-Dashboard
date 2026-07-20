@@ -355,6 +355,7 @@ function Individuals({
               ]}
               zeroBased
               smooth
+              connectGaps
               formatX={shortDay}
               formatY={fmt1}
               ariaLabel={`${selected.name} daily Workload, last ${rangeDays} days`}

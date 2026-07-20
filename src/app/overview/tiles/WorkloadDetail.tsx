@@ -101,6 +101,7 @@ export function WorkloadDetail({ dataset, date }: { dataset: DashboardDataset; d
               },
             ]}
             smooth
+            connectGaps
             height={200}
             formatX={(d) => formatDayLabel(d)}
             formatY={(v) => v.toFixed(1)}

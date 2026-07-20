@@ -206,6 +206,7 @@ export function TeamLoadCharts({
           height={220}
           zeroBased
           smooth
+          connectGaps
           selectedIndex={selected}
           onPointClick={(i) => setSelected((cur) => (cur === i ? null : i))}
           formatX={shortDay}

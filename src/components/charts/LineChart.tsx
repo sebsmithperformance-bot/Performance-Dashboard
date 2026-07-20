@@ -102,6 +102,7 @@ export function LineChart({
   selectedIndex = null,
   zeroBased = false,
   smooth = false,
+  connectGaps = false,
   formatX = (label) => label,
   formatY = (v) => String(v),
   /** tooltip header per x-index; defaults to the x label */
@@ -124,6 +125,9 @@ export function LineChart({
   selectedIndex?: number | null
   zeroBased?: boolean
   smooth?: boolean
+  /** bridge missing intervals with a dashed connector so the line reads as one
+   *  continuous trend (still no zero-fill; the gap stays visually distinct) */
+  connectGaps?: boolean
   formatX?: (label: string, index: number) => string
   formatY?: (value: number) => string
   tooltipHeaders?: string[]
@@ -163,13 +167,16 @@ export function LineChart({
   const stepX = Math.max(1, Math.ceil(xLabels.length / 6))
   const xTickIdx = xLabels.map((_, i) => i).filter((i) => i % stepX === 0 || i === xLabels.length - 1)
 
-  // build per-series path segments, breaking at nulls (gaps stay visible)
+  // build per-series path segments. Missing values (null) break the solid line
+  // into runs of consecutive observations — never zero-filled (§6.7). When
+  // connectGaps is set, a dashed connector bridges each missing interval so the
+  // series still reads as ONE continuous trend, while the gap stays visible as a
+  // distinct style (the underlying data and its missing metadata are untouched).
   const seriesPaths = series.map((s) => {
-    const segments: string[] = []
+    const runs: { x: number; y: number }[][] = []
     let current: { x: number; y: number }[] = []
     const flush = () => {
-      if (current.length === 0) return
-      segments.push(smooth ? monotonePath(current) : current.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '))
+      if (current.length > 0) runs.push(current)
       current = []
     }
     s.values.forEach((v, i) => {
@@ -180,10 +187,34 @@ export function LineChart({
       current.push({ x: x(i), y: y(v) })
     })
     flush()
+    const runPath = (run: { x: number; y: number }[]) =>
+      smooth
+        ? monotonePath(run)
+        : run.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+    const d = runs.map(runPath).join(' ')
+    // straight dashed bridge from the end of each run to the start of the next
+    const bridge = connectGaps
+      ? runs
+          .slice(1)
+          .map((run, k) => {
+            const a = runs[k]![runs[k]!.length - 1]!
+            const b = run[0]!
+            return `M${a.x.toFixed(1)},${a.y.toFixed(1)} L${b.x.toFixed(1)},${b.y.toFixed(1)}`
+          })
+          .join(' ')
+      : ''
+    // a solitary observation (no neighbours) is invisible as a bare path; when
+    // connectGaps bridges to it on at least one side it no longer needs a dot
     const lonePoints = s.values
       .map((v, i) => ({ v, i }))
-      .filter(({ v, i }) => v !== null && s.values[i - 1] == null && s.values[i + 1] == null)
-    return { series: s, d: segments.join(' '), lonePoints }
+      .filter(
+        ({ v, i }) =>
+          v !== null &&
+          s.values[i - 1] == null &&
+          s.values[i + 1] == null &&
+          !(connectGaps && runs.length > 1),
+      )
+    return { series: s, d, bridge, lonePoints }
   })
 
   const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -293,8 +324,20 @@ export function LineChart({
         )}
 
         <g clipPath={`url(#${clipId})`}>
-          {seriesPaths.map(({ series: s, d, lonePoints }, si) => (
+          {seriesPaths.map(({ series: s, d, bridge, lonePoints }, si) => (
             <g key={s.key}>
+              {bridge && (
+                <path
+                  d={bridge}
+                  fill="none"
+                  stroke={s.color}
+                  strokeWidth={2.25}
+                  strokeDasharray="5 4"
+                  opacity={0.5}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+              )}
               {d && (
                 <path
                   d={d}
