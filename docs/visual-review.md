@@ -117,3 +117,42 @@ separately — it is the same TrendExplorer component as Data Trends → Perform
    a row — inherent to matched rows; revisit only if it reads as empty.
 4. Session Overview keeps its existing position/ranking layout; the reference's split
    position-breakdown + ranked-bar panels were not rebuilt (its IA was already approved).
+
+## Session 7 (2026-07-20) — Front-facing product revision
+
+Reviewed in the browser at 1440 / 1280 / 390 (responsive `sm/xl` grids cover 1024/768)
+against the default synthetic seed. Console clean on fresh loads.
+
+**Verified good**
+
+- Sidebar is the only navigation system — no horizontal sub-tabs on any page. Active item
+  has the crimson-tinted background + left indicator + `aria-current`. New sections
+  (Competition, Annual Plan) and the reorganised Admin (Import, KPI Settings, Data
+  Management, Competition Settings) all present; GPS is three flat Monitoring leaves.
+- Team Snapshot is a pure grid of clickable summary tiles (accent top border, chevron,
+  "View details"); every tile opens the shared right-side drawer with the drill-down
+  (Workload drawer shows the continuous team-Workload trend, position averages, athlete
+  table). One column on mobile, no horizontal overflow; collapsed masthead ("PENN FH").
+- Workload reads 2.8 / 10 (1–10 scale); Last Session GPS leads with Total Distance — no
+  "Player Load" anywhere in the coach UI. Load Health median ACWR from the Workload metric.
+- Athlete Profile radar is the large top panel; the Team Average benchmark is a regular
+  heptagon at exactly 50 on every axis (the "50" label sits on its vertex); the athlete
+  series is direction-aware percentile; raw values in the side panel.
+- Competition: range picker with "N sessions · M scored events" + info button; Team
+  Standings and Individual Leaderboard render the podium + 4th + full table; KPI
+  Leaderboards render one card per eligible KPI (mode badge, top-3, full board on click).
+  Points are accumulated over the range, isolated to the section.
+- Annual Plan empty state ("No annual plan connected") with the link form; standalone
+  sidebar row highlights active.
+- Import History shows the Prototype + Synthetic-data badges and the never-blank PROTOTYPE
+  MODE state with an Import Data action and accepted file types.
+
+**Follow-ups (deferred, non-blocking)**
+
+1. Athlete Profile radar spoke labels can still clip at 390px (pre-existing) — the enlarged
+   radar mitigates but wide labels (e.g. "Trap Bar Deadlift Top Load") may truncate.
+2. Competition relative-to-bodyweight scoring is inert until body weights are entered in
+   Competition Settings (prototype has none by default) — absolute scoring drives the demo.
+3. Dev-only: a transient `useCompetition` HMR error can appear when routes are hot-swapped
+   mid-session; does not reproduce on a fresh load and cannot occur in production (the
+   layout always wraps the child Outlet).

@@ -4,11 +4,12 @@ Live tracker maintained by the orchestrator (docs/orchestration.md). Spec refere
 (§) point at `docs/spec/build-prompt.md`.
 
 **Current phase:** Build Order steps 5–6 complete frontend-first (all coach-facing sections
-+ admin customization pages, behind the data/settings seams), plus a coach-feedback polish
-revision and a reference-driven visual redesign (Penn masthead, grouped sidebar tree,
-dense KPI strips, Swiss 721). 129 tests green; typecheck/lint/guarded-build green. Backend
-spike (§2.1) remains blocked on AWS account access and is still the gate for anything
-backend-wired.
++ admin customization pages, behind the data/settings seams), then a coach-feedback polish
+revision, a reference-driven visual redesign, and a **front-facing product revision**
+(sidebar-only nav, clickable Team Snapshot, Workload terminology, larger Athlete Profile
+radar, prototype Import History, standalone Competition, Annual Plan). 139 tests green;
+typecheck/lint/guarded-build green. Backend spike (§2.1) remains blocked on AWS account
+access and is still the gate for anything backend-wired.
 
 ## Blockers / required inputs (owner: Sebastian)
 
@@ -215,3 +216,48 @@ backend-wired.
 - **Charts:** smooth monotone curves, 2.25px lines and restrained gridlines across every
   line chart; 44px table rows.
 - Tests 127 → 129. Typecheck, lint and the guarded production build are green.
+
+### 2026-07-20 — Front-facing product revision (branch `dev`)
+
+Targeted revision on the existing app (no rebuild, no backend). Nine bounded commits:
+
+- **Navigation:** the sidebar is now the ONLY primary+secondary nav — the horizontal
+  sub-tab row and the GPS third-level strip are gone. GPS became three flat Monitoring
+  leaves; **Competition** and **Annual Plan** joined as top-level sections; Import moved
+  under Admin next to a new **Competition Settings**. Routes adopt explicit per-leaf paths
+  (`/overview/team-snapshot`, `/monitoring/gps/session-*`, `/data-trends/*`,
+  `/performance/*`, `/competition/*`, `/annual-plan`, `/admin/*`) with legacy redirects;
+  `aria-current` on the active item; standalone sections render as one clickable row.
+- **Team Snapshot:** the Overview page is now a pure grid of clickable summary tiles; each
+  opens one shared drill-down drawer (full-screen sheet on mobile). Seven tiles:
+  Availability, Workload, Load Health, Speed Flags, Last Session GPS, S&C Change, Data
+  Completeness. Tile show/hide + order still honour the layout config.
+- **Workload:** coach-facing load is the 1–10 Workload source everywhere (daily-load
+  selector `LOAD_KPI='workload'`; ACWR/monotony/strain/readiness inputs); Player Load is
+  filtered out of the effective KPI registry at the `DashboardDataContext` seam. It stays
+  in imports, raw records, the DB registry and the fixture for back-compat.
+- **Copy + info controls:** methodology paragraphs replaced with keyboard-accessible `(i)`
+  buttons (ACWR/monotony/strain, data completeness, radar percentiles, competition
+  scoring); over-limit subtitles trimmed.
+- **Athlete Profile:** the percentile radar is the top visual focus (~60% of the first
+  row), enlarged, with the comparison-group benchmark polygon pinned to exactly 50 on
+  every axis (not the drifting percentile-of-mean). Raw values stay visible.
+- **Trend lines:** `LineChart` gained a `connectGaps` mode — daily Workload reads as one
+  continuous line, bridging missing intervals with a muted dashed connector, no zero-fill.
+- **Import History:** prototype/synthetic badges, a never-blank PROTOTYPE MODE empty state,
+  and Demo Import labels on local fixture imports.
+- **Competition (new, isolated):** a scoring selector ranks valid athletes per scored
+  session × eligible KPI × scoring mode (direction-aware), converts place→configurable
+  points via a dated profile, and accumulates over a range (never one best session).
+  Absolute + relative-to-bodyweight; only explicitly eligible S&C KPIs score. Team
+  Standings / Individual Leaderboard (podium + 4th + table) and KPI Leaderboards (card per
+  KPI). Competition owns its own shared time range; config lives in Admin → Competition
+  Settings. Points never appear outside the section.
+- **Annual Plan (new):** stores one Excel workbook link (`AnnualPlanSettings`) via the
+  existing SettingsRepository — no new backend, no Excel parsing. Empty/connected states,
+  http(s) validation, `noopener noreferrer` new-tab open, confirm-on-remove.
+- Tests 129 → 139 (+ overview tile/drawer, LineChart gaps, competition scoring, annual
+  plan). Typecheck, lint and the guarded production build are green. Browser-reviewed at
+  1440/1280/390 (responsive grid covers 1024/768); console clean on fresh loads.
+- Unchanged and protected: calculation formulas, import pipeline, DB schema, the five
+  seams. No AWS/backend work — the §2.1 spike remains the gate.
