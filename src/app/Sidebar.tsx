@@ -1,8 +1,8 @@
 import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
-import { NavLink, useLocation } from 'react-router'
+import { NavLink } from 'react-router'
 import { orderByConfig } from '../lib/settings/defaults.ts'
 import { useSettings } from '../lib/settings/SettingsContext.tsx'
-import { ADMIN_ITEMS, GPS_SUB_TABS, PRIMARY_SECTIONS, type NavSection, type SubTab } from './nav.ts'
+import { ADMIN_ITEMS, PRIMARY_SECTIONS, type NavSection, type SubTab } from './nav.ts'
 import type { LucideIcon } from 'lucide-react'
 
 /** Collapsed-rail icon item (icon only, section base as target). */
@@ -43,16 +43,38 @@ function LeafItem({ tab, nested = false }: { tab: SubTab; nested?: boolean }) {
   )
 }
 
-/** One section group: uppercase label + its always-visible leaves. The GPS
- *  leaf expands to its third-level tabs when a GPS route is active. */
-function SectionGroup({ section, pathname }: { section: NavSection; pathname: string }) {
+/** A standalone section with no children (e.g. Annual Plan) — one clickable
+ *  row with its icon, at section level. */
+function StandaloneItem({ section }: { section: NavSection }) {
+  const { icon: Icon } = section
+  return (
+    <div className="mt-3 flex flex-col border-t border-white/10 pt-3 first:mt-0 first:border-t-0 first:pt-0">
+      <NavLink
+        to={section.base}
+        className={({ isActive }) =>
+          `relative flex h-9 items-center gap-2.5 rounded-control px-3 text-body font-medium transition-colors duration-150 ${
+            isActive
+              ? 'bg-[var(--navigation-active)] font-semibold text-on-brand before:absolute before:top-1 before:bottom-1 before:left-0 before:w-0.5 before:rounded-full before:bg-[var(--navigation-indicator)]'
+              : 'text-secondary hover:bg-white/5 hover:text-primary'
+          }`
+        }
+      >
+        <Icon aria-hidden className="size-4 shrink-0" strokeWidth={1.75} />
+        <span className="section-label truncate text-[0.6875rem]">{section.label}</span>
+      </NavLink>
+    </div>
+  )
+}
+
+/** One section group: uppercase label + its always-visible leaves (§2). */
+function SectionGroup({ section }: { section: NavSection }) {
   const { settings } = useSettings()
+  if (section.subTabs.length === 0) return <StandaloneItem section={section} />
   const subTabs = orderByConfig(
     section.subTabs,
     (t) => t.path,
     settings.layout.subTabOrder[section.base] ?? [],
   )
-  const gpsActive = pathname.startsWith('/monitoring/gps')
   return (
     <div className="mt-3 flex flex-col gap-0.5 border-t border-white/10 pt-3 first:mt-0 first:border-t-0 first:pt-0">
       {/* category headers read as structure, not as another clickable row */}
@@ -60,16 +82,7 @@ function SectionGroup({ section, pathname }: { section: NavSection; pathname: st
         {section.label}
       </span>
       {subTabs.map((tab) => (
-        <div key={tab.path}>
-          <LeafItem tab={tab} />
-          {tab.path === '/monitoring/gps' && gpsActive && (
-            <div className="mt-0.5 flex flex-col gap-0.5">
-              {GPS_SUB_TABS.map((g) => (
-                <LeafItem key={g.path} tab={g} nested />
-              ))}
-            </div>
-          )}
-        </div>
+        <LeafItem key={tab.path} tab={tab} />
       ))}
     </div>
   )
@@ -77,7 +90,6 @@ function SectionGroup({ section, pathname }: { section: NavSection; pathname: st
 
 function SidebarBody({ collapsed }: { collapsed: boolean }) {
   const { settings } = useSettings()
-  const { pathname } = useLocation()
   const sections = orderByConfig(PRIMARY_SECTIONS, (s) => s.base, settings.layout.sectionOrder)
 
   if (collapsed) {
@@ -98,7 +110,7 @@ function SidebarBody({ collapsed }: { collapsed: boolean }) {
     <>
       <nav aria-label="Primary" className="flex flex-col px-2 pb-2">
         {sections.map((section) => (
-          <SectionGroup key={section.base} section={section} pathname={pathname} />
+          <SectionGroup key={section.base} section={section} />
         ))}
       </nav>
       <div className="mx-3 border-t border-white/10" />

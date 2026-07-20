@@ -12,7 +12,7 @@ import { createMemorySettingsRepository } from '../../lib/settings/local-setting
 import { SettingsProvider } from '../../lib/settings/SettingsContext.tsx'
 import type { SettingsRepository } from '../../lib/settings/types.ts'
 import type { DashboardDataProvider as DataProvider } from '../../lib/dashboard/types.ts'
-import { TeamDashboardPage } from '../overview/TeamDashboardPage.tsx'
+import { TeamSnapshotPage } from '../overview/TeamSnapshotPage.tsx'
 import { DataManagementPage } from './DataManagementPage.tsx'
 import { KpiSettingsPage } from './KpiSettingsPage.tsx'
 
@@ -101,7 +101,7 @@ it('Data Management hides a widget and the Team Dashboard honors it', async () =
   expect(repo.load().layout.hiddenWidgets).toContain('availability')
   dm.unmount()
 
-  renderWith(repo, <TeamDashboardPage />)
+  renderWith(repo, <TeamSnapshotPage />)
   await screen.findByText('Athlete Flags')
   expect(screen.queryByText('Availability')).toBeNull()
   expect(screen.getByText('Load Health')).toBeTruthy()

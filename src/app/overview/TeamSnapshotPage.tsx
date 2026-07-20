@@ -119,7 +119,7 @@ const TILE_COMPONENTS: Record<string, ComponentType<TileProps>> = {
 
 /** Overview → Team Dashboard (§5.1): the whiteboard tile grid, honoring the
  *  coach's show/hide + order layout config (§5.5). */
-export function TeamDashboardPage() {
+export function TeamSnapshotPage() {
   const { status, error, dataset, selectedDate } = useDashboardData()
   const { settings } = useSettings()
   const [customizeOpen, setCustomizeOpen] = useState(false)

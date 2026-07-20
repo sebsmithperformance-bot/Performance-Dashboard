@@ -12,7 +12,7 @@ import { createMemorySettingsRepository } from '../../lib/settings/local-setting
 import { SettingsProvider } from '../../lib/settings/SettingsContext.tsx'
 import type { DashboardDataProvider, SavedView } from '../../lib/dashboard/types.ts'
 import { AthletesPage } from './AthletesPage.tsx'
-import { TeamDashboardPage } from './TeamDashboardPage.tsx'
+import { TeamSnapshotPage } from './TeamSnapshotPage.tsx'
 
 function memoryViews(): DashboardDataProvider['savedViews'] {
   const views: SavedView[] = []
@@ -47,7 +47,7 @@ function renderWithProvider(ui: React.ReactNode) {
 afterEach(cleanup)
 
 it('Team Dashboard renders the KPI strip and panels from the seam with correct content', async () => {
-  renderWithProvider(<TeamDashboardPage />)
+  renderWithProvider(<TeamSnapshotPage />)
 
   // Team Snapshot strip owns the GPS numbers (no duplicate Last Session panel)
   await screen.findByText('Team Snapshot')
@@ -81,7 +81,7 @@ it('Team Dashboard renders the KPI strip and panels from the seam with correct c
 })
 
 it('tiles condense to their compact state and expand back', async () => {
-  renderWithProvider(<TeamDashboardPage />)
+  renderWithProvider(<TeamSnapshotPage />)
   const availabilityHeader = (await screen.findByText('Availability')).closest('button')!
   expect(availabilityHeader.getAttribute('aria-expanded')).toBe('true')
   fireEvent.click(availabilityHeader)
@@ -90,7 +90,7 @@ it('tiles condense to their compact state and expand back', async () => {
 })
 
 it('S&C tile refuses zero baselines with a stated reason', async () => {
-  renderWithProvider(<TeamDashboardPage />)
+  renderWithProvider(<TeamSnapshotPage />)
   await screen.findByText('S&C % Change')
   fireEvent.change(screen.getByLabelText('KPI'), { target: { value: 'power_clean_top_load' } })
   fireEvent.change(screen.getByLabelText('Basis'), { target: { value: 'prior_session' } })

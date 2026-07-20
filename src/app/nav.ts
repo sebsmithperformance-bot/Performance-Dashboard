@@ -1,15 +1,18 @@
 /**
- * §5 information architecture as data — the single source for the sidebar,
- * sub-tab rows, and route tree. Order/visibility will later be overridable
- * via the server-persisted dashboard_layout config (§5.5); the structure
- * itself (what exists) stays here.
+ * §2 information architecture as data — the single source for the sidebar and
+ * route tree. The sidebar is the ONLY primary and secondary navigation system
+ * (no horizontal sub-tabs). Order/visibility is overridable via the
+ * server-persisted dashboard_layout config; the structure itself (what exists)
+ * stays here.
  */
 import {
   Activity,
+  CalendarRange,
   Dumbbell,
   LayoutDashboard,
   LayoutList,
   Settings2,
+  Trophy,
   TrendingUp,
   Upload,
   type LucideIcon,
@@ -26,6 +29,7 @@ export interface NavSection {
   label: string
   icon: LucideIcon
   base: string
+  /** empty = a standalone section rendered as a single clickable row */
   subTabs: SubTab[]
 }
 
@@ -35,7 +39,7 @@ export const PRIMARY_SECTIONS: NavSection[] = [
     icon: LayoutDashboard,
     base: '/overview',
     subTabs: [
-      { label: 'Team Dashboard', path: '/overview', end: true },
+      { label: 'Team Snapshot', path: '/overview/team-snapshot' },
       { label: 'Athletes', path: '/overview/athletes' },
     ],
   },
@@ -44,18 +48,20 @@ export const PRIMARY_SECTIONS: NavSection[] = [
     icon: Activity,
     base: '/monitoring',
     subTabs: [
-      { label: 'Availability', path: '/monitoring', end: true },
+      { label: 'Availability', path: '/monitoring/availability' },
       { label: 'Readiness', path: '/monitoring/readiness' },
-      { label: 'GPS', path: '/monitoring/gps' },
+      { label: 'GPS Session Overview', path: '/monitoring/gps/session-overview' },
+      { label: 'GPS Session Compare', path: '/monitoring/gps/session-compare' },
+      { label: 'GPS Trends & Recommendations', path: '/monitoring/gps/trends' },
     ],
   },
   {
     label: 'Data Trends',
     icon: TrendingUp,
-    base: '/trends',
+    base: '/data-trends',
     subTabs: [
-      { label: 'Performance', path: '/trends', end: true },
-      { label: 'GPS', path: '/trends/gps' },
+      { label: 'Performance', path: '/data-trends/performance' },
+      { label: 'GPS', path: '/data-trends/gps' },
     ],
   },
   {
@@ -63,10 +69,26 @@ export const PRIMARY_SECTIONS: NavSection[] = [
     icon: Dumbbell,
     base: '/performance',
     subTabs: [
-      { label: 'Overview', path: '/performance', end: true },
+      { label: 'Overview', path: '/performance/overview' },
       { label: 'Leaderboards', path: '/performance/leaderboards' },
       { label: 'Athlete Profile', path: '/performance/athlete-profile' },
     ],
+  },
+  {
+    label: 'Competition',
+    icon: Trophy,
+    base: '/competition',
+    subTabs: [
+      { label: 'Team Standings', path: '/competition/team-standings' },
+      { label: 'Individual Leaderboard', path: '/competition/individual-leaderboard' },
+      { label: 'KPI Leaderboards', path: '/competition/kpi-leaderboards' },
+    ],
+  },
+  {
+    label: 'Annual Plan',
+    icon: CalendarRange,
+    base: '/annual-plan',
+    subTabs: [],
   },
 ]
 
@@ -76,16 +98,10 @@ export interface AdminItem {
   path: string
 }
 
-/** Admin section — kept visually separate from the four primary sections (§5.5). */
+/** Admin section — kept visually separate from the primary sections (§2). */
 export const ADMIN_ITEMS: AdminItem[] = [
-  { label: 'KPI Settings', icon: Settings2, path: '/admin/kpi-settings' },
   { label: 'Import Data', icon: Upload, path: '/admin/import' },
+  { label: 'KPI Settings', icon: Settings2, path: '/admin/kpi-settings' },
   { label: 'Data Management', icon: LayoutList, path: '/admin/data-management' },
-]
-
-/** Inner tab row for Monitoring → GPS (§5.2). */
-export const GPS_SUB_TABS: SubTab[] = [
-  { label: 'Session Overview', path: '/monitoring/gps', end: true },
-  { label: 'Session Compare', path: '/monitoring/gps/compare' },
-  { label: 'Trends & Recommendations', path: '/monitoring/gps/trends' },
+  { label: 'Competition Settings', icon: Trophy, path: '/admin/competition-settings' },
 ]
