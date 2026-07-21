@@ -1,6 +1,7 @@
 import { LogOut, Menu } from 'lucide-react'
 import { useAuth } from '../lib/auth/AuthContext.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
+import { AreaTabs } from './AreaTabs.tsx'
 
 const APP_ENV: string = import.meta.env.VITE_APP_ENV ?? 'local'
 
@@ -25,17 +26,22 @@ export function Masthead({ onOpenDrawer }: { onOpenDrawer: () => void }) {
         <Menu aria-hidden className="size-5" />
       </button>
 
-      <div className="flex min-w-0 items-baseline gap-2 md:gap-3">
+      <div className="flex min-w-0 shrink-0 items-baseline gap-2 md:gap-3">
         {/* short form below sm so the wordmark never truncates mid-word */}
         <span className="display text-lg font-bold tracking-wide text-on-brand uppercase sm:hidden">
           Penn FH
         </span>
-        <span className="display hidden truncate text-lg font-bold tracking-wide text-on-brand uppercase sm:inline">
+        <span className="display hidden truncate text-lg font-bold tracking-wide text-on-brand uppercase lg:inline">
           Penn Field Hockey
         </span>
-        <span className="section-label hidden text-label text-brand-neutral sm:inline">
-          Performance Dashboard
+        <span className="display hidden truncate text-lg font-bold tracking-wide text-on-brand uppercase sm:inline lg:hidden">
+          Penn FH
         </span>
+      </div>
+
+      {/* Top-level product-area tabs — the single top-level switch (desktop) */}
+      <div className="ml-2 hidden min-w-0 self-stretch overflow-x-auto md:ml-4 md:flex lg:ml-6">
+        <AreaTabs />
       </div>
 
       <div className="ml-auto flex items-center gap-3">

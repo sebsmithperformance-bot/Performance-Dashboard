@@ -2,8 +2,9 @@ import { ChevronDown, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { useSettings } from '../lib/settings/SettingsContext.tsx'
-import { ADMIN_ITEMS, matchNavPage, type NavArea, type NavCategory, type NavPage } from './nav.ts'
+import { ADMIN_ITEMS, matchNavPage, type NavCategory, type NavPage } from './nav.ts'
 import { visibleNavTree } from './nav-layout.ts'
+import { AreaTabs } from './AreaTabs.tsx'
 import type { LucideIcon } from 'lucide-react'
 
 /** Collapsed-rail icon item (icon only). */
@@ -23,13 +24,16 @@ function RailItem({ to, icon: Icon, label }: { to: string; icon: LucideIcon; lab
   )
 }
 
-/** Leaf page link within an expanded category (indented, subordinate). */
-function LeafItem({ page }: { page: NavPage }) {
+/** Leaf page link. Indented when it sits inside an expanded accordion
+ *  category; flush when it is a flat top-level item (single-category area). */
+function LeafItem({ page, indent = true }: { page: NavPage; indent?: boolean }) {
   return (
     <NavLink
       to={page.path}
       className={({ isActive }) =>
-        `relative flex h-8 items-center rounded-control pr-3 pl-8 text-body font-medium transition-colors duration-150 ${
+        `relative flex h-8 items-center rounded-control pr-3 text-body font-medium transition-colors duration-150 ${
+          indent ? 'pl-8' : 'pl-3'
+        } ${
           isActive
             ? 'bg-[var(--navigation-active)] font-semibold text-on-brand before:absolute before:top-1 before:bottom-1 before:left-0 before:w-0.5 before:rounded-full before:bg-[var(--navigation-indicator)]'
             : 'text-secondary hover:bg-white/5 hover:text-primary'
@@ -37,28 +41,6 @@ function LeafItem({ page }: { page: NavPage }) {
       }
     >
       <span className="truncate">{page.label}</span>
-    </NavLink>
-  )
-}
-
-/** A standalone area with a single page (e.g. Annual Plan) — one clickable
- *  top-level row that highlights when active. */
-function AreaLeaf({ area }: { area: NavArea }) {
-  const { icon: Icon } = area
-  const page = area.categories[0]!.pages[0]!
-  return (
-    <NavLink
-      to={page.path}
-      className={({ isActive }) =>
-        `relative flex h-9 items-center gap-2.5 rounded-control px-3 text-body font-semibold transition-colors duration-150 ${
-          isActive
-            ? 'bg-[var(--navigation-active)] text-on-brand before:absolute before:top-1 before:bottom-1 before:left-0 before:w-0.5 before:rounded-full before:bg-[var(--navigation-indicator)]'
-            : 'text-secondary hover:bg-white/5 hover:text-primary'
-        }`
-      }
-    >
-      <Icon aria-hidden className="size-4 shrink-0" strokeWidth={1.75} />
-      <span className="section-label truncate text-[0.6875rem]">{area.label}</span>
     </NavLink>
   )
 }
@@ -110,20 +92,27 @@ function SidebarBody({ collapsed }: { collapsed: boolean }) {
   const { pathname } = useLocation()
   const tree = visibleNavTree(settings.layout)
 
-  // the category containing the active page auto-opens; only one open at a time
-  const activeCategoryId = matchNavPage(pathname)?.category.id ?? null
-  const [openId, setOpenId] = useState<string | null>(activeCategoryId)
+  // the sidebar shows ONLY the active product area's nav (areas switch via the
+  // top area tabs); on an admin route we fall back to the first area
+  const match = matchNavPage(pathname)
+  const activeArea = tree.find((a) => a.id === match?.area.id) ?? tree[0] ?? null
+
+  // within the active area, the category containing the active page auto-opens;
+  // only one open at a time
+  const activeCategoryId = match?.category.id ?? null
+  const [openId, setOpenId] = useState<string | null>(activeCategoryId ?? activeArea?.categories[0]?.id ?? null)
   useEffect(() => {
     if (activeCategoryId) setOpenId(activeCategoryId)
   }, [activeCategoryId])
 
+  const multiCategory = (activeArea?.categories.length ?? 0) > 1
+
   if (collapsed) {
     return (
       <nav aria-label="Primary" className="flex flex-col gap-1 p-2">
-        {tree.map((area) => {
-          const to = area.categories[0]?.pages[0]?.path ?? '/'
-          return <RailItem key={area.id} to={to} icon={area.icon} label={area.label} />
-        })}
+        {(activeArea?.categories ?? []).map((c) => (
+          <RailItem key={c.id} to={c.pages[0]!.path} icon={c.icon} label={c.label} />
+        ))}
         <div className="mx-1 my-1 border-t border-white/10" />
         {ADMIN_ITEMS.map((a) => (
           <RailItem key={a.path} to={a.path} icon={a.icon} label={a.label} />
@@ -134,62 +123,28 @@ function SidebarBody({ collapsed }: { collapsed: boolean }) {
 
   return (
     <>
-      <nav aria-label="Primary" className="flex flex-col gap-1 px-2 pt-2 pb-2">
-        {tree.map((area) => {
-          const singlePage =
-            area.categories.length === 1 && area.categories[0]!.pages.length === 1
-          // standalone area (e.g. Annual Plan): one top-level clickable row
-          if (singlePage) {
-            return (
-              <div
-                key={area.id}
-                className="mt-2 border-t border-white/10 pt-2 first:mt-0 first:border-t-0 first:pt-0"
-              >
-                <AreaLeaf area={area} />
-              </div>
-            )
-          }
-          // single-category area (e.g. Competition): the area IS one accordion
-          if (area.categories.length === 1) {
-            const category = area.categories[0]!
-            return (
-              <div
-                key={area.id}
-                className="mt-2 border-t border-white/10 pt-2 first:mt-0 first:border-t-0 first:pt-0"
-              >
-                <CategoryGroup
-                  category={category}
-                  icon={area.icon}
-                  label={area.label}
-                  open={openId === category.id}
-                  onToggle={() => setOpenId(openId === category.id ? null : category.id)}
-                />
-              </div>
-            )
-          }
-          // multi-category area (Performance Dashboard): super-header + accordions
-          return (
-            <div
-              key={area.id}
-              className="mt-2 flex flex-col gap-0.5 border-t border-white/10 pt-2 first:mt-0 first:border-t-0 first:pt-0"
-            >
-              <span className="flex items-center gap-2 px-3 pb-1 text-[0.6875rem] font-semibold tracking-wide text-brand-neutral uppercase">
-                <area.icon aria-hidden className="size-3.5 shrink-0" strokeWidth={2} />
-                {area.label}
-              </span>
-              {area.categories.map((category) => (
-                <CategoryGroup
-                  key={category.id}
-                  category={category}
-                  icon={category.icon}
-                  label={category.label}
-                  open={openId === category.id}
-                  onToggle={() => setOpenId(openId === category.id ? null : category.id)}
-                />
-              ))}
-            </div>
-          )
-        })}
+      <nav aria-label="Primary" className="flex flex-col gap-1 px-2 pt-3 pb-2">
+        {activeArea && (
+          <span className="section-label px-3 pb-1 text-[0.6875rem] text-brand-neutral">
+            {activeArea.label}
+          </span>
+        )}
+        {multiCategory
+          ? // multi-category area (Performance Dashboard): accordion per category
+            activeArea!.categories.map((category) => (
+              <CategoryGroup
+                key={category.id}
+                category={category}
+                icon={category.icon}
+                label={category.label}
+                open={openId === category.id}
+                onToggle={() => setOpenId(openId === category.id ? null : category.id)}
+              />
+            ))
+          : // single-category area (Competition / Annual Plan): pages shown flat
+            (activeArea?.categories[0]?.pages ?? []).map((page) => (
+              <LeafItem key={page.id} page={page} indent={false} />
+            ))}
       </nav>
       <div className="mx-3 border-t border-white/10" />
       <nav aria-label="Administration" className="flex flex-col gap-0.5 px-2 pt-3 pb-2">
@@ -273,6 +228,10 @@ export function Sidebar({
               >
                 <X aria-hidden className="size-5" />
               </button>
+            </div>
+            {/* product-area switch first, then the active area's nav */}
+            <div className="border-b border-white/10">
+              <AreaTabs variant="stacked" />
             </div>
             <SidebarBody collapsed={false} />
           </aside>

@@ -26,11 +26,15 @@ function renderSidebar(path: string, settings?: DashboardSettings) {
   )
 }
 
-it('shows three top-level product areas', () => {
+it('shows only the active area’s nav (not the other product areas’ pages)', () => {
   renderSidebar('/performance/athlete-profile')
-  expect(screen.getByText('Performance Dashboard')).toBeTruthy()
-  expect(screen.getByText('Competition')).toBeTruthy()
-  expect(screen.getByText('Annual Plan')).toBeTruthy()
+  const primary = screen.getByRole('navigation', { name: 'Primary' })
+  // active area label + its categories are present
+  expect(within(primary).getByText('Performance Dashboard')).toBeTruthy()
+  expect(within(primary).getByText('Monitoring')).toBeTruthy()
+  // another area's pages are NOT in the sidebar (they live in the area tabs)
+  expect(within(primary).queryByRole('link', { name: 'Team Standings' })).toBeNull()
+  expect(within(primary).queryByRole('link', { name: 'Annual Plan' })).toBeNull()
 })
 
 it('auto-expands only the active category; the selected page is current', () => {
@@ -60,11 +64,12 @@ it('hides pages configured hidden in the layout', () => {
   expect(screen.queryByRole('link', { name: 'Leaderboards' })).toBeNull()
 })
 
-it('renders Competition as its own accordion, expanded on a competition route', () => {
+it('on a competition route the sidebar shows the competition pages flat', () => {
   renderSidebar('/competition/team-standings')
   const active = screen.getByRole('link', { name: 'Team Standings' })
   expect(active.getAttribute('aria-current')).toBe('page')
-  // Performance Dashboard categories stay collapsed
+  expect(screen.getByRole('link', { name: 'Individual Leaderboard' })).toBeTruthy()
+  // Performance Dashboard pages are not in this area's sidebar
   expect(screen.queryByRole('link', { name: 'Athlete Profile' })).toBeNull()
 })
 

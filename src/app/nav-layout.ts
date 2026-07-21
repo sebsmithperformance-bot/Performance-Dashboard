@@ -46,6 +46,13 @@ export function firstVisiblePath(layout: DashboardLayoutConfig): string {
   return tree[0]?.categories[0]?.pages[0]?.path ?? '/overview/team-snapshot'
 }
 
+/** First visible page path within an area, for the area tabs. Falls back to
+ *  the global first visible page when the area is hidden/empty. */
+export function firstVisiblePathForArea(layout: DashboardLayoutConfig, areaId: string): string {
+  const area = visibleNavTree(layout).find((a) => a.id === areaId)
+  return area?.categories[0]?.pages[0]?.path ?? firstVisiblePath(layout)
+}
+
 /** First visible page path within a given area base (e.g. '/overview'), for
  *  area index redirects; falls back to the global first visible page. */
 export function firstVisiblePathUnder(layout: DashboardLayoutConfig, prefix: string): string {
