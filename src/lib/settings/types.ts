@@ -98,10 +98,18 @@ export interface PositionGroup {
  * sections/widgets added in code appear automatically.
  */
 export interface DashboardLayoutConfig {
-  /** primary section base paths in display order */
-  sectionOrder: string[]
-  /** section base path → sub-tab paths in display order */
-  subTabOrder: Record<string, string[]>
+  /** top-level product area ids in display order */
+  areaOrder: string[]
+  /** hidden area ids */
+  hiddenAreas: string[]
+  /** area id → category ids in display order */
+  categoryOrder: Record<string, string[]>
+  /** hidden category ids */
+  hiddenCategories: string[]
+  /** category id → page ids in display order */
+  pageOrder: Record<string, string[]>
+  /** hidden page ids (page id = route path) */
+  hiddenPages: string[]
   /** hidden optional widget ids */
   hiddenWidgets: string[]
   /** page id → widget ids in display order */
@@ -171,8 +179,6 @@ export interface CompetitionSettings {
   scoringProfiles: ScoringProfile[]
   defaultProfileId: string
   savedRanges: CompetitionSavedRange[]
-  /** per-page visibility inside the Competition section */
-  pages: { teamStandings: boolean; individualLeaderboard: boolean; kpiLeaderboards: boolean }
   /** display flags for a kiosk/TV context (§10 config surface) */
   tvRotation: boolean
   splitScreen: boolean

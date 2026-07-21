@@ -179,25 +179,11 @@ export function CompetitionSettingsPage() {
         </ul>
       </Section>
 
-      <Section title="Pages &amp; display">
+      <Section
+        title="Display"
+        info="Competition page visibility now lives in Admin → Layout & Navigation."
+      >
         <div className="flex flex-col gap-2">
-          {(
-            [
-              ['teamStandings', 'Team Standings'],
-              ['individualLeaderboard', 'Individual Leaderboard'],
-              ['kpiLeaderboards', 'KPI Leaderboards'],
-            ] as const
-          ).map(([key, label]) => (
-            <label key={key} className="flex items-center gap-2 text-body">
-              <input
-                type="checkbox"
-                checked={c.pages[key]}
-                onChange={(e) => updateCompetition({ pages: { ...c.pages, [key]: e.target.checked } })}
-                className="accent-(--accent)"
-              />
-              {label}
-            </label>
-          ))}
           <label className="flex items-center gap-2 text-body">
             <input
               type="checkbox"

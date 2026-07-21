@@ -202,7 +202,7 @@ function Readiness({
             <span className="font-medium">ACWR</span> = 7-day acute Workload ÷ 28-day chronic weekly
             equivalent. <span className="font-medium">Monotony</span> = mean daily Workload ÷ its
             standard deviation over the window. <span className="font-medium">Strain</span> = weekly
-            Workload × monotony. Bands are editable in KPI Settings → Thresholds.
+            Workload × monotony. Bands are editable in Metric Settings → Thresholds.
           </span>
         </InfoHint>
       </p>

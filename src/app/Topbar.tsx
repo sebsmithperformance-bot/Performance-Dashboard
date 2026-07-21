@@ -5,17 +5,15 @@ import { useDashboardData } from '../lib/dashboard/DashboardDataContext.tsx'
 import { formatDayLabel as formatDate, sessionTypeSummary } from '../lib/dashboard/format.ts'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
-import { ADMIN_ITEMS, PRIMARY_SECTIONS } from './nav.ts'
+import { ADMIN_ITEMS, matchNavPage } from './nav.ts'
 
-/** Current page title from the route — the primary section, or an admin page. */
+/** Current page title from the route — the product area, or an admin page. */
 function usePageTitle(): string {
   const { pathname } = useLocation()
-  const section = PRIMARY_SECTIONS.find(
-    (s) => pathname === s.base || pathname.startsWith(`${s.base}/`),
-  )
-  if (section) return section.label
+  const match = matchNavPage(pathname)
+  if (match) return match.area.label
   const admin = ADMIN_ITEMS.find((a) => pathname.startsWith(a.path))
-  return admin?.label ?? 'Overview'
+  return admin?.label ?? 'Performance Dashboard'
 }
 
 /**

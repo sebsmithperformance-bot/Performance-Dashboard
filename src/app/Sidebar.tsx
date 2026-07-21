@@ -1,11 +1,12 @@
-import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
-import { NavLink } from 'react-router'
-import { orderByConfig } from '../lib/settings/defaults.ts'
+import { ChevronDown, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { NavLink, useLocation } from 'react-router'
 import { useSettings } from '../lib/settings/SettingsContext.tsx'
-import { ADMIN_ITEMS, PRIMARY_SECTIONS, type NavSection, type SubTab } from './nav.ts'
+import { ADMIN_ITEMS, matchNavPage, type NavArea, type NavCategory, type NavPage } from './nav.ts'
+import { visibleNavTree } from './nav-layout.ts'
 import type { LucideIcon } from 'lucide-react'
 
-/** Collapsed-rail icon item (icon only, section base as target). */
+/** Collapsed-rail icon item (icon only). */
 function RailItem({ to, icon: Icon, label }: { to: string; icon: LucideIcon; label: string }) {
   return (
     <NavLink
@@ -22,93 +23,107 @@ function RailItem({ to, icon: Icon, label }: { to: string; icon: LucideIcon; lab
   )
 }
 
-/** Expanded leaf item within a section group (indented, subordinate). */
-function LeafItem({ tab, nested = false }: { tab: SubTab; nested?: boolean }) {
+/** Leaf page link within an expanded category (indented, subordinate). */
+function LeafItem({ page }: { page: NavPage }) {
   return (
     <NavLink
-      to={tab.path}
-      end={tab.end}
+      to={page.path}
       className={({ isActive }) =>
-        `relative flex h-8 items-center rounded-control pr-3 text-body font-medium transition-colors duration-150 ${
-          nested ? 'pl-7 text-label' : 'pl-3'
-        } ${
+        `relative flex h-8 items-center rounded-control pr-3 pl-8 text-body font-medium transition-colors duration-150 ${
           isActive
             ? 'bg-[var(--navigation-active)] font-semibold text-on-brand before:absolute before:top-1 before:bottom-1 before:left-0 before:w-0.5 before:rounded-full before:bg-[var(--navigation-indicator)]'
             : 'text-secondary hover:bg-white/5 hover:text-primary'
         }`
       }
     >
-      <span className="truncate">{tab.label}</span>
+      <span className="truncate">{page.label}</span>
     </NavLink>
   )
 }
 
-/** A standalone section with no children (e.g. Annual Plan) — one clickable
- *  row with its icon, at section level. */
-function StandaloneItem({ section }: { section: NavSection }) {
-  const { icon: Icon } = section
+/** A standalone area with a single page (e.g. Annual Plan) — one clickable
+ *  top-level row that highlights when active. */
+function AreaLeaf({ area }: { area: NavArea }) {
+  const { icon: Icon } = area
+  const page = area.categories[0]!.pages[0]!
   return (
-    <div className="mt-3 flex flex-col border-t border-white/10 pt-3 first:mt-0 first:border-t-0 first:pt-0">
-      <NavLink
-        to={section.base}
-        className={({ isActive }) =>
-          `relative flex h-9 items-center gap-2.5 rounded-control px-3 text-body font-medium transition-colors duration-150 ${
-            isActive
-              ? 'bg-[var(--navigation-active)] font-semibold text-on-brand before:absolute before:top-1 before:bottom-1 before:left-0 before:w-0.5 before:rounded-full before:bg-[var(--navigation-indicator)]'
-              : 'text-secondary hover:bg-white/5 hover:text-primary'
-          }`
-        }
-      >
-        <Icon aria-hidden className="size-4 shrink-0" strokeWidth={1.75} />
-        <span className="section-label truncate text-[0.6875rem]">{section.label}</span>
-      </NavLink>
-    </div>
+    <NavLink
+      to={page.path}
+      className={({ isActive }) =>
+        `relative flex h-9 items-center gap-2.5 rounded-control px-3 text-body font-semibold transition-colors duration-150 ${
+          isActive
+            ? 'bg-[var(--navigation-active)] text-on-brand before:absolute before:top-1 before:bottom-1 before:left-0 before:w-0.5 before:rounded-full before:bg-[var(--navigation-indicator)]'
+            : 'text-secondary hover:bg-white/5 hover:text-primary'
+        }`
+      }
+    >
+      <Icon aria-hidden className="size-4 shrink-0" strokeWidth={1.75} />
+      <span className="section-label truncate text-[0.6875rem]">{area.label}</span>
+    </NavLink>
   )
 }
 
-/** Competition page → its visibility flag (§10 Competition Settings). */
-const COMPETITION_PAGE_FLAG: Record<string, 'teamStandings' | 'individualLeaderboard' | 'kpiLeaderboards'> = {
-  '/competition/team-standings': 'teamStandings',
-  '/competition/individual-leaderboard': 'individualLeaderboard',
-  '/competition/kpi-leaderboards': 'kpiLeaderboards',
-}
-
-/** One section group: uppercase label + its always-visible leaves (§2). */
-function SectionGroup({ section }: { section: NavSection }) {
-  const { settings } = useSettings()
-  if (section.subTabs.length === 0) return <StandaloneItem section={section} />
-  const pages = settings.competition.pages
-  const subTabs = orderByConfig(
-    section.subTabs,
-    (t) => t.path,
-    settings.layout.subTabOrder[section.base] ?? [],
-  ).filter((t) => {
-    const flag = COMPETITION_PAGE_FLAG[t.path]
-    return flag ? pages[flag] : true
-  })
+/** An accordion category: a clickable header that expands to its page leaves.
+ *  Only the open category shows its pages; the active category auto-opens. */
+function CategoryGroup({
+  category,
+  icon,
+  label,
+  open,
+  onToggle,
+}: {
+  category: NavCategory
+  icon: LucideIcon
+  label: string
+  open: boolean
+  onToggle: () => void
+}) {
+  const Icon = icon
   return (
-    <div className="mt-3 flex flex-col gap-0.5 border-t border-white/10 pt-3 first:mt-0 first:border-t-0 first:pt-0">
-      {/* category headers read as structure, not as another clickable row */}
-      <span className="section-label px-3 pb-1.5 text-[0.6875rem] text-brand-neutral">
-        {section.label}
-      </span>
-      {subTabs.map((tab) => (
-        <LeafItem key={tab.path} tab={tab} />
-      ))}
+    <div className="flex flex-col">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex h-9 items-center gap-2.5 rounded-control px-3 text-secondary transition-colors duration-150 hover:bg-white/5 hover:text-primary"
+      >
+        <Icon aria-hidden className="size-4 shrink-0" strokeWidth={1.75} />
+        <span className="section-label truncate text-[0.6875rem]">{label}</span>
+        <ChevronDown
+          aria-hidden
+          className={`ml-auto size-4 shrink-0 transition-transform duration-200 ${open ? '' : '-rotate-90'}`}
+        />
+      </button>
+      {open && (
+        <div className="mt-0.5 mb-1 flex flex-col gap-0.5">
+          {category.pages.map((page) => (
+            <LeafItem key={page.id} page={page} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
 function SidebarBody({ collapsed }: { collapsed: boolean }) {
   const { settings } = useSettings()
-  const sections = orderByConfig(PRIMARY_SECTIONS, (s) => s.base, settings.layout.sectionOrder)
+  const { pathname } = useLocation()
+  const tree = visibleNavTree(settings.layout)
+
+  // the category containing the active page auto-opens; only one open at a time
+  const activeCategoryId = matchNavPage(pathname)?.category.id ?? null
+  const [openId, setOpenId] = useState<string | null>(activeCategoryId)
+  useEffect(() => {
+    if (activeCategoryId) setOpenId(activeCategoryId)
+  }, [activeCategoryId])
 
   if (collapsed) {
     return (
       <nav aria-label="Primary" className="flex flex-col gap-1 p-2">
-        {sections.map((s) => (
-          <RailItem key={s.base} to={s.base} icon={s.icon} label={s.label} />
-        ))}
+        {tree.map((area) => {
+          const to = area.categories[0]?.pages[0]?.path ?? '/'
+          return <RailItem key={area.id} to={to} icon={area.icon} label={area.label} />
+        })}
         <div className="mx-1 my-1 border-t border-white/10" />
         {ADMIN_ITEMS.map((a) => (
           <RailItem key={a.path} to={a.path} icon={a.icon} label={a.label} />
@@ -119,16 +134,81 @@ function SidebarBody({ collapsed }: { collapsed: boolean }) {
 
   return (
     <>
-      <nav aria-label="Primary" className="flex flex-col px-2 pb-2">
-        {sections.map((section) => (
-          <SectionGroup key={section.base} section={section} />
-        ))}
+      <nav aria-label="Primary" className="flex flex-col gap-1 px-2 pt-2 pb-2">
+        {tree.map((area) => {
+          const singlePage =
+            area.categories.length === 1 && area.categories[0]!.pages.length === 1
+          // standalone area (e.g. Annual Plan): one top-level clickable row
+          if (singlePage) {
+            return (
+              <div
+                key={area.id}
+                className="mt-2 border-t border-white/10 pt-2 first:mt-0 first:border-t-0 first:pt-0"
+              >
+                <AreaLeaf area={area} />
+              </div>
+            )
+          }
+          // single-category area (e.g. Competition): the area IS one accordion
+          if (area.categories.length === 1) {
+            const category = area.categories[0]!
+            return (
+              <div
+                key={area.id}
+                className="mt-2 border-t border-white/10 pt-2 first:mt-0 first:border-t-0 first:pt-0"
+              >
+                <CategoryGroup
+                  category={category}
+                  icon={area.icon}
+                  label={area.label}
+                  open={openId === category.id}
+                  onToggle={() => setOpenId(openId === category.id ? null : category.id)}
+                />
+              </div>
+            )
+          }
+          // multi-category area (Performance Dashboard): super-header + accordions
+          return (
+            <div
+              key={area.id}
+              className="mt-2 flex flex-col gap-0.5 border-t border-white/10 pt-2 first:mt-0 first:border-t-0 first:pt-0"
+            >
+              <span className="flex items-center gap-2 px-3 pb-1 text-[0.6875rem] font-semibold tracking-wide text-brand-neutral uppercase">
+                <area.icon aria-hidden className="size-3.5 shrink-0" strokeWidth={2} />
+                {area.label}
+              </span>
+              {area.categories.map((category) => (
+                <CategoryGroup
+                  key={category.id}
+                  category={category}
+                  icon={category.icon}
+                  label={category.label}
+                  open={openId === category.id}
+                  onToggle={() => setOpenId(openId === category.id ? null : category.id)}
+                />
+              ))}
+            </div>
+          )
+        })}
       </nav>
       <div className="mx-3 border-t border-white/10" />
       <nav aria-label="Administration" className="flex flex-col gap-0.5 px-2 pt-3 pb-2">
         <span className="section-label px-3 pb-1.5 text-[0.6875rem] text-brand-neutral">Admin</span>
         {ADMIN_ITEMS.map((item) => (
-          <LeafItem key={item.path} tab={{ label: item.label, path: item.path }} />
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              `relative flex h-8 items-center gap-2.5 rounded-control px-3 text-body font-medium transition-colors duration-150 ${
+                isActive
+                  ? 'bg-[var(--navigation-active)] font-semibold text-on-brand before:absolute before:top-1 before:bottom-1 before:left-0 before:w-0.5 before:rounded-full before:bg-[var(--navigation-indicator)]'
+                  : 'text-secondary hover:bg-white/5 hover:text-primary'
+              }`
+            }
+          >
+            <item.icon aria-hidden className="size-4 shrink-0" strokeWidth={1.75} />
+            <span className="truncate">{item.label}</span>
+          </NavLink>
         ))}
       </nav>
     </>

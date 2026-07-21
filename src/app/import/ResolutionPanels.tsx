@@ -25,7 +25,7 @@ export function MappingPanel({
       <h3 className="text-subhead font-semibold">Unmapped source headers</h3>
       <p className="mt-1 text-label text-secondary">
         Map each to an existing KPI or ignore it for this import. Mappings persist for future
-        imports. Creating a brand-new KPI requires full configuration in KPI Settings first.
+        imports. Creating a brand-new KPI requires full configuration in Metric Settings first.
       </p>
       <ul className="mt-3 flex flex-col gap-2">
         {bundle.stage.unmappedHeaders.map((header) => (

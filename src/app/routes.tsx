@@ -4,8 +4,8 @@ import { useAuth } from '../lib/auth/AuthContext.tsx'
 import { SignInScreen } from '../lib/auth/SignInScreen.tsx'
 import { AppShell } from './AppShell.tsx'
 import { CompetitionSettingsPage } from './admin/CompetitionSettingsPage.tsx'
-import { DataManagementPage } from './admin/DataManagementPage.tsx'
-import { KpiSettingsPage } from './admin/KpiSettingsPage.tsx'
+import { LayoutNavigationPage } from './admin/LayoutNavigationPage.tsx'
+import { MetricSettingsPage } from './admin/MetricSettingsPage.tsx'
 import { AnnualPlanPage } from './annual-plan/AnnualPlanPage.tsx'
 import { CompetitionLayout } from './competition/CompetitionContext.tsx'
 import { IndividualLeaderboardPage } from './competition/IndividualLeaderboardPage.tsx'
@@ -24,10 +24,18 @@ import { TrendExplorer } from './trends/TrendExplorer.tsx'
 import { AthletesPage } from './overview/AthletesPage.tsx'
 import { TeamSnapshotPage } from './overview/TeamSnapshotPage.tsx'
 import { NotFoundPage, SectionPage } from './pages.tsx'
+import { firstVisiblePath } from './nav-layout.ts'
+import { useSettings } from '../lib/settings/SettingsContext.tsx'
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { status } = useAuth()
   return status === 'signed_in' ? children : <Navigate to="/signin" replace />
+}
+
+/** Land on the first visible page (recovery-aware when areas/pages are hidden). */
+function HomeRedirect() {
+  const { settings } = useSettings()
+  return <Navigate to={firstVisiblePath(settings.layout)} replace />
 }
 
 export function AppRoutes() {
@@ -42,7 +50,7 @@ export function AppRoutes() {
           </RequireAuth>
         }
       >
-        <Route index element={<Navigate to="/overview/team-snapshot" replace />} />
+        <Route index element={<HomeRedirect />} />
 
         <Route path="/overview" element={<SectionPage />}>
           <Route index element={<Navigate to="/overview/team-snapshot" replace />} />
@@ -107,11 +115,16 @@ export function AppRoutes() {
         <Route path="/annual-plan" element={<AnnualPlanPage />} />
 
         <Route path="/admin/import" element={<ImportPage />} />
-        <Route path="/admin/kpi-settings" element={<KpiSettingsPage />} />
-        <Route path="/admin/data-management" element={<DataManagementPage />} />
+        <Route path="/admin/metric-settings" element={<MetricSettingsPage />} />
+        <Route path="/admin/layout-navigation" element={<LayoutNavigationPage />} />
         <Route path="/admin/competition-settings" element={<CompetitionSettingsPage />} />
 
         {/* legacy redirects */}
+        <Route path="/admin/kpi-settings" element={<Navigate to="/admin/metric-settings" replace />} />
+        <Route
+          path="/admin/data-management"
+          element={<Navigate to="/admin/layout-navigation" replace />}
+        />
         <Route path="/trends" element={<Navigate to="/data-trends/performance" replace />} />
         <Route path="/trends/gps" element={<Navigate to="/data-trends/gps" replace />} />
 

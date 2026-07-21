@@ -87,7 +87,6 @@ export function defaultCompetition(): CompetitionSettings {
     ],
     defaultProfileId: 'default',
     savedRanges: [],
-    pages: { teamStandings: true, individualLeaderboard: true, kpiLeaderboards: true },
     tvRotation: false,
     splitScreen: false,
   }
@@ -106,7 +105,16 @@ export function defaultSettings(): DashboardSettings {
     kpi: {},
     thresholds: { ...DEFAULT_THRESHOLDS },
     // empty = canonical structure, nothing hidden (see DashboardLayoutConfig)
-    layout: { sectionOrder: [], subTabOrder: {}, hiddenWidgets: [], widgetOrder: {} },
+    layout: {
+      areaOrder: [],
+      hiddenAreas: [],
+      categoryOrder: {},
+      hiddenCategories: [],
+      pageOrder: {},
+      hiddenPages: [],
+      hiddenWidgets: [],
+      widgetOrder: {},
+    },
     positions: DEFAULT_POSITIONS.map((p) => ({ ...p })),
     display: {
       defaultComparisonBasis: 'prior_week',

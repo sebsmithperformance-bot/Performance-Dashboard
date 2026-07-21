@@ -107,7 +107,7 @@ export function LoadHealthDetail({ dataset, date }: { dataset: DashboardDataset;
         Four workload states — observations, not predictions.
         <InfoHint label="About ACWR bands">
           <span className="mb-1 block font-medium text-secondary">
-            {view.loadKpiLabel}. Bands (editable in KPI Settings → Thresholds):
+            {view.loadKpiLabel}. Bands (editable in Metric Settings → Thresholds):
           </span>
           <span className="flex flex-col gap-0.5">
             {view.bands.map((b) => (

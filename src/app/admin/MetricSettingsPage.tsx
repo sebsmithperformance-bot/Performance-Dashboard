@@ -64,10 +64,11 @@ const SURFACES: { key: keyof KpiVisibility; label: string }[] = [
   { key: 'profile', label: 'Athlete Profile' },
 ]
 
-/** Admin → KPI Settings (§5.5): registry display config, operational
- *  thresholds, and position groups. Canonical units and calculation formulas
- *  are visibly locked — never editable here. */
-export function KpiSettingsPage() {
+/** Admin → Metric Settings: registry display config, operational thresholds,
+ *  and position groups. Underlying metric (KPI) keys and calculation formulas
+ *  are visibly locked — never editable here. Renamed from KPI Settings; the
+ *  stored keys and data are unchanged. */
+export function MetricSettingsPage() {
   const { status, error, dataset } = useDashboardData()
 
   return (
@@ -192,7 +193,7 @@ function KpiRegistry({ kpis }: { kpis: DashKpi[] }) {
     setCustomKpis(settings.customKpis.map((c) => (c.key === key ? { ...c, retired: false } : c)))
 
   return (
-    <Panel icon={Settings2} title="KPI registry" keyValue={`${kpis.length} KPIs`}>
+    <Panel icon={Settings2} title="Metric registry" keyValue={`${kpis.length} metrics`}>
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <p className="max-w-2xl text-label text-muted">
@@ -200,9 +201,7 @@ function KpiRegistry({ kpis }: { kpis: DashKpi[] }) {
             locked (§6.3).
           </p>
           <Button variant="secondary" onClick={() => setAdding(true)}>
-            <Plus aria-hidden className="size-4" />
-            Add KPI
-          </Button>
+            <Plus aria-hidden className="size-4" />Add Metric</Button>
         </div>
         <DataTable columns={columns} rows={kpis} rowKey={(k) => k.key} onRowClick={setEditing} />
         {retiredCustom.length > 0 && (
@@ -303,7 +302,7 @@ function AddKpiDrawer({
   }
 
   return (
-    <Drawer title="Add KPI" onClose={onClose}>
+    <Drawer title="Add Metric" onClose={onClose}>
       <div className="flex flex-col gap-4">
         <div className="rounded-control border border-subtle bg-surface-2 p-3 text-label text-secondary">
           A new KPI is a definition only — it stays empty until its source data is mapped during
@@ -462,9 +461,7 @@ function AddKpiDrawer({
         </fieldset>
 
         <div className="flex flex-wrap gap-2">
-          <Button onClick={save} disabled={!canSave}>
-            Add KPI
-          </Button>
+          <Button onClick={save} disabled={!canSave}>Add Metric</Button>
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
@@ -644,7 +641,7 @@ function KpiEditor({
               })
             }
           >
-            Save KPI settings
+            Save metric settings
           </Button>
           {hasOverride && (
             <Button variant="secondary" onClick={onReset}>

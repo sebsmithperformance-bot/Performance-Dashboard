@@ -217,7 +217,7 @@ function Trends({
       />
 
       <p className="flex flex-wrap items-center gap-1 text-label text-muted">
-        Bands come from KPI Settings → Thresholds.
+        Bands come from Metric Settings → Thresholds.
         <InfoHint label="Band definitions">
           <span className="flex flex-col gap-0.5">
             {bandDefs.map((b) => (
