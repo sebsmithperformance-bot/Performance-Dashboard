@@ -18,6 +18,7 @@ import type {
   KpiOverride,
   KpiThreshold,
   PositionGroup,
+  SavedRange,
   SettingsRepository,
   ThresholdSettings,
 } from './types.ts'
@@ -33,6 +34,8 @@ interface SettingsValue {
   setKpiThresholds: (kpiKey: string, thresholds: KpiThreshold[]) => void
   updateCompetition: (patch: Partial<CompetitionSettings>) => void
   setAnnualPlan: (plan: AnnualPlanSettings) => void
+  setSavedRanges: (scope: string, ranges: SavedRange[]) => void
+  setDefaultRange: (scope: string, id: string | null) => void
   resetLayout: () => void
   resetThresholds: () => void
 }
@@ -76,6 +79,18 @@ export function SettingsProvider({
       updateCompetition: (patch) =>
         commit({ ...settings, competition: { ...settings.competition, ...patch } }),
       setAnnualPlan: (annualPlan) => commit({ ...settings, annualPlan }),
+      setSavedRanges: (scope, ranges) => {
+        const next = { ...settings.savedRanges }
+        if (ranges.length === 0) delete next[scope]
+        else next[scope] = ranges
+        commit({ ...settings, savedRanges: next })
+      },
+      setDefaultRange: (scope, id) => {
+        const next = { ...settings.defaultRanges }
+        if (id === null) delete next[scope]
+        else next[scope] = id
+        commit({ ...settings, defaultRanges: next })
+      },
       resetLayout: () => commit({ ...settings, layout: defaultSettings().layout }),
       resetThresholds: () => commit({ ...settings, thresholds: defaultSettings().thresholds }),
     }

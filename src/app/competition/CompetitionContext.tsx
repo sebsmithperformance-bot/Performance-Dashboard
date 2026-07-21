@@ -1,7 +1,8 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import { Outlet } from 'react-router'
 import { Trophy } from 'lucide-react'
-import { CONTROL_CLASS, DateRangeSelector, LabeledControl } from '../../components/controls/controls.tsx'
+import { CONTROL_CLASS, LabeledControl } from '../../components/controls/controls.tsx'
+import { SavedRangeControl, useSavedRanges } from '../../components/controls/SavedRangeControl.tsx'
 import { EmptyState } from '../../components/ui/EmptyState.tsx'
 import { InfoHint } from '../../components/ui/InfoHint.tsx'
 import { Skeleton } from '../../components/ui/Skeleton.tsx'
@@ -26,23 +27,28 @@ export function useCompetition(): CompetitionValue {
   return v
 }
 
-type RangeKind = 'all' | 'session' | 'custom' | 'saved'
+type RangeKind = 'all' | 'session' | 'range'
 
 /**
  * §10: Competition owns its OWN shared time range. Changing it updates only
  * the three Competition pages — never the date/session state elsewhere. The
  * range picker + accumulated result live here and flow to the pages via
- * context.
+ * context. The Date range mode reuses the shared saved-range control (scope
+ * 'competition'), independent of the Performance Dashboard ranges (§6).
  */
 export function CompetitionLayout() {
   const { status, dataset } = useDashboardData()
   const { settings } = useSettings()
   const competition = settings.competition
 
+  const { defaultRange } = useSavedRanges('competition')
   const [kind, setKind] = useState<RangeKind>('all')
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [custom, setCustom] = useState({ from: '', to: '' })
-  const [savedId, setSavedId] = useState<string | null>(null)
+  const [custom, setCustom] = useState(() =>
+    defaultRange
+      ? { from: defaultRange.from, to: defaultRange.to }
+      : { from: dataset?.seasonStart ?? '', to: dataset?.seasonEnd ?? '' },
+  )
 
   const scoredSessions = useMemo(
     () =>
@@ -55,12 +61,10 @@ export function CompetitionLayout() {
   const range: CompetitionRange = useMemo(() => {
     if (kind === 'session' && (sessionId ?? scoredSessions[0]?.id))
       return { kind: 'session', sessionId: sessionId ?? scoredSessions[0]!.id }
-    if (kind === 'custom' && custom.from && custom.to)
+    if (kind === 'range' && custom.from && custom.to)
       return { kind: 'custom', from: custom.from, to: custom.to }
-    if (kind === 'saved' && (savedId ?? competition.savedRanges[0]?.id))
-      return { kind: 'saved', rangeId: savedId ?? competition.savedRanges[0]!.id }
     return { kind: 'all' }
-  }, [kind, sessionId, custom, savedId, scoredSessions, competition.savedRanges])
+  }, [kind, sessionId, custom, scoredSessions])
 
   const result = useMemo(
     () => (dataset ? competitionResult(dataset, competition, range) : null),
@@ -84,8 +88,7 @@ export function CompetitionLayout() {
           >
             <option value="all">All time</option>
             <option value="session">Single session</option>
-            <option value="custom">Custom range</option>
-            {competition.savedRanges.length > 0 && <option value="saved">Saved range</option>}
+            <option value="range">Date range</option>
           </select>
         </LabeledControl>
 
@@ -104,27 +107,8 @@ export function CompetitionLayout() {
             </select>
           </LabeledControl>
         )}
-        {kind === 'custom' && (
-          <DateRangeSelector
-            from={custom.from || dataset.seasonStart}
-            to={custom.to || dataset.seasonEnd}
-            onChange={setCustom}
-          />
-        )}
-        {kind === 'saved' && competition.savedRanges.length > 0 && (
-          <LabeledControl label="Saved range">
-            <select
-              value={savedId ?? competition.savedRanges[0]!.id}
-              onChange={(e) => setSavedId(e.target.value)}
-              className={CONTROL_CLASS}
-            >
-              {competition.savedRanges.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
-          </LabeledControl>
+        {kind === 'range' && (
+          <SavedRangeControl scope="competition" value={custom} onChange={setCustom} />
         )}
 
         <span className="ml-auto flex items-center gap-1 text-label text-muted">

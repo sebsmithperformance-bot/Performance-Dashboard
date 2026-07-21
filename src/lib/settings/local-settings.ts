@@ -29,6 +29,8 @@ export function createLocalSettingsRepository(): SettingsRepository {
           kpiThresholds: stored.kpiThresholds ?? base.kpiThresholds,
           competition: { ...base.competition, ...stored.competition },
           annualPlan: { ...base.annualPlan, ...stored.annualPlan },
+          savedRanges: stored.savedRanges ?? base.savedRanges,
+          defaultRanges: stored.defaultRanges ?? base.defaultRanges,
         }
       } catch {
         return base

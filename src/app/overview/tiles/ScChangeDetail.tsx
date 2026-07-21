@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react'
 import { DistributionBar } from '../../../components/charts/DistributionBar.tsx'
 import {
   CONTROL_CLASS,
-  DateRangeSelector,
   LabeledControl,
   MetricSelector,
 } from '../../../components/controls/controls.tsx'
+import { SavedRangeControl } from '../../../components/controls/SavedRangeControl.tsx'
 import { KPIValue } from '../../../components/ui/KPIValue.tsx'
 import { formatPercentDelta } from '../../../lib/dashboard/format.ts'
 import { scChangeView, type ComparisonBasis } from '../../../lib/dashboard/selectors/sc-change.ts'
@@ -117,7 +117,7 @@ export function ScChangeDetail({ dataset, date }: { dataset: DashboardDataset; d
           </select>
         </LabeledControl>
         {basis === 'custom_range' && (
-          <DateRangeSelector from={range.from} to={range.to} onChange={setRange} />
+          <SavedRangeControl scope="overview-sc-change" value={range} onChange={setRange} />
         )}
       </div>
 

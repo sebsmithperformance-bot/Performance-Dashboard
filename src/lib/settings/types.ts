@@ -154,13 +154,6 @@ export interface CompetitionKpiEligibility {
   relative: boolean
 }
 
-export interface CompetitionSavedRange {
-  id: string
-  label: string
-  from: string
-  to: string
-}
-
 /**
  * Competition configuration (§10) — a self-contained points game, isolated
  * from all performance monitoring. Points never appear outside the Competition
@@ -178,7 +171,6 @@ export interface CompetitionSettings {
   eligibleKpis: Record<string, CompetitionKpiEligibility>
   scoringProfiles: ScoringProfile[]
   defaultProfileId: string
-  savedRanges: CompetitionSavedRange[]
   /** display flags for a kiosk/TV context (§10 config surface) */
   tvRotation: boolean
   splitScreen: boolean
@@ -193,6 +185,18 @@ export interface AnnualPlanSettings {
   fileName: string | null
   fileUrl: string | null
   lastUpdated: string | null
+}
+
+/**
+ * A named custom date range, saved for one-click reuse (§6). Shared by every
+ * page that has a custom date-range selector; ranges are scoped by a page/area
+ * key so each product area keeps its own list and active range independent.
+ */
+export interface SavedRange {
+  id: string
+  label: string
+  from: string
+  to: string
 }
 
 export interface DashboardSettings {
@@ -211,6 +215,10 @@ export interface DashboardSettings {
   competition: CompetitionSettings
   /** single configured Annual Plan workbook link (§11) */
   annualPlan: AnnualPlanSettings
+  /** saved custom date ranges, keyed by scope (page/area) — §6 */
+  savedRanges: Record<string, SavedRange[]>
+  /** per-scope default saved-range id */
+  defaultRanges: Record<string, string>
 }
 
 /**

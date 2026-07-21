@@ -9,7 +9,6 @@ import { LineChart } from '../../components/charts/LineChart.tsx'
 import {
   AthleteSelector,
   CONTROL_CLASS,
-  DateRangeSelector,
   FilterBar,
   LabeledControl,
   MetricSelector,
@@ -17,6 +16,7 @@ import {
   SeasonSelector,
 } from '../../components/controls/controls.tsx'
 import { SaveViewControl } from '../../components/controls/SaveViewControl.tsx'
+import { SavedRangeControl, useSavedRanges } from '../../components/controls/SavedRangeControl.tsx'
 import { ChartCard } from '../../components/ui/ChartCard.tsx'
 import { DataTable, type Column } from '../../components/ui/DataTable.tsx'
 import { ErrorState } from '../../components/ui/ErrorState.tsx'
@@ -103,7 +103,11 @@ function Explorer({
   const [mode, setMode] = useState<TrendMode>('team')
   const [position, setPosition] = useState<string | null>(null)
   const [athleteId, setAthleteId] = useState<string | null>(dataset.athletes[0]?.id ?? null)
-  const [range, setRange] = useState({ from: dataset.seasonStart, to: endDate })
+  // initialise from the scope's default saved range when one is set (§6)
+  const { defaultRange } = useSavedRanges(pageId)
+  const [range, setRange] = useState(() =>
+    defaultRange ? { from: defaultRange.from, to: defaultRange.to } : { from: dataset.seasonStart, to: endDate },
+  )
 
   // switching sub-tab swaps the catalog (S&C ↔ GPS); a metric from the other
   // catalog would render empty, so fall back to the first of this one
@@ -219,7 +223,7 @@ function Explorer({
             onChange={setAthleteId}
           />
         )}
-        <DateRangeSelector from={range.from} to={range.to} onChange={setRange} />
+        <SavedRangeControl scope={pageId} value={range} onChange={setRange} />
         <SaveViewControl
           page={pageId}
           store={savedViews}

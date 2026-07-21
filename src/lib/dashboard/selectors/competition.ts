@@ -14,7 +14,6 @@ export type CompetitionRange =
   | { kind: 'all' }
   | { kind: 'session'; sessionId: string }
   | { kind: 'custom'; from: string; to: string }
-  | { kind: 'saved'; rangeId: string }
 
 export type ScoringMode = 'absolute' | 'relative'
 
@@ -123,7 +122,6 @@ function teamAssignment(
 
 function resolveRange(
   dataset: DashboardDataset,
-  settings: CompetitionSettings,
   range: CompetitionRange,
 ): { sessions: DashSession[]; label: string } {
   const scored = dataset.sessions.filter((s) => s.kind === 'lift' || s.kind === 'field')
@@ -135,14 +133,6 @@ function resolveRange(
     return {
       sessions: scored.filter((s) => s.date >= range.from && s.date <= range.to),
       label: `${range.from} → ${range.to}`,
-    }
-  }
-  if (range.kind === 'saved') {
-    const saved = settings.savedRanges.find((r) => r.id === range.rangeId)
-    if (!saved) return { sessions: scored, label: 'All time' }
-    return {
-      sessions: scored.filter((s) => s.date >= saved.from && s.date <= saved.to),
-      label: saved.label,
     }
   }
   return { sessions: scored, label: 'All time' }
@@ -161,7 +151,7 @@ export function competitionResult(
   const teamMap = teamAssignment(dataset, settings)
   const teamName = (id: string | null) =>
     id ? (settings.teams.find((t) => t.id === id)?.name ?? null) : null
-  const { sessions, label } = resolveRange(dataset, settings, range)
+  const { sessions, label } = resolveRange(dataset, range)
 
   // eligible, rankable KPIs (higher/lower interpretation only)
   const eligible: { kpi: DashKpi; modes: ScoringMode[] }[] = []

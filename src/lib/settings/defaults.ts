@@ -86,7 +86,6 @@ export function defaultCompetition(): CompetitionSettings {
       },
     ],
     defaultProfileId: 'default',
-    savedRanges: [],
     tvRotation: false,
     splitScreen: false,
   }
@@ -129,6 +128,8 @@ export function defaultSettings(): DashboardSettings {
     kpiThresholds: {},
     competition: defaultCompetition(),
     annualPlan: { fileName: null, fileUrl: null, lastUpdated: null },
+    savedRanges: {},
+    defaultRanges: {},
   }
 }
 
