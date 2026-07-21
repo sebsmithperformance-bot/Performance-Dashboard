@@ -63,6 +63,7 @@ function devSyntheticData(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: process.env.NODE_ENV === 'production' ? '/Performance-Dashboard/' : '/',
   plugins: [react(), tailwindcss(), devSyntheticData()],
   // honor a harness-assigned PORT so parallel sessions don't collide on 5173
   server: process.env.PORT ? { port: Number(process.env.PORT) } : undefined,
