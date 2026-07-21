@@ -127,15 +127,15 @@ function Trends({
               Team-average ACWR is{' '}
               <span className="tabular font-semibold">{g.teamAcwr.toFixed(2)}</span> —{' '}
               <span className="font-semibold">{g.label}</span>. To keep tomorrow inside the{' '}
-              {acwrBand.label} band, aim for a team-average session load of{' '}
+              {acwrBand.label} band, aim for a team-average session Workload of{' '}
               <span className="tabular font-semibold">
-                {fmt0(g.targetBand.from)}–{fmt0(g.targetBand.to)} AU
+                {fmt0(g.targetBand.from)}–{fmt0(g.targetBand.to)}
               </span>{' '}
-              (0 AU = full recovery).
+              (1–10 Workload scale; 0 = full recovery).
               <InfoHint label="How this is calculated">
-                Target = band edge × 28-day weekly equivalent − last 6 days of team-average load.
-                Both band edges are shown, never a single prescription. A workload observation, not
-                medical advice (§6.8).
+                Target = band edge × 28-day weekly equivalent − last 6 days of team-average
+                Workload, all on the 1–10 Workload scale. Both band edges are shown, never a single
+                prescription. A workload observation, not medical advice (§6.8).
               </InfoHint>
             </p>
           ) : (

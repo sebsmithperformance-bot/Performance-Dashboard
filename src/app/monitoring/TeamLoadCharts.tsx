@@ -11,7 +11,6 @@ import { LineChart, type YBand } from '../../components/charts/LineChart.tsx'
 import { ChartCard } from '../../components/ui/ChartCard.tsx'
 import {
   formatDayLabel,
-  formatInt as fmt0,
   formatRatio as fmt2,
   formatShortDay as shortDay,
 } from '../../lib/dashboard/format.ts'
@@ -167,8 +166,8 @@ export function TeamLoadCharts({
                 : 'no valid window'}
             </span>
             <span className="tabular text-muted">
-              {picked.validAcwrCount}/{view.groupSize} valid · mean load{' '}
-              {picked.meanLoad === null ? '—' : `${fmt0(picked.meanLoad)} AU`}
+              {picked.validAcwrCount}/{view.groupSize} valid · mean Workload{' '}
+              {picked.meanLoad === null ? '—' : `${fmt1(picked.meanLoad)} / 10`}
             </span>
             <button
               type="button"
