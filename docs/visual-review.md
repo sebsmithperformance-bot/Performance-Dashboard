@@ -156,3 +156,32 @@ against the default synthetic seed. Console clean on fresh loads.
 3. Dev-only: a transient `useCompetition` HMR error can appear when routes are hot-swapped
    mid-session; does not reproduce on a fresh load and cannot occur in production (the
    layout always wraps the child Outlet).
+
+## Session 8 (2026-07-21) — Navigation & settings restructure
+
+Reviewed at 1280 against the default synthetic seed; console clean on fresh loads.
+
+**Verified good**
+
+- Three top-level product areas render first: Performance Dashboard (with a super-header
+  + Overview / Monitoring / Data Trends / Performance accordions), Competition (single
+  accordion), Annual Plan (standalone highlighted row). Competition and Annual Plan sit
+  outside Performance Dashboard.
+- Accordion: only the active category is expanded; clicking a collapsed category expands
+  it and collapses the previously open one (one at a time). Active leaf shows the crimson
+  indicator + aria-current. Admin shows the renamed Metric Settings and Layout & Navigation.
+- Layout & Navigation lists the full tree — areas, categories, pages, and the seven Team
+  Snapshot widgets — each with a visibility checkbox and Move Up/Down, plus Reset to
+  Default. Hiding a page removes it from the sidebar immediately.
+- Shared SavedRangeControl appears on Data Trends (Range / From / To / name / Save range)
+  and on Competition's Date range mode — the same control, independent scopes.
+- Workload reads on the 1–10 scale everywhere; no remaining "AU" on coach-facing
+  Workload displays.
+
+**Follow-ups (deferred, non-blocking)**
+
+1. Competition Date range inputs start empty (mm/dd/yyyy) because the dataset is still
+   loading on first layout render; the range resolves to All time until dates are picked.
+   Cosmetic — the All time default already covers the full season.
+2. Saved-range Rename uses window.prompt (fine for the local prototype; revisit for a
+   polished inline editor later).

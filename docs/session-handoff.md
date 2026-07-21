@@ -1,55 +1,47 @@
-# Session Handoff — Front-facing product revision (2026-07-20)
+# Session Handoff — Navigation & settings restructure (2026-07-21)
 
-Branch `dev`. This was a targeted front-facing revision of the existing dashboard — no
-rebuild, no AWS/backend work. The §2.1 backend spike remains the gate for anything
-backend-wired (blocked on the AWS account decision).
+Branch `dev`. Front-facing revision of the existing dashboard — no rebuild, no AWS/backend
+work. The §2.1 backend spike remains the gate for anything backend-wired.
 
-## What landed (9 bounded commits)
+## What landed (4 commits, `151081d`→`7d5534c`)
 
-1. `refactor: remove duplicate tabs and clarify sidebar navigation`
-2. `refactor: convert overview to clickable team snapshot`
-3. `refactor: replace player load with workload scale`
-4. `refactor: simplify copy and add information controls`
-5. `feat: enlarge athlete profile radar comparison`
-6. `feat: continuous daily workload trend lines`
-7. `fix: clarify prototype import history`
-8. `feat: add standalone competition section`
-9. `feat: add annual plan link page`
-   (+ this docs commit)
+1. `refactor: three product areas, accordion nav, layout settings, metric settings rename`
+2. `feat: shared saveable custom date ranges`
+3. `test: verify workload uses the 1-10 scale and label remaining load displays`
+   (docs commit follows)
 
-## Key architectural notes
+## Key architecture
 
-- **Player Load is hidden at one choke point** — `COACH_HIDDEN_KPIS` in
-  `src/lib/dashboard/DashboardDataContext.tsx` filters it out of the effective KPI
-  registry. Observations stay canonical (imports, DB registry, fixtures keep `player_load`).
-  The daily-load metric is `LOAD_KPI = 'workload'` in
-  `src/lib/dashboard/selectors/daily-load.ts`.
-- **Team Snapshot** = `TeamSnapshotPage` + `SnapshotTile` + `snapshot.ts` (summaries) +
-  `tiles/*Detail.tsx` (drawer bodies). Tile catalog in `overview/widgets.ts`.
-- **Competition** is fully isolated. Scoring lives in
-  `src/lib/dashboard/selectors/competition.ts`; the three pages consume a `result` from
-  `competition/CompetitionContext.tsx` (`CompetitionLayout` owns the shared range state and
-  wraps the routed pages). Config is `settings.competition` (see
-  `settings/types.ts` + `defaultCompetition()` in `settings/defaults.ts`), edited in
-  `admin/CompetitionSettingsPage.tsx`.
-- **Annual Plan** stores `settings.annualPlan` (`{fileName,fileUrl,lastUpdated}`) via the
-  existing SettingsRepository. No Excel parsing — a future workbook reader replaces the
-  link card behind `annual-plan/AnnualPlanPage.tsx`.
-- **Continuous lines**: `LineChart` `connectGaps` prop bridges gaps with a dashed connector
-  (no zero-fill). Applied to daily-Workload lines.
-- **Radar benchmark = 50**: enforced in `performance/AthleteProfilePage.tsx` (benchmark
-  series is a constant 50 per rankable axis), not in the selector.
+- **Nav model** is `Area → Category → Page` in `src/app/nav.ts` (`NAV_AREAS`). Three areas:
+  Performance Dashboard (4 categories), Competition (1 category), Annual Plan (1 page).
+  `matchNavPage(pathname)` finds the active page/category/area.
+- **`src/app/nav-layout.ts`** is the one place that applies the layout config (order +
+  visibility) — `visibleNavTree`, `orderedAreas/Categories/Pages`, `firstVisiblePath`.
+  Used by both the sidebar and the Layout & Navigation page.
+- **Sidebar** (`src/app/Sidebar.tsx`) is an accordion: `openId` state = active category,
+  synced on route change; single-category areas render as one accordion, single-page areas
+  as a standalone leaf.
+- **Layout config** (`DashboardLayoutConfig`) now has areaOrder/hiddenAreas/categoryOrder/
+  hiddenCategories/pageOrder/hiddenPages + widget keys. The **Layout & Navigation** admin
+  page (`admin/LayoutNavigationPage.tsx`, route `/admin/layout-navigation`, replaces Data
+  Management) does show/hide + reorder at every level + Reset; `safeUpdate` blocks the tree
+  from going fully empty.
+- **Metric Settings** = renamed KPI Settings (`admin/MetricSettingsPage.tsx`, route
+  `/admin/metric-settings`, legacy redirect). KPI keys/data unchanged.
+- **Shared saved ranges** (§6): `components/controls/SavedRangeControl.tsx` +
+  `useSavedRanges(scope)`, backed by `settings.savedRanges`/`defaultRanges` (keyed by
+  scope). Wired into Data Trends, the S&C Change drawer, and Competition. Active range is
+  parent-local so scopes stay independent.
+- **Workload**: `LOAD_KPI = 'workload'` (`selectors/daily-load.ts`) drives all current-load
+  calcs; Player Load is filtered out of the coach registry at `DashboardDataContext`.
 
-## State of the gates
+## Gates
 
-139 tests green; `npm run typecheck`, `npm run lint`, and the guarded
-`VITE_APP_ENV=local npm run build` all pass. Working tree clean after the docs commit.
-Browser-reviewed at 1440/1280/390.
+159 tests green; typecheck, lint, and guarded `VITE_APP_ENV=local npm run build` pass.
+Working tree clean after the docs commit. Browser-reviewed at 1280.
 
 ## Suggested next steps (not started)
 
-- The §2.1 AWS spike (still the gate). Nothing here touches the backend.
-- Deferred UI polish in `docs/visual-review.md` Session 7 (radar spoke-label clipping at
-  390px; competition relative scoring needs body weights entered).
-- Competition could gain saved-range editing UI and dated-profile management (the data
-  model already supports both).
+- The §2.1 AWS spike (still the gate).
+- Deferred UI polish in `docs/visual-review.md` Session 8 (Competition Date-range initial
+  values; inline range-rename editor).

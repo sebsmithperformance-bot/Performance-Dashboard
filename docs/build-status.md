@@ -5,9 +5,11 @@ Live tracker maintained by the orchestrator (docs/orchestration.md). Spec refere
 
 **Current phase:** Build Order steps 5–6 complete frontend-first (all coach-facing sections
 + admin customization pages, behind the data/settings seams), then a coach-feedback polish
-revision, a reference-driven visual redesign, and a **front-facing product revision**
+revision, a reference-driven visual redesign, a **front-facing product revision**
 (sidebar-only nav, clickable Team Snapshot, Workload terminology, larger Athlete Profile
-radar, prototype Import History, standalone Competition, Annual Plan). 139 tests green;
+radar, prototype Import History, standalone Competition, Annual Plan), and a **navigation &
+settings restructure** (three product areas, accordion sidebar, Layout & Navigation admin
+page, Metric Settings rename, shared saved date ranges). 159 tests green;
 typecheck/lint/guarded-build green. Backend spike (§2.1) remains blocked on AWS account
 access and is still the gate for anything backend-wired.
 
@@ -261,3 +263,44 @@ Targeted revision on the existing app (no rebuild, no backend). Nine bounded com
   1440/1280/390 (responsive grid covers 1024/768); console clean on fresh loads.
 - Unchanged and protected: calculation formulas, import pipeline, DB schema, the five
   seams. No AWS/backend work — the §2.1 spike remains the gate.
+
+### 2026-07-21 — Navigation & settings restructure (branch `dev`)
+
+Follow-up front-facing revision (no backend). Four commits (`151081d`→`7d5534c`):
+
+- **Three product areas:** nav is now Area → Category → Page (`nav.ts`). Three
+  top-level areas — Performance Dashboard (Overview / Monitoring / Data Trends /
+  Performance categories), Competition (Team Standings / Individual Leaderboard /
+  KPI Leaderboards), Annual Plan. Competition and Annual Plan are NOT under
+  Performance Dashboard.
+- **Accordion sidebar:** compact; only the category containing the active page is
+  expanded, one open at a time, auto-opening on navigation; Penn Crimson active
+  indicator + `aria-current`; mobile off-canvas and keyboard access preserved.
+  Annual Plan renders as a standalone row, Competition as a single accordion.
+- **Layout & Navigation (new admin page, replaces Data Management):** show/hide +
+  Move Up/Down for every area, category, page, and Team Snapshot widget, plus
+  Reset to Default. Hiding a parent hides its children; child settings persist
+  for restore; the tree can never be fully hidden (Reset is the recovery). New
+  layout config (`areaOrder`/`hiddenAreas`/`categoryOrder`/`hiddenCategories`/
+  `pageOrder`/`hiddenPages` + existing widget keys); a shared `nav-layout.ts`
+  applies it for both the sidebar and this page; a recovery-aware home redirect
+  lands on the first visible page.
+- **KPI Settings → Metric Settings:** renamed sidebar item, page component,
+  registry/Add/Save labels, route (`/admin/metric-settings`, legacy redirect),
+  copy references and tests. Underlying KPI keys and stored data unchanged.
+- **Workload (reaffirmed):** current-load calculations use only the 1–10 Workload
+  metric (daily trend, acute 7d, chronic 28d weekly equivalent, ACWR, monotony,
+  strain, Team Snapshot, Readiness, alerts); the last two coach-facing "AU"
+  labels (team ACWR selected-day mean, GPS Trends target band) relabelled to the
+  1–10 scale. Player Load stays in raw data only. Tests assert Workload drives
+  ACWR/monotony/strain (not Player Load) and no NaN/Infinity.
+- **Shared saved custom ranges (new):** one reusable `SavedRangeControl`
+  (settings-backed, scoped) — enter/name/save/select/rename/delete a custom range
+  and set a per-scope default. Wired into Data Trends (both tabs), the S&C Change
+  drawer, and Competition (its Date range mode). Each scope keeps its own list and
+  active range, so a Competition range never changes a Performance Dashboard range.
+- Tests 143 → 159 (+ nav structure, sidebar accordion, layout hide/reorder/reset,
+  saved-range persist/independence, workload source). Typecheck, lint and the
+  guarded production build are green. Browser-reviewed at 1280 (accordion,
+  one-open-at-a-time, Layout & Nav tree, shared range on Data Trends +
+  Competition); console clean.
