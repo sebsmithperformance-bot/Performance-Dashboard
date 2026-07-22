@@ -1,0 +1,13 @@
+[
+  "Single-Session Report 10 Aug 26.csv",
+  "cross_source_same_session_perch.csv",
+  "cross_source_same_session_teambuildr.csv",
+  "perch_clean_power.csv",
+  "perch_unmapped_header_and_blank.csv",
+  "playerdata_clean_game_week.csv",
+  "playerdata_missing_device_rows.csv",
+  "playerdata_sectioned_duplicates.csv",
+  "teambuildr_clean_preseason.csv",
+  "teambuildr_corrections.csv",
+  "teambuildr_duplicate_and_alias.csv"
+]

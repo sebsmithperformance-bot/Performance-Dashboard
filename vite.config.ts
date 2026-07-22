@@ -6,9 +6,15 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 /**
- * Dev-only middleware serving the generated synthetic dataset to the shell
- * (spec §7.3 local mode: synthetic data only). apply:'serve' means it cannot
- * exist in any production bundle or preview build.
+ * Dev-only middleware serving a freshly *generated* synthetic dataset to the
+ * shell (spec §7.3 local mode: synthetic data only). apply:'serve' means it
+ * cannot exist in any production bundle or preview build.
+ *
+ * When no generated dataset exists (`seed/output/current/`, e.g. a fresh clone
+ * that hasn't run `npm run seed:generate`), each handler calls next() so Vite's
+ * static serving falls through to the committed demo data in `public/dev-data/`.
+ * That committed copy is the same dataset the GitHub Pages build ships, so the
+ * app shows data everywhere without requiring the generator to run first.
  */
 function devSyntheticData(): Plugin {
   const currentDir = () => path.resolve('seed/output/current')
@@ -16,31 +22,27 @@ function devSyntheticData(): Plugin {
     name: 'dev-synthetic-data',
     apply: 'serve',
     configureServer(server) {
-      server.middlewares.use('/dev-data/canonical.json', (_req, res) => {
+      server.middlewares.use('/dev-data/canonical.json', (_req, res, next) => {
         readFile(path.join(currentDir(), 'canonical.json'))
           .then((buf) => {
             res.setHeader('Content-Type', 'application/json')
             res.end(buf)
           })
-          .catch(() => {
-            res.statusCode = 404
-            res.end(JSON.stringify({ error: 'No generated dataset. Run: npm run seed:generate' }))
-          })
+          // fall through to public/dev-data/canonical.json (committed demo data)
+          .catch(() => next())
       })
       // Generated sample files for the local Import page (§13: the demo season
       // enters through the real import pipeline)
-      server.middlewares.use('/dev-data/fixtures.json', (_req, res) => {
+      server.middlewares.use('/dev-data/fixtures.json', (_req, res, next) => {
         readdir(path.join(currentDir(), 'fixtures'))
           .then((names) => {
             res.setHeader('Content-Type', 'application/json')
             res.end(JSON.stringify(names.filter((n) => n.endsWith('.csv')).sort()))
           })
-          .catch(() => {
-            res.statusCode = 404
-            res.end('[]')
-          })
+          // fall through to committed public/dev-data/fixtures.json
+          .catch(() => next())
       })
-      server.middlewares.use('/dev-data/fixtures/', (req, res) => {
+      server.middlewares.use('/dev-data/fixtures/', (req, res, next) => {
         const name = decodeURIComponent((req.url ?? '').replace(/^\//, ''))
         if (name.includes('..') || name.includes('/')) {
           res.statusCode = 400
@@ -52,10 +54,8 @@ function devSyntheticData(): Plugin {
             res.setHeader('Content-Type', 'text/csv')
             res.end(buf)
           })
-          .catch(() => {
-            res.statusCode = 404
-            res.end('not found')
-          })
+          // fall through to committed public/dev-data/fixtures/<name>
+          .catch(() => next())
       })
     },
   }

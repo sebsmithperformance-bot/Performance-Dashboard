@@ -1,0 +1,143 @@
+Date,Session,Athlete,Group,Distance,Session Load,Workload,Sprint Distance,High Intensity Running,No. of High Intensity Events,Yards per Minute,No. of Sprints,Top Speed,Accelerations,Decelerations
+2026-09-14,Recovery Session,Delaney Yarrowe,Goalkeepers,490,60,1,0,3,0,13,0,10.5,7,8
+2026-09-14,Recovery Session,Oakley Bellamy,Defenders,1040,128,1.8,0,10,1,27,0,12.6,16,18
+2026-09-14,Recovery Session,Emerson Granthem,Defenders,812,105,1,5,14,2,22,1,12.8,16,18
+2026-09-14,Recovery Session,Arden Dunmore,Defenders,1138,140,2.3,0,17,2,29,0,12.8,13,14
+2026-09-14,Recovery Session,Palmer Thornbury,Defenders,1154,138,1,21,21,3,30,3,13.1,13,15
+2026-09-14,Recovery Session,Blair Zellwood,Defenders,951,123,1.2,0,15,2,24,0,11.5,19,19
+2026-09-14,Recovery Session,Avery Oakhurst,Defenders,606,71,1.4,0,8,1,28,0,11.5,8,9
+2026-09-14,Recovery Session,Kendall Birchwood,Midfielders,1376,156,1.4,10,35,5,35,1,13.2,13,15
+2026-09-14,Recovery Session,Briar Pemberly,Midfielders,1431,155,1.3,0,31,4,36,0,12.2,13,14
+2026-09-14,Recovery Session,Umber Wexford,Midfielders,1143,134,2.7,0,29,4,32,0,12.7,15,17
+2026-09-14,Recovery Session,Collins Northgate,Midfielders,1318,154,1.7,0,24,4,34,0,12.8,16,17
+2026-09-14,Recovery Session,Lennox Vandermeer,Midfielders,1232,147,2,16,21,3,32,2,13.2,14,14
+2026-09-14,Recovery Session,Winslow Kirkbride,Midfielders,1209,142,1.5,0,39,5,34,0,13.5,15,17
+2026-09-14,Recovery Session,Sutton Merriweather,Midfielders,1287,152,1.6,15,15,2,33,2,13.6,15,17
+2026-09-14,Recovery Session,Vale Fairbanks,Forwards,1187,136,1.6,7,22,3,31,1,11.9,17,19
+2026-09-14,Recovery Session,Zephyr Ingleside,Forwards,1189,139,1.6,11,26,4,30,1,12.7,16,17
+2026-09-14,Recovery Session,Marlowe Ravenscroft,Forwards,1311,158,1.8,0,36,5,35,0,13.6,14,14
+2026-09-14,Recovery Session,Noa Abernathy,Forwards,930,117,1.4,0,25,4,24,0,12.1,13,16
+2026-09-14,Recovery Session,Rowan Danforth,Forwards,1036,127,1.8,22,29,4,27,2,11.8,18,20
+2026-09-14,Recovery Session,Xiomara Calloway,Forwards,1107,134,1.8,18,19,3,29,2,13,13,13
+2026-09-14,Recovery Session,Finley Jessup,Forwards,823,101,1.3,4,18,3,21,1,12.4,13,15
+2026-09-15,Practice,Delaney Yarrowe,Goalkeepers,1359,161,1,0,23,4,16,0,12.7,21,21
+2026-09-15,Practice,Darby Underhill,Goalkeepers,1343,171,2.1,10,16,2,16,2,12.7,24,26
+2026-09-15,Practice,Oakley Bellamy,Defenders,4195,464,3.8,33,286,40,51,4,15.1,42,43
+2026-09-15,Practice,Emerson Granthem,Defenders,4363,502,4.1,89,321,41,54,8,15.7,39,43
+2026-09-15,Practice,Arden Dunmore,Defenders,3723,392,3,55,265,35,49,5,16.4,27,32
+2026-09-15,Practice,Palmer Thornbury,Defenders,4200,473,3.9,24,340,48,51,5,15.8,48,48
+2026-09-15,Practice,Greer Lockhart,Defenders,3774,439,4,25,189,26,48,5,14,35,36
+2026-09-15,Practice,Blair Zellwood,Defenders,3705,400,3.4,27,208,26,44,3,15,41,43
+2026-09-15,Practice,Kendall Birchwood,Midfielders,5084,585,4,60,339,60,61,8,15.2,42,55
+2026-09-15,Practice,Briar Pemberly,Midfielders,4142,463,4,40,246,38,52,5,15.4,33,38
+2026-09-15,Practice,Umber Wexford,Midfielders,4301,463,4,38,292,50,51,9,15.8,37,41
+2026-09-15,Practice,Collins Northgate,Midfielders,4874,570,4.6,30,235,35,58,6,15.8,41,43
+2026-09-15,Practice,Winslow Kirkbride,Midfielders,5440,620,5.2,51,326,42,66,6,15.7,48,53
+2026-09-15,Practice,Sutton Merriweather,Midfielders,4700,507,4.4,85,266,40,58,7,15.3,50,54
+2026-09-15,Practice,Vale Fairbanks,Forwards,4167,491,4.7,51,226,39,51,9,15.2,32,31
+2026-09-15,Practice,Zephyr Ingleside,Forwards,3744,444,4.9,49,313,56,49,10,15.7,34,36
+2026-09-15,Practice,Marlowe Ravenscroft,Forwards,3528,478,3.9,68,370,60,44,12,16.8,41,54
+2026-09-15,Practice,Noa Abernathy,Forwards,4331,522,4.2,89,340,54,52,12,15.4,46,51
+2026-09-15,Practice,Rowan Danforth,Forwards,4035,485,4,97,293,45,51,12,14.5,40,45
+2026-09-15,Practice,Xiomara Calloway,Forwards,4662,504,4.6,99,374,55,58,14,15.8,33,31
+2026-09-15,Practice,Finley Jessup,Forwards,5131,556,3.8,54,292,38,63,9,14.9,34,37
+2026-09-16,Practice,Delaney Yarrowe,Goalkeepers,1008,124,1.1,0,11,1,14,0,12.8,18,21
+2026-09-16,Practice,Indigo Quillfeather,Goalkeepers,922,112,1.4,13,13,2,13,3,12.4,19,18
+2026-09-16,Practice,Darby Underhill,Goalkeepers,1026,120,1,13,20,3,15,2,12.6,18,18
+2026-09-16,Practice,Oakley Bellamy,Defenders,3422,420,4,18,182,30,48,2,15.4,37,41
+2026-09-16,Practice,Emerson Granthem,Defenders,3363,375,2.9,21,164,29,49,3,15,38,40
+2026-09-16,Practice,Arden Dunmore,Defenders,2703,343,3,28,165,31,39,3,15.8,28,32
+2026-09-16,Practice,Palmer Thornbury,Defenders,3610,404,3.4,62,204,38,49,5,16.1,40,44
+2026-09-16,Practice,Greer Lockhart,Defenders,3235,361,2.9,16,187,26,46,2,14.4,27,32
+2026-09-16,Practice,Blair Zellwood,Defenders,3562,393,3.2,44,220,33,49,5,14.5,36,37
+2026-09-16,Practice,Avery Oakhurst,Defenders,2605,282,3,25,133,16,51,3,14.7,23,23
+2026-09-16,Practice,Kendall Birchwood,Midfielders,4671,533,4.6,55,320,52,63,8,14.9,35,39
+2026-09-16,Practice,Campbell Everhart,Midfielders,3753,381,3.6,16,182,33,51,2,14.7,34,36
+2026-09-16,Practice,Briar Pemberly,Midfielders,4037,462,2.9,35,226,31,56,6,15.2,26,30
+2026-09-16,Practice,Umber Wexford,Midfielders,3587,401,4.3,41,201,30,53,5,15.8,34,32
+2026-09-16,Practice,Collins Northgate,Midfielders,3885,450,4,42,213,30,53,5,15.5,33,32
+2026-09-16,Practice,Lennox Vandermeer,Midfielders,4349,489,3.9,71,394,60,60,9,17,37,49
+2026-09-16,Practice,Winslow Kirkbride,Midfielders,4131,457,3.9,35,189,25,59,4,16.8,31,35
+2026-09-16,Practice,Sutton Merriweather,Midfielders,4031,462,4,44,267,41,55,5,16.5,37,40
+2026-09-16,Practice,Vale Fairbanks,Forwards,4358,472,2.7,91,354,53,61,10,15.7,32,36
+2026-09-16,Practice,Zephyr Ingleside,Forwards,3554,409,3.5,82,290,42,49,11,15.7,34,34
+2026-09-16,Practice,Marlowe Ravenscroft,Forwards,3644,438,4.1,165,419,59,49,14,16.7,36,38
+2026-09-16,Practice,Xiomara Calloway,Forwards,3522,417,3.6,97,326,44,50,10,16,30,34
+2026-09-16,Practice,Finley Jessup,Forwards,3865,415,4.1,92,371,49,53,11,15.2,28,30
+2026-09-17,Practice,Delaney Yarrowe,Goalkeepers,872,102,1.2,0,15,2,16,0,12.8,12,12
+2026-09-17,Practice,Indigo Quillfeather,Goalkeepers,925,105,1.4,14,14,2,15,2,12.2,13,12
+2026-09-17,Practice,Darby Underhill,Goalkeepers,624,75,1.9,0,8,1,11,0,12.2,12,12
+2026-09-17,Practice,Oakley Bellamy,Defenders,2439,292,3.5,21,154,25,45,5,14.9,28,31
+2026-09-17,Practice,Emerson Granthem,Defenders,2691,306,1.7,11,157,18,47,1,14.6,24,22
+2026-09-17,Practice,Arden Dunmore,Defenders,2133,258,2,51,154,29,36,6,15,17,17
+2026-09-17,Practice,Palmer Thornbury,Defenders,2628,313,3.3,25,162,22,44,4,15.6,30,32
+2026-09-17,Practice,Greer Lockhart,Defenders,2432,276,2.2,20,72,10,43,3,15,23,24
+2026-09-17,Practice,Blair Zellwood,Defenders,3122,354,3.6,49,192,27,52,6,14.8,27,31
+2026-09-17,Practice,Avery Oakhurst,Defenders,1078,115,1.5,11,43,6,45,1,13.2,8,8
+2026-09-17,Practice,Kendall Birchwood,Midfielders,3203,365,3.7,38,185,34,56,4,16.3,27,27
+2026-09-17,Practice,Campbell Everhart,Midfielders,2916,321,2,62,165,21,50,5,14.4,26,29
+2026-09-17,Practice,Briar Pemberly,Midfielders,3109,372,3.7,74,263,33,53,6,15.9,25,26
+2026-09-17,Practice,Umber Wexford,Midfielders,3155,359,3.6,14,175,24,53,2,16,27,28
+2026-09-17,Practice,Lennox Vandermeer,Midfielders,3320,374,3.3,58,285,42,58,8,16.9,25,26
+2026-09-17,Practice,Winslow Kirkbride,Midfielders,3699,393,3.4,25,173,33,63,3,16,25,28
+2026-09-17,Practice,Sutton Merriweather,Midfielders,2876,336,2.5,27,223,33,50,3,16.3,27,30
+2026-09-17,Practice,Vale Fairbanks,Forwards,2841,327,3,100,234,36,49,10,15.5,23,25
+2026-09-17,Practice,Zephyr Ingleside,Forwards,2725,328,2.8,38,244,39,48,8,15.8,26,31
+2026-09-17,Practice,Marlowe Ravenscroft,Forwards,2669,347,4.4,62,266,41,50,8,16.3,28,31
+2026-09-17,Practice,Rowan Danforth,Forwards,2750,326,2.9,49,176,22,47,6,15,24,28
+2026-09-17,Practice,Finley Jessup,Forwards,2191,261,2.2,49,151,24,40,5,14.9,20,22
+2026-09-18,Game W6,Oakley Bellamy,Defenders,2655,345,3.4,20,210,30,65,4,16.1,24,25
+2026-09-18,Game W6,Emerson Granthem,Defenders,2895,366,3.6,64,278,39,56,6,16.6,30,30
+2026-09-18,Game W6,Arden Dunmore,Defenders,2936,367,3,45,253,30,64,5,16.4,21,26
+2026-09-18,Game W6,Palmer Thornbury,Defenders,2451,326,2.7,64,302,40,56,5,17.4,29,32
+2026-09-18,Game W6,Greer Lockhart,Defenders,1061,115,1,0,61,10,62,0,14,7,7
+2026-09-18,Game W6,Kendall Birchwood,Midfielders,3749,442,3.9,70,488,60,74,12,16.9,27,30
+2026-09-18,Game W6,Campbell Everhart,Midfielders,3557,435,4,51,354,55,65,7,15.1,26,30
+2026-09-18,Game W6,Briar Pemberly,Midfielders,4259,462,4.3,92,298,41,73,8,16.7,22,24
+2026-09-18,Game W6,Umber Wexford,Midfielders,3143,369,3.4,55,243,36,63,5,16.3,30,32
+2026-09-18,Game W6,Collins Northgate,Midfielders,2027,236,2,46,219,33,72,5,16.4,16,16
+2026-09-18,Game W6,Lennox Vandermeer,Midfielders,1276,149,2.2,62,118,14,67,5,17.3,9,9
+2026-09-18,Game W6,Winslow Kirkbride,Midfielders,1610,184,1,18,181,28,67,2,16.6,13,15
+2026-09-18,Game W6,Vale Fairbanks,Forwards,2584,277,3.1,126,293,54,63,11,16.3,18,18
+2026-09-18,Game W6,Zephyr Ingleside,Forwards,3084,367,2.5,108,376,60,70,13,18,20,21
+2026-09-18,Game W6,Marlowe Ravenscroft,Forwards,3089,321,3,91,361,60,63,11,17.9,27,24
+2026-09-18,Game W6,Noa Abernathy,Forwards,1406,192,1.4,48,172,22,59,5,15.7,14,15
+2026-09-18,Game W6,Rowan Danforth,Forwards,1075,130,1.8,18,115,17,67,4,15.1,11,12
+2026-09-18,Game W6,Xiomara Calloway,Forwards,2178,258,2.6,77,286,44,64,8,16,17,18
+2026-09-19,Recovery Session,Delaney Yarrowe,Goalkeepers,495,60,1.3,3,3,0,13,1,10.4,9,9
+2026-09-19,Recovery Session,Oakley Bellamy,Defenders,1166,137,1,0,22,3,30,0,12.2,15,15
+2026-09-19,Recovery Session,Arden Dunmore,Defenders,960,110,1.5,7,15,2,25,1,12.9,12,11
+2026-09-19,Recovery Session,Palmer Thornbury,Defenders,1254,151,1.8,0,35,5,34,0,13.2,14,16
+2026-09-19,Recovery Session,Greer Lockhart,Defenders,1027,113,1.1,0,10,2,26,0,12.5,15,16
+2026-09-19,Recovery Session,Blair Zellwood,Defenders,901,104,1.6,5,5,1,24,1,11.3,13,14
+2026-09-19,Recovery Session,Kendall Birchwood,Midfielders,1330,147,1.5,0,30,4,36,0,12.9,13,12
+2026-09-19,Recovery Session,Campbell Everhart,Midfielders,1114,131,2.2,0,23,4,29,0,12.3,14,16
+2026-09-19,Recovery Session,Briar Pemberly,Midfielders,1169,128,1.3,14,24,4,31,1,13,10,10
+2026-09-19,Recovery Session,Umber Wexford,Midfielders,1120,129,2.3,0,13,2,29,0,12.9,16,17
+2026-09-19,Recovery Session,Collins Northgate,Midfielders,1270,145,1.8,13,30,5,33,2,12.9,13,15
+2026-09-19,Recovery Session,Lennox Vandermeer,Midfielders,1464,157,2.2,21,34,6,39,2,13.5,16,16
+2026-09-19,Recovery Session,Winslow Kirkbride,Midfielders,1280,147,2.2,10,34,5,33,2,12.6,13,14
+2026-09-19,Recovery Session,Sutton Merriweather,Midfielders,1159,144,2,0,32,4,31,0,13.2,13,15
+2026-09-19,Recovery Session,Vale Fairbanks,Forwards,970,123,1.4,9,28,4,25,1,12.5,14,15
+2026-09-19,Recovery Session,Zephyr Ingleside,Forwards,1204,140,1.6,11,41,5,33,1,13.5,12,13
+2026-09-19,Recovery Session,Marlowe Ravenscroft,Forwards,1219,146,1.9,18,33,5,31,2,13.1,18,20
+2026-09-19,Recovery Session,Noa Abernathy,Forwards,962,108,1.7,12,12,2,25,2,11.9,18,20
+2026-09-19,Recovery Session,Xiomara Calloway,Forwards,1268,149,1,0,32,4,34,0,12.7,12,13
+2026-09-19,Recovery Session,Finley Jessup,Forwards,887,108,1.7,6,27,4,23,1,12.3,14,13
+2026-09-20,Game W6,Oakley Bellamy,Defenders,2550,296,2.6,36,230,45,54,4,15.4,24,27
+2026-09-20,Game W6,Emerson Granthem,Defenders,2329,273,2.6,9,150,24,58,2,15.8,22,23
+2026-09-20,Game W6,Arden Dunmore,Defenders,4031,448,2.8,67,317,37,82,7,16.8,19,20
+2026-09-20,Game W6,Palmer Thornbury,Defenders,2988,362,2.6,45,302,37,54,5,17.4,29,33
+2026-09-20,Game W6,Greer Lockhart,Defenders,1841,200,1.8,10,108,16,63,1,15.7,13,15
+2026-09-20,Game W6,Campbell Everhart,Midfielders,3242,363,3.7,59,264,37,65,7,15.9,24,30
+2026-09-20,Game W6,Briar Pemberly,Midfielders,2680,297,2.7,43,296,39,72,5,15.8,16,18
+2026-09-20,Game W6,Umber Wexford,Midfielders,1993,229,2.4,22,222,35,64,4,16.2,17,20
+2026-09-20,Game W6,Collins Northgate,Midfielders,2073,242,1.6,14,156,23,67,2,16.7,15,17
+2026-09-20,Game W6,Lennox Vandermeer,Midfielders,2081,259,2,54,284,50,65,8,17.8,18,20
+2026-09-20,Game W6,Winslow Kirkbride,Midfielders,2045,232,2.3,14,147,23,79,2,16.5,16,18
+2026-09-20,Game W6,Vale Fairbanks,Forwards,3386,428,4,115,393,58,65,11,16.7,31,35
+2026-09-20,Game W6,Zephyr Ingleside,Forwards,3080,385,3.7,63,313,45,66,10,17.1,21,25
+2026-09-20,Game W6,Marlowe Ravenscroft,Forwards,2693,309,2.5,91,307,54,66,10,17.2,20,21
+2026-09-20,Game W6,Noa Abernathy,Forwards,780,88,1.7,7,75,13,52,1,15.2,8,8
+2026-09-20,Game W6,Rowan Danforth,Forwards,1803,212,2,57,166,23,72,6,16,14,15
+2026-09-20,Game W6,Xiomara Calloway,Forwards,3011,373,3,82,379,60,72,13,16.9,23,25

@@ -46,10 +46,10 @@ export function Masthead({ onOpenDrawer }: { onOpenDrawer: () => void }) {
 
       <div className="ml-auto flex items-center gap-3">
         <Badge tone="warning">
-          {APP_ENV.toUpperCase()}
+          {APP_ENV === 'production' ? 'PRODUCTION' : 'PROTOTYPE'}
           <span className="sr-only lg:not-sr-only">
             {' '}
-            · {APP_ENV === 'production' ? 'REAL DATA' : 'SYNTHETIC'}
+            · {APP_ENV === 'production' ? 'REAL DATA' : 'SYNTHETIC DATA'}
           </span>
         </Badge>
         <button
