@@ -1,47 +1,71 @@
-# Session Handoff — Navigation & settings restructure (2026-07-21)
+# Session Handoff — Cleanup & handoff (finalized 2026-07-22)
 
-Branch `dev`. Front-facing revision of the existing dashboard — no rebuild, no AWS/backend
-work. The §2.1 backend spike remains the gate for anything backend-wired.
+Branch `cleanup/dashboard-handoff` (off `main` @ `35b3c6a`), opened as a pull
+request targeting `dev`. Workstream 1 only: audit, clean, and document the
+existing dashboard so it is stable and easy to hand off. **No** Shiny rebuild,
+AWS, vendor APIs, deployment changes, or new features.
 
-## What landed (4 commits, `151081d`→`7d5534c`)
+**Finalization checks (all pass):** no secrets tracked, no real athlete data
+tracked (only `tests/fixtures/`), Player Load still filtered from the coach
+registry (`COACH_HIDDEN_KPIS`), routes/nav unchanged vs `main` (33 route entries,
+0 removed), GitHub Pages behavior untouched.
 
-1. `refactor: three product areas, accordion nav, layout settings, metric settings rename`
-2. `feat: shared saveable custom date ranges`
-3. `test: verify workload uses the 1-10 scale and label remaining load displays`
-   (docs commit follows)
+## State at start
 
-## Key architecture
+Tests, typecheck, lint, and build all passed. The codebase was already clean — no
+`console.log`/`TODO`/`debugger`/commented-out code, no lint suppressions, and (per
+an import-graph scan) exactly one unreferenced source file. The real handoff gap
+was documentation, so that is where most of this session went.
 
-- **Nav model** is `Area → Category → Page` in `src/app/nav.ts` (`NAV_AREAS`). Three areas:
-  Performance Dashboard (4 categories), Competition (1 category), Annual Plan (1 page).
-  `matchNavPage(pathname)` finds the active page/category/area.
-- **`src/app/nav-layout.ts`** is the one place that applies the layout config (order +
-  visibility) — `visibleNavTree`, `orderedAreas/Categories/Pages`, `firstVisiblePath`.
-  Used by both the sidebar and the Layout & Navigation page.
-- **Sidebar** (`src/app/Sidebar.tsx`) is an accordion: `openId` state = active category,
-  synced on route change; single-category areas render as one accordion, single-page areas
-  as a standalone leaf.
-- **Layout config** (`DashboardLayoutConfig`) now has areaOrder/hiddenAreas/categoryOrder/
-  hiddenCategories/pageOrder/hiddenPages + widget keys. The **Layout & Navigation** admin
-  page (`admin/LayoutNavigationPage.tsx`, route `/admin/layout-navigation`, replaces Data
-  Management) does show/hide + reorder at every level + Reset; `safeUpdate` blocks the tree
-  from going fully empty.
-- **Metric Settings** = renamed KPI Settings (`admin/MetricSettingsPage.tsx`, route
-  `/admin/metric-settings`, legacy redirect). KPI keys/data unchanged.
-- **Shared saved ranges** (§6): `components/controls/SavedRangeControl.tsx` +
-  `useSavedRanges(scope)`, backed by `settings.savedRanges`/`defaultRanges` (keyed by
-  scope). Wired into Data Trends, the S&C Change drawer, and Competition. Active range is
-  parent-local so scopes stay independent.
-- **Workload**: `LOAD_KPI = 'workload'` (`selectors/daily-load.ts`) drives all current-load
-  calcs; Player Load is filtered out of the coach registry at `DashboardDataContext`.
+## What changed
 
-## Gates
+**Code (minimal, low-risk):**
 
-159 tests green; typecheck, lint, and guarded `VITE_APP_ENV=local npm run build` pass.
-Working tree clean after the docs commit. Browser-reviewed at 1280.
+- Deleted the dead component `src/components/ui/CompletenessBadge.tsx` — not
+  imported anywhere (completeness is surfaced via selectors + the Data
+  Completeness tile). Corrected its stale mention in `build-status.md`.
+- Fixed a flaky DB test: the PGlite (WASM) suites could exceed vitest's 5s default
+  on a cold run. Added `testTimeout`/`hookTimeout: 20000` to the `test` block in
+  `vite.config.ts` (test config only — `base`, plugins, and the dev-data
+  middleware are untouched). Full suite now passes reliably on repeated cold runs.
 
-## Suggested next steps (not started)
+**Documentation (the main deliverable):**
 
-- The §2.1 AWS spike (still the gate).
-- Deferred UI polish in `docs/visual-review.md` Session 8 (Competition Date-range initial
-  values; inline range-rename editor).
+- New: `docs/current-architecture.md`, `docs/page-map.md`, `docs/data-contract.md`,
+  `docs/calculations.md`.
+- Updated: `README.md` (two-workstream framing, doc index, reference-implementation
+  note), this handoff, and the `build-status.md` component list.
+
+## Deliberately NOT touched (per session scope)
+
+- **Deployment / GitHub Pages / generated dev-data / build artifacts.** The
+  untracked `dev-data/` and `public/dev-data/` folders and the `.github` deploy
+  workflow were left exactly as-is at the user's explicit instruction.
+- **Protected paths** (`src/lib/calculations`, `units`, `import`, `env-guards`) —
+  no formula or contract changes.
+- **Marginal unused *type* exports** in app selectors — left alone to avoid churn;
+  most live under CODEOWNERS-protected paths anyway.
+
+## Known issues intentionally deferred
+
+- The GitHub Pages deploy copies `public/dev-data/` into `dist/`, but that folder
+  is untracked and CI does not regenerate it, so the live Pages site ships without
+  data. **Flagged, not changed** — out of scope for this session (deployment).
+- `dev-data/` (repo root) is a byte-identical, unreferenced duplicate of
+  `public/dev-data/`. Left in place (generated dev-data is out of scope).
+- Lint emits non-blocking `react-refresh/only-export-components` warnings on the
+  context files. Cosmetic; no action taken.
+
+## Gates at handoff
+
+161 tests green (21 files); `tsc -b` clean; `oxlint` clean (warnings only);
+`npm run build` passes.
+
+## Suggested next steps
+
+- Decide how the live deploy should get its data (commit `public/dev-data/`, or
+  have CI run `npm run seed:generate`) — see the deferred issue above.
+- The §2.1 AWS spike remains the gate for any backend-wired work.
+- Begin the R Shiny rebuild in its own branch/session, using this dashboard as the
+  reference implementation.
+</content>

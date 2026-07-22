@@ -3,6 +3,15 @@
 Live tracker maintained by the orchestrator (docs/orchestration.md). Spec references
 (§) point at `docs/spec/build-prompt.md`.
 
+> **2026-07-22 — cleanup & handoff (finalized)** (`cleanup/dashboard-handoff`, PR
+> → `dev`). Audited, lightly cleaned, and documented the current dashboard for
+> handoff (Workstream 1). Removed one dead component, stabilized the PGlite test
+> suites, and added the handoff docs (`current-architecture`, `page-map`,
+> `data-contract`, `calculations`). Verified: no secrets or real athlete data
+> tracked, Player Load not reintroduced, no routes removed, GitHub Pages
+> unchanged. **161 tests green**; typecheck/lint/build green. No features,
+> formulas, or deployment touched. See [`session-handoff.md`](./session-handoff.md).
+
 **Current phase:** Build Order steps 5–6 complete frontend-first (all coach-facing sections
 + admin customization pages, behind the data/settings seams), then a coach-feedback polish
 revision, a reference-driven visual redesign, a **front-facing product revision**
@@ -150,7 +159,7 @@ access and is still the gate for anything backend-wired.
   (90% threshold + ≥3 baseline + exposure-eligible sessions; insufficient separated),
   single-session athletes table (same-date sessions separate; quality states).
 - Shared component system: KPIValue/formatting core (registry decimals, units,
-  missing ≠ zero, NaN/∞ impossible), TrendIndicator, CompletenessBadge,
+  missing ≠ zero, NaN/∞ impossible), TrendIndicator,
   AvailabilityBadge, AlertCard, ChartCard (built-in accessible table toggle), sticky
   sortable DataTable, Drawer, PageHeader, FilterBar + selector controls, SaveViewControl,
   ErrorState, SVG Sparkline/DistributionBar, KPI→chart-token registry.

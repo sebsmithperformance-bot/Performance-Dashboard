@@ -6,12 +6,23 @@ data sources: **TeamBuildr** (lifts), **PlayerData** (GPS/load), and **Perch** (
 
 Ground-up rebuild — not a patch on the V1 single-file dashboard.
 
+**Status:** finalized for handoff (2026-07-22). Stable on synthetic data; 161 tests
+green, typecheck/lint/build green.
+
+> **Two workstreams.** (1) This repository is the finalized **current dashboard** —
+> a client-only React app on synthetic data, and the complete visual/functional
+> **reference implementation**. (2) A later **R Shiny rebuild** (real vendor
+> connections + AWS) happens in a separate branch and session. This repo does not
+> depend on that future work. See [`docs/current-architecture.md`](docs/current-architecture.md).
+
 ## Stack
 
-- **Frontend:** Vite + React + TypeScript (strict) + Tailwind CSS v4
-- **Backend (planned, gated on the §2.1 architecture spike):** AWS Amplify Hosting, Cognito
-  auth, AppSync GraphQL, Aurora PostgreSQL Serverless v2 (RDS Data API), private S3 for CSV
-  imports
+- **Frontend (what runs today):** Vite + React 19 + TypeScript (strict) + Tailwind CSS v4,
+  `react-router`. Client-only, synthetic data, mock auth.
+- **Local database (tests + import prototype):** PGlite — in-process Postgres (WASM); no server needed.
+- **Backend (planned, gated on the §2.1 architecture spike — not built):** AWS Amplify Hosting,
+  Cognito auth, AppSync GraphQL, Aurora PostgreSQL Serverless v2 (RDS Data API), private S3 for
+  CSV imports
 - **Tests:** Vitest · **Lint:** oxlint · **Format:** Prettier
 
 ## Development
@@ -45,7 +56,17 @@ Production builds hard-fail if mock auth or dev resource identifiers are detecte
 
 ## Key documents
 
-- `docs/build-status.md` — live build checklist and session log
+Handoff docs (start here):
+
+- [`docs/current-architecture.md`](docs/current-architecture.md) — how the app is built (layers, seams)
+- [`docs/page-map.md`](docs/page-map.md) — every route, its component, and its data
+- [`docs/data-contract.md`](docs/data-contract.md) — the dataset shape all pages consume
+- [`docs/calculations.md`](docs/calculations.md) — the formulas (ACWR, monotony, strain, comparisons)
+- [`docs/session-handoff.md`](docs/session-handoff.md) — latest session summary
+
+Reference:
+
+- `docs/build-status.md` — build checklist and session log
 - `docs/adr/` — architecture decision records (001–006 required before their areas ship)
 - `docs/import-sources/` — documented real export formats per source
 - `db/migrations/` — versioned SQL schema, the only way schema changes ship
