@@ -30,6 +30,12 @@ dist-ssr
 # Generated synthetic datasets (regenerable via npm run seed:generate)
 seed/output/
 
+# Root-level dev-data/ is an unused duplicate of the committed public/dev-data/.
+# The app serves demo data from public/dev-data/; ignore the root copy so it
+# never gets re-committed. (Only the leading-slash path is ignored — public/dev-data
+# stays tracked.)
+/dev-data/
+
 # Real athlete data must never enter the repository (spec §8, §14)
 *.real.csv
 data-real/
