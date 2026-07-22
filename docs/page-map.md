@@ -16,6 +16,10 @@ nav, scoped to the active product area), a **Topbar**, and the routed page in
 `<Outlet>`. `RequireAuth` gates everything except `/signin`; the index route
 redirects to the first visible page via `firstVisiblePath(settings.layout)`.
 
+At a glance: **3 product areas** (16 pages total) + **4 admin/Settings pages**, plus
+legacy redirects. All routes below are unchanged from `main` as of the 2026-07-22
+handoff.
+
 ## Product areas & pages
 
 Three top-level product areas. The path column is the live route; the file is the

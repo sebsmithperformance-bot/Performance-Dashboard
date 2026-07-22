@@ -6,6 +6,9 @@ data sources: **TeamBuildr** (lifts), **PlayerData** (GPS/load), and **Perch** (
 
 Ground-up rebuild — not a patch on the V1 single-file dashboard.
 
+**Status:** finalized for handoff (2026-07-22). Stable on synthetic data; 161 tests
+green, typecheck/lint/build green.
+
 > **Two workstreams.** (1) This repository is the finalized **current dashboard** —
 > a client-only React app on synthetic data, and the complete visual/functional
 > **reference implementation**. (2) A later **R Shiny rebuild** (real vendor

@@ -7,6 +7,8 @@ spec is *planned, not built*. This document describes what actually runs today.
 > This dashboard is the complete visual and functional **reference
 > implementation** for a later R Shiny rebuild (a separate workstream, separate
 > branch, separate session). Nothing here depends on that future work.
+>
+> Finalized for handoff 2026-07-22.
 
 ## Stack
 

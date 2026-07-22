@@ -1,8 +1,14 @@
-# Session Handoff — Cleanup & handoff prep (2026-07-22)
+# Session Handoff — Cleanup & handoff (finalized 2026-07-22)
 
-Branch `cleanup/dashboard-handoff` (off `main` @ `35b3c6a`). Workstream 1 only:
-audit, clean, and document the existing dashboard so it is stable and easy to hand
-off. **No** Shiny rebuild, AWS, vendor APIs, deployment changes, or new features.
+Branch `cleanup/dashboard-handoff` (off `main` @ `35b3c6a`), opened as a pull
+request targeting `dev`. Workstream 1 only: audit, clean, and document the
+existing dashboard so it is stable and easy to hand off. **No** Shiny rebuild,
+AWS, vendor APIs, deployment changes, or new features.
+
+**Finalization checks (all pass):** no secrets tracked, no real athlete data
+tracked (only `tests/fixtures/`), Player Load still filtered from the coach
+registry (`COACH_HIDDEN_KPIS`), routes/nav unchanged vs `main` (33 route entries,
+0 removed), GitHub Pages behavior untouched.
 
 ## State at start
 
