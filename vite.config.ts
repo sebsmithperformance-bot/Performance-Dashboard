@@ -70,6 +70,10 @@ export default defineConfig({
   optimizeDeps: { exclude: ['@electric-sql/pglite'] },
   test: {
     environment: 'node',
+    // PGlite (in-process Postgres) compiles its WASM on first use, which can
+    // exceed vitest's 5s default on a cold run and flake the DB-backed suites.
+    testTimeout: 20000,
+    hookTimeout: 20000,
     include: [
       'src/**/*.test.ts',
       'src/**/*.test.tsx',
